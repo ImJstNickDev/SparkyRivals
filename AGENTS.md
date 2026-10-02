@@ -180,7 +180,10 @@ Keep the upstream license, attribution, history, functionality, and package guid
   platform limitations rather than claiming unrun checks passed.
 - Update `docs/fork/` when architecture, build identity, or upstream integration
   assumptions change. Keep proposals distinct from implemented behavior.
-- Bootstrap contains documentation only. Challenges and Wear OS begin only in
+- SparkyRivals production uses a separate server checkout and host bind mounts
+  under repository-root `dockerdata/` (git-ignored), never named volumes or `/srv`.
+  Follow `docs/fork/DEPLOYMENT.md` for paths, ownership, backup and restore.
+- Challenges and Wear OS begin only in
   their explicitly requested milestones; follow `docs/fork/ROADMAP.md`.
 
 This small root section makes fork guidance discoverable from every package

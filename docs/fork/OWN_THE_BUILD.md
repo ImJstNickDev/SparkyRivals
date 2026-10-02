@@ -1,142 +1,98 @@
 # Milestone 1: Own the Build
 
-Implementation is in progress on `milestone/own-the-build`. The central identity
-resolver and host Expo configuration now support explicit custom identities,
-derived development/preview variants, and rejection of upstream EAS destinations.
-All three Apple target configs now derive their bundle IDs and App Groups from
-the resolver and emit phone/Watch schemes in generated runtime metadata. Their
-native target names remain unchanged. Mobile linking/auth and server browser
-returns now use configured schemes with an explicit server allowlist. The default
-upstream callback, API-key/session paths, and token-fragment behavior are retained.
-Widgets, Live Activities, Android notifications and Watch complications now use
-the resolved schemes. HealthKit/Health Connect regression tests cover each owned
-variant without changing source detection or the `SparkyFitnessSessionId` marker.
-The prebuild signing plugin now selects `signingConfigs.release`, consumes the
-existing `MYAPP_RELEASE_*` interface, and rejects missing/debug credentials at
-release task execution. It also rejects release tasks from config-only projects.
-Owned development/preview/production EAS profiles and local profile/native
-validation scripts are implemented. The inherited App Store submission destination
-is removed. Build numbers support explicit local allocation and remote EAS
-auto-increment. Account registration and signed native builds remain external
-setup steps. Remaining steps below are pending until
-their implementation and validation land.
-This milestone follows the
-[identifier inventory](IDENTIFIERS.md) at upstream
-`f8df11ac3b019d022d3fa4a1b39c1b2f8576d361`.
+Implementation completed for review on `milestone/own-the-build` (2026-10-03).
+Owned build configuration, security guards and Linux validation are implemented.
+Actual account registration, permanent signing keys, native compilation and device
+acceptance remain open; no signed/distributed binary is claimed.
 
-## Outcome and boundaries
+The maintainer's milestone 1 definition allows local/configuration completion when
+accounts or native toolchains are unavailable. This refines the bootstrap plan's
+stronger “installable device build” exit: [ROADMAP.md](ROADMAP.md) tracks that
+remaining release acceptance separately. No Challenges, Wear OS, broad rebrand,
+store submission or production Docker redesign was performed.
 
-Produce reproducible SparkyRivals Android, iOS, and Apple Watch builds under our
-own application identities, EAS project, and signing credentials. Development
-builds should coexist with upstream. Build validation must not publish or submit
-to a store. Preserve upstream defaults, license/credits, features, native module
-names, and file layout. Broad visual rebranding and Challenges are later work.
+## Implemented behavior
 
-Inputs to settle at implementation time: an owned reverse-DNS identity, our EAS
-owner/project UUID, Apple Team ID and registered App IDs/App Group, Android signing
-key custody, eventual distribution channel, and store application IDs if submitting.
-Do not invent or register these from placeholder values. Configuration and unsigned
-validation can proceed before distribution credentials are available.
+1. **Central identity:** extended the existing CommonJS `app.identifiers.js`;
+   preserved upstream defaults/legacy exports. Validated variant names and generic
+   custom production roots; derived isolated dev/preview identities. Owned
+   owner/project configuration is required and upstream EAS destinations rejected.
+2. **Apple relationships:** all child target bundles/groups derive from the host;
+   generated Info.plist metadata supplies runtime links. Native target names and
+   upstream module/protocol identifiers remain unchanged.
+3. **Secure callbacks:** one operator-owned native scheme allowlist controls
+   Better Auth origins and fixed browser return destinations. Unknown/malformed
+   selectors fail; login tokens and one-use registration tickets remain fragments.
+   API-key/session/web-origin behavior is retained and regression-tested.
+4. **Native links and health:** widgets, Live Activities, Android notifications,
+   Watch pages/complications consume resolved schemes. Existing runtime health
+   source detection and `SparkyFitnessSessionId` remain intact; variant regression
+   tests prove marked Watch workouts are excluded from re-import.
+5. **Release signing:** durable Gradle generation consumes `MYAPP_RELEASE_*` or
+   EAS-injected credentials. Release tasks reject missing/debug credentials and
+   configuration-only generation. Debug keeps its normal local signing behavior.
+6. **Profiles and validation:** three owned EAS profiles, local profile wrapper,
+   monotonic local build numbers / remote EAS incrementing versions, semantic
+   native metadata assertions and repeat-prebuild comparisons. The Watch launch
+   helper discovers generated workspace and built bundle identity.
+7. **Automation:** publishing/mutation/notification jobs are guarded off in forks.
+   Android codegen/debug failures propagate; Apple simulator builds resolve their
+   generated identities. Actions remain disabled. New native configuration CI is
+   read-only and requires no cloud account or signing material.
+8. **Operations:** build-only variables remain outside server containers. Runtime
+   callback config reaches env templates, EnvGenerator, Compose and Helm. The
+   required root `dockerdata/` bind-mount policy is documented and git-ignored.
 
-## Recommended implementation
+## Configuration and account boundaries
 
-1. Extend **`app.identifiers.js`** as the existing CommonJS identity resolver.
-   Keep its legacy exports/overrides working. Resolve platform package/bundle,
-   display name, slug, phone/watch URL schemes, team, group, and EAS identity in one
-   place. Have app config and all target configs consume it. Use a generic explicit
-   custom-identity mode with required inputs for derivative builds; retain upstream
-   behavior when that mode is absent. Fail before cloud builds if custom mode is
-   incomplete or resolves known upstream project/store destinations.
-2. Use build-environment values rather than hardcoded fork conditionals. Proposed
-   names include `APP_IDENTITY=custom`, `EXPO_APP_NAME`, `EXPO_APP_SLUG`,
-   `EXPO_ANDROID_PACKAGE`, `EXPO_IOS_BUNDLE_IDENTIFIER`, `EXPO_APP_SCHEME`,
-   `EXPO_WATCH_SCHEME`, `EXPO_EAS_PROJECT_ID`, and `EXPO_OWNER`. Keep existing team,
-   development bundle, group, widget override, and Maps-key variables compatible.
-   Validate `APP_VARIANT`; explicitly decide whether preview is isolated from
-   production (recommended) instead of accidentally inheriting production identity.
-3. Derive `.widget`, `.ExpoWidgetsTarget`, `.watchkitapp`, and
-   `.watchkitapp.watch-widget` from the resolved host relationship. Expose schemes
-   and group values through generated Info.plist/template resources and runtime
-   config. Swift/Kotlin code should read those values; internal namespaces remain
-   stable. Verify Watch companion ID and all host/extension entitlements.
-4. Parameterize the **whole deep-link flow**. Update mobile auth/linking, phone
-   widgets, Live Activities, Android notifications, and Watch complication links.
-   Extend existing server trusted-origin configuration and server-owned callback
-   selection with an explicit validated allowlist/default; never trust an arbitrary
-   callback URL supplied by a client receiving a session token. Preserve upstream
-   callback compatibility. A custom-scheme client may need a configured derivative
-   server for web auth; document this, keeping session/API-key paths intact.
-5. Fix **Android release signing at its source**. Add a narrowly scoped Expo plugin
-   (or an equivalently reproducible build hook) that writes a real release signing
-   configuration from build-time properties. No secrets in tracked files or JS.
-   Production release must fail when credentials are absent, never fall back to
-   debug signing. Use one documented credential authority and sync to other build
-   paths deliberately. Reserve phone/Wear certificate and application-ID continuity.
-6. Create a separate fork EAS project and development/preview/production profiles.
-   Check target discovery and provisioning for all Apple extensions. Inspect the
-   entitlements embedded in a signed archive. Use a separate explicit submission
-   profile for our App Store Connect ID; no automatic submission in validation.
-   Define remote versus local/CI build-number ownership so release versionCodes
-   cannot reset to the clean-prebuild value 1.
-7. Review inherited automation before enabling Actions. First enable validation
-   workflows with fork-safe triggers; keep release, bot, translation-push,
-   external-notification, and deployment jobs inactive or explicitly guarded.
-   Resolve simulator launch IDs from built/configured metadata. Use a Node version
-   verified with the current Expo/React Native baseline (local checks passed on
-   Node 24; inherited mobile workflows still select Node 20). Fix the Android
-   masked debug-build failure so a failed native check cannot report success.
+See [BUILDING.md](BUILDING.md) for exact variables, profiles, identities, commands,
+registration/provisioning and key recovery. See [IDENTIFIERS.md](IDENTIFIERS.md)
+for current resolution versus historical bootstrap findings.
 
-The [Expo variants guide](https://docs.expo.dev/build-reference/variants/) supports
-separate package/bundle identities per build environment. The
-[EAS extension guide](https://docs.expo.dev/build-reference/app-extensions/) explains
-credential discovery before native generation. Use the installed plugin output as
-the source of truth for extension metadata, avoiding duplicate target declarations.
+- EAS CLI reports **Not logged in**. No owned owner/project UUID has been created
+  or invented. Set actual values after deliberately creating/linking our project.
+- No Apple account/team/membership is verified; team variables were unset. Five
+  explicit App IDs and one App Group per variant need owned provisioning.
+- No permanent Android release key exists from this work. Supply and securely back
+  up an owned key before distributing; signed native execution remains untested.
+- The upstream App Store Connect submission destination was removed from
+  `eas.json`, including the inherited profile. There is no automatic submission
+  configuration. A future submission needs an explicitly reviewed owned store ID.
+- `APP_CONFIG_ONLY=1` is an explicit unsigned inspection mode, not a production
+  fallback. It omits absent EAS metadata, is rejected by EAS builders, and blocks
+  Android release tasks. Apple use in this mode is limited to unsigned simulators.
 
-## Proposed small commits
+## Validation and remaining release acceptance
 
-| Order | Suggested commit                                                 | Concrete scope and validation                                                                                                                                                                                                  |
-| ----- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 1     | `chore(build): centralize configurable application identity`     | Extend CommonJS resolver, keep current default-output fixtures, add custom/invalid variant tests, make `app.config.ts` consume it. No native source renames.                                                                   |
-| 2     | `chore(build): derive Apple target identities and shared groups` | Update three target config functions plus Live Activity config; contract tests for host/extension IDs, team/group consistency and generated metadata.                                                                          |
-| 3     | `feat(auth): support configured mobile callback schemes`         | Shared callback configuration/validation, server trusted origins and both web-return paths, mobile auth and linking. Tests for allowed/rejected callbacks, token fragments, upstream compatibility, session and API-key flows. |
-| 4     | `chore(mobile): configure widget and watch deep links`           | Read generated scheme metadata in Swift/Kotlin/TS link producers; update launcher config and tests. Preserve protocol keys and health dedupe markers.                                                                          |
-| 5     | `fix(build): require explicit Android release signing`           | Reproducible release Gradle wiring, missing-credential rejection, debug unchanged, certificate inspection. Native config/plugin tests plus generated Gradle assertions.                                                        |
-| 6     | `chore(build): add fork EAS profiles and native validation`      | Our project/profile values, no automatic submission, build-number policy, compile workflows and validated toolchains. Configure repository secrets/settings outside git; enable only reviewed automation.                      |
-| 7     | `docs(build): document owned builds and signing recovery`        | Exact setup/build commands, non-secret identity matrix, credential custody/rotation and restore procedure, native/device results, docs/fork updates.                                                                           |
+[BUILD_VALIDATION.md](BUILD_VALIDATION.md) records exact checks and limitations.
+The full mobile/server/frontend suites and package validation pass; repeated clean
+prebuilds agree across all three owned variants, with upstream defaults checked.
+The eight existing Expo patch warnings did not block this work and remain for a
+separate dependency change. No dependency or lockfile alignment was mixed in.
 
-Each implementation commit includes tests for its behavior. Keep unrelated Expo
-dependency updates and any database-test concurrency fix in separate upstream-friendly
-commits if they are required to make the native builds work. Do not fold broad
-dependency upgrades into identity parameterization.
+Before the first distributed build, verify Android compilation/signing, Xcode
+compilation, signed entitlements/profile/build-number agreement, physical phone and
+paired Watch behavior, HealthKit/Health Connect grants/dedupe, and auth browser
+returns. Account/credential setup and those checks do not authorize store submission.
 
-## Acceptance checks
+## Differences from the bootstrap proposal
 
-- Run mobile `pnpm run validate` and relevant config, auth, link, widget, Watch,
-  and health own-record-filter tests; run the full mobile CI suite for the cross-cutting
-  native config change. Validate/test server and web when callback auth changes,
-  and all consumers if a shared contract changes.
-- Check default upstream configuration, custom development, preview, and production;
-  inspect Expo public/prebuild output for IDs, schemes, groups, targets, and EAS
-  destination. Keep signing secrets out of any emitted public config.
-- Clean and repeated Android/iOS prebuilds must be reproducible. Native source
-  survives clean prebuild because it is outside generated projects. Keep both
-  root native patches applying correctly.
-- Android: JDK 17 plus the required SDK/NDK, `assembleDebug`, then a signed release
-  build. Use `apksigner verify --print-certs` and AAB signing inspection to prove the
-  expected certificate. Missing release credentials must fail. Install our APK
-  alongside upstream; exercise auth, Health Connect grants/sync, deep links,
-  widget actions, notifications, and account switching.
-- Apple: use the existing macOS/Xcode simulator workflow for both app and Watch,
-  then EAS/Xcode signed device builds with our team. Inspect embedded provisioning
-  and entitlements for every target. Test pairing, pages/order, check-in, workout
-  start/finish/telemetry, HealthKit sync, widgets, Live Activities, and auth return
-  on an iPhone + Watch. Simulator success cannot prove these hardware paths.
-- Preserve `SparkyFitnessSessionId`; verify a locally recorded Watch workout is
-  not imported a second time, including when testing side-by-side app identities.
-- Record tested OS/toolchain/identifiers without exposing secrets. No production
-  signing or store publication is claimed until these checks actually run.
+- Production-root inputs derive variant suffixes centrally instead of repeating
+  independent app/extension IDs in each profile.
+- Added explicit account-free configuration mode so prebuild tests never invent
+  a project UUID or contact upstream destinations.
+- Reused `MYAPP_RELEASE_*` and EAS's existing signing injection rather than adding
+  another secret interface.
+- Used a validated scheme selector with server-built callback URLs. No client
+  return URL is added to trusted origins.
+- Isolated workflow safety/tool-runtime fixes in a CI commit. Deprecated action
+  runners found by actionlint were updated; compatible Node 20 mobile workflows
+  were not changed merely for alignment. New owned profiles/validation use Node 24.
+- Added a small follow-up for local dotenv loading so profile commands and native
+  validation use the same ignored build settings as Expo.
+- Kept dependency alignment deferred because prebuild/validation succeeded.
+- Recorded deployment policy without replacing upstream Compose defaults.
 
-New build variables need updates to the existing env template and environment
-documentation; audit EnvGenerator, Compose, and Helm consumers for applicability
-under the root guide. Build-only signing credentials must not be passed to running
-server containers. Document that separation in the build guide.
+The implementation follows the planned semantic commit boundaries. No upstream
+history was rewritten. Use [UPSTREAM.md](UPSTREAM.md) when merging future changes,
+and rerun the native identity matrix after changes to Expo plugins or templates.

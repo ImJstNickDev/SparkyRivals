@@ -1,5 +1,9 @@
 # Upstream baseline validation
 
+This is the historical, untouched-upstream record. Current owned-build evidence is
+in [BUILD_VALIDATION.md](BUILD_VALIDATION.md); milestone 1 fixes the release-signing
+gap described below while retaining the documented native toolchain limits.
+
 Audited upstream commit: `f8df11ac3b019d022d3fa4a1b39c1b2f8576d361`.
 Baseline checks ran on 2026-10-02 (Europe/Rome); documentation checks and repeated
 server/frontend validation completed on 2026-10-03.

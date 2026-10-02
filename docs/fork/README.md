@@ -28,14 +28,21 @@ Upstream product names, package paths, credits, and release history remain in pl
 
 ## Current phase
 
-Milestone 0 is bootstrap, architecture and build-identity audit, documentation, and
-baseline validation. No Challenge feature, Wear OS application, or broad rebrand
-has been implemented. The next milestone is [Own the Build](OWN_THE_BUILD.md).
+Milestone 0 is complete. [Own the Build](OWN_THE_BUILD.md) implements generic owned
+identities, secure callback configuration, release signing guards and reproducible
+native generation. See [BUILDING.md](BUILDING.md) for actual configuration and
+[BUILD_VALIDATION.md](BUILD_VALIDATION.md) for evidence and untested boundaries.
+Accounts, permanent signing credentials and signed/device build acceptance remain
+manual setup. No Challenges, Wear OS app or broad rebrand has been implemented.
 
-GitHub Actions are **disabled in the fork's repository settings** as of bootstrap.
-Inherited workflows include upstream publishing destinations. Milestone 1 must
-separate validation from release automation before selectively enabling them.
-No release, store submission, deployment, or EAS build was started by this audit.
+GitHub Actions remain **disabled**. Inherited publishing/mutation jobs are now
+guarded off in forks; validation enablement is documented, not performed. No store
+submission, deployment, paid/cloud build, or upstream account operation occurred.
+
+Production will use a separate server checkout. Persistent state belongs in
+repository-root `dockerdata/` through host bind mounts; see the mandatory
+[deployment/storage policy](DEPLOYMENT.md). The laptop path is not a production
+storage contract.
 
 ## Product direction
 
@@ -61,7 +68,10 @@ product direction. See [ARCHITECTURE.md](ARCHITECTURE.md#future-client-experienc
 - [Identifier and signing inventory](IDENTIFIERS.md)
 - [Baseline validation and limitations](BASELINE.md)
 - [Milestone roadmap](ROADMAP.md)
-- [Own the Build implementation plan](OWN_THE_BUILD.md)
+- [Own the Build implementation status](OWN_THE_BUILD.md)
+- [Owned build guide and credential recovery](BUILDING.md)
+- [Milestone 1 validation](BUILD_VALIDATION.md)
+- [Production deployment/storage policy](DEPLOYMENT.md)
 
 Read the root and applicable package `AGENTS.md` before editing. The root guide has
 a small delimited fork section so agents working anywhere discover this area.
@@ -69,7 +79,7 @@ Upstream instructions remain authoritative for their package conventions. Upstre
 contribution approval rules apply when proposing work to upstream; this fork's
 milestones are authorized by its maintainer.
 
-These documents describe the pinned audit commit, not every future upstream
-version. Recheck source and update the assumptions after meaningful merges.
+Architecture and bootstrap baseline documents describe the pinned audit commit;
+owned build documents describe milestone 1. Recheck source and update the assumptions after meaningful merges.
 They are repository documentation: `docs/.vitepress/config.mts` builds `docs/src`,
 so `docs/fork` is deliberately outside the upstream documentation website.

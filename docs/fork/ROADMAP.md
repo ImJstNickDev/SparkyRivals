@@ -12,16 +12,20 @@ compatibility throughout.
 - Concrete [Own the Build plan](OWN_THE_BUILD.md).
 - Exit evidence: [BASELINE.md](BASELINE.md). No Challenges/Wear implementation.
 
-## 1. Own the Build — next
+## 1. Own the Build — implementation ready for review
 
-Parameterize identity through existing config, own EAS/Apple/Android destinations
-and signing, fix Android release-key wiring, and validate app/Watch builds. Preserve
-upstream defaults and internal names. Separate validation from publishing. Follow
-the proposed seven small commits and acceptance checks in [OWN_THE_BUILD.md](OWN_THE_BUILD.md).
+Implemented: central custom identity with isolated variants, derived Apple targets,
+secure native callback allowlisting, widget/Watch links, explicit release signing,
+build profiles/versioning, repeatable native metadata checks and guarded workflows.
+See [OWN_THE_BUILD.md](OWN_THE_BUILD.md) and [BUILD_VALIDATION.md](BUILD_VALIDATION.md).
 
-Exit: installable owned Android and iPhone/Apple Watch builds, working existing
-health sync/auth/widgets, and reproducible native generation. Any unavailable
-device/signing check remains explicitly open; unsigned generation is not completion.
+The maintainer's milestone 1 scope permits configuration completion before account
+setup. Code/configuration acceptance passes locally. **Distribution acceptance is
+still open:** obtain owned EAS/Apple accounts, register/provision App IDs/groups,
+establish permanent Android key custody, and validate native compiled/signed builds
+and physical health/auth/widgets/Watch behavior. No installable binary is claimed.
+See [BUILDING.md](BUILDING.md) for those steps. Later milestones require a new
+explicit request; this status does not authorize Challenges or Wear OS work.
 
 ## 2. Challenge backend
 

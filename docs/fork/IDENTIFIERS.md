@@ -1,5 +1,67 @@
 # Application identity and signing audit
 
+## Current milestone 1 status — 2026-10-03
+
+The implementation now resolves custom build identities centrally. The bootstrap
+inventory below is retained as a **historical** source/risk map; its “current”
+values and proposed actions describe the bootstrap SHA, not the implemented build.
+Use this section and [BUILDING.md](BUILDING.md) for current behavior.
+
+| Surface                      | Current resolution / status                                                                                                                               | Classification                                                |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Host identity                | `app.identifiers.js`: validated custom production roots, derived `.dev`/`.preview` bundles and scheme suffixes; upstream defaults/legacy exports retained | 1: configurable                                               |
+| Display name / slug          | `EXPO_APP_NAME`, `EXPO_APP_SLUG`; variant display suffixes; owned slug `sparkyrivals`                                                                     | 1                                                             |
+| Android package / iOS bundle | Separate generic root inputs; owned root `com.imjstnick.sparkyrivals`                                                                                     | 1; 4 for installed identity migration                         |
+| Phone WidgetKit              | `<phone>.widget`, native target `CalorieTracker`                                                                                                          | 1 derived; target name remains 3                              |
+| Expo widgets / Live Activity | `<phone>.ExpoWidgetsTarget`; custom override cannot redirect away from host                                                                               | 1 derived                                                     |
+| Watch / Watch widget         | `<phone>.watchkitapp` / `<phone>.watchkitapp.watch-widget`; companion plist points at phone                                                               | 1 derived                                                     |
+| App Groups                   | All five targets use `group.<phone>.shared`; overrides validated against resolved variant namespace                                                       | 1; 4 for persisted shared storage                             |
+| Apple Team                   | Existing `EXPO_DEV_APPLE_TEAM_ID` and `EXPO_PROD_APPLE_TEAM_ID`; preview uses production team; no default team                                            | 1; account setup pending                                      |
+| Primary/Watch schemes        | `EXPO_APP_SCHEME` and optional Watch root; injected into Swift metadata/Kotlin templates; JS reads Expo runtime config                                    | 1                                                             |
+| Expo dev-client scheme       | `exp+sparkyrivals` only in custom development; no generated dev-client scheme in custom preview/production                                                | 1 derived                                                     |
+| Native auth                  | Server `SPARKY_FITNESS_MOBILE_AUTH_SCHEMES` allowlist plus upstream scheme; server constructs fixed callback, validates selectors, preserves fragments    | 1; security contract 4                                        |
+| EAS owner/project            | `EXPO_OWNER`, `EXPO_EAS_PROJECT_ID` required for normal custom builds; upstream UUID rejected. Not authenticated, actual values pending                   | 1; account setup pending                                      |
+| Unsigned inspection          | Explicit `APP_CONFIG_ONLY=1`; missing EAS metadata omitted; EAS builders/Android release tasks reject it                                                  | 1; not a distribution mode                                    |
+| App Store Connect            | Upstream `6757314392` submission profile removed; no fork store destination configured                                                                    | Resolved hazard; owned listing/setup pending                  |
+| Android release signing      | Prebuild plugin consumes `MYAPP_RELEASE_*` Gradle props/env or final EAS-injected config; release cannot select debug fallback                            | 1; permanent key and native signed validation pending         |
+| Versions                     | `EXPO_BUILD_NUMBER` for local numbers; owned local Android release rejects default 1. Owned EAS profiles use remote auto-increment                        | 1; allocate/reconcile counters before distribution            |
+| Maps key                     | Existing build-only `GOOGLE_MAPS_ANDROID_API_KEY`; owned package/certificate restrictions still required if enabled                                       | 1; provider setup optional                                    |
+| Own health records           | Existing runtime `Application.applicationId` / HealthKit `currentAppSource().bundleIdentifier` retained; all owned variants regression-tested             | 1                                                             |
+| Watch workout marker         | `SparkyFitnessSessionId` retained in native writer and phone reader; marked Watch workouts remain excluded                                                | 4: preserved data contract                                    |
+| Internal namespaces / keys   | Kotlin packages, Swift targets/modules, widget kinds, Watch messages, local persistence keys, background task IDs and attribution retained                | 3 / 4: intentionally preserved                                |
+| CI                           | Publishing/mutation/notification jobs guarded to upstream repository; Android failure masking fixed, simulator IDs derived. Actions still disabled        | Resolved configuration hazards; deliberate enablement pending |
+
+### Owned identity and deep-link matrix
+
+| Variant           | Phone Android/iOS                    | Phone scheme           | Watch scheme                 | App Group                                         |
+| ----------------- | ------------------------------------ | ---------------------- | ---------------------------- | ------------------------------------------------- |
+| Development / dev | `com.imjstnick.sparkyrivals.dev`     | `sparkyrivals-dev`     | `sparkyrivals-dev-watch`     | `group.com.imjstnick.sparkyrivals.dev.shared`     |
+| Preview           | `com.imjstnick.sparkyrivals.preview` | `sparkyrivals-preview` | `sparkyrivals-preview-watch` | `group.com.imjstnick.sparkyrivals.preview.shared` |
+| Production        | `com.imjstnick.sparkyrivals`         | `sparkyrivals`         | `sparkyrivals-watch`         | `group.com.imjstnick.sparkyrivals.shared`         |
+
+Each row has the four child bundle suffixes listed above. Upstream/default keeps
+`org.SparkyApps.SparkyFitnessMobile1.dev` for development and
+`com.SparkyApps.SparkyFitnessMobile` for preview/production, phone scheme
+`sparkyfitnessmobile`, Watch scheme `sparkyfitness-watch`, and original groups.
+
+### Signing/capabilities still requiring account or device acceptance
+
+Phone: HealthKit/background delivery, shared App Group, time-sensitive alerts,
+existing audio/fetch/processing modes and notifications (development intentionally
+removes APNs). Watch: HealthKit, shared group, workout-processing background mode.
+WidgetKit, ExpoWidgetsTarget and Watch widget each need their own App ID/profile
+and the same variant group; Live Activity support remains enabled. Generated APNs
+`development` is not proof of distribution provisioning.
+
+No Apple account/team/membership or device signing was verified. No Android
+permanent key was created. EAS CLI reported **Not logged in** and no project UUID
+was assigned. [BUILDING.md](BUILDING.md) gives registration, provisioning,
+key recovery, versioning, scheme/server setup and safe workflow enablement steps.
+[BUILD_VALIDATION.md](BUILD_VALIDATION.md) distinguishes prebuild/config evidence
+from unrun native compilation and hardware behavior.
+
+## Historical bootstrap inventory
+
 Baseline: `f8df11ac3b019d022d3fa4a1b39c1b2f8576d361`, inspected 2026-10-02.
 No identifiers, credentials, native source, or signing code changed in bootstrap.
 Paths in this document are relative to `SparkyFitnessMobile/` unless prefixed with
@@ -17,7 +79,7 @@ An item in class 1 or 2 can also have an upgrade/signing consequence; the conseq
 is recorded explicitly. New fork identities will not update installations signed
 as upstream applications. Register our identities before distributing binaries.
 
-## Build identity inventory
+### Build identity inventory
 
 | Item                                       | Current value and source                                                                                                                                                                  | Class | Consequence / milestone 1 action                                                                                                                                      |
 | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -44,7 +106,7 @@ directly. Extend this existing boundary instead of adding another identity regis
 The target functions write ignored `Info.plist` and entitlement files during config
 evaluation/prebuild. Never treat generated output as the durable source of identity.
 
-## Deep links and native source contracts
+### Deep links and native source contracts
 
 | Contract                             | Locations / current value                                                                                                                                                    | Class | Action / risk                                                                                                                                                                                               |
 | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -66,7 +128,7 @@ evaluation/prebuild. Never treat generated output as the durable source of ident
 | Local persistence                    | SecureStore server credentials, AsyncStorage `serverConfigs`, `@SparkyFitness/app-preferences`, Watch snapshots and complication storage keys                                | 4     | Changing application identity/group affects storage reachability. Do not casually rename keys or imply local data migration happens automatically.                                                          |
 | Upstream fixtures / internal classes | e.g. Jest `com.sparkyfitness.mobile`, `WatchConnectivityModule`, `CalorieWidgetBridge`, Swift app/target class names                                                         | 3     | Fixtures must not accidentally drive production config; internal names do not need a broad rebrand.                                                                                                         |
 
-## Capabilities and platform requirements
+### Capabilities and platform requirements
 
 | Capability                                            | Verified declaration / generated output                                                                                                                                     | Class | Signing/build implication                                                                                                                                                                        |
 | ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -87,7 +149,7 @@ No private signing keys, provisioning profiles, release keystores, or credential
 JSON were found in the tracked baseline. Actual certificates and account ownership
 cannot be inferred from bundle strings; they were not fetched from remote services.
 
-## EAS and CI dependencies
+### EAS and CI dependencies
 
 `eas.json` defines development (development client/internal distribution), preview
 (internal distribution using production identity), and production (Android AAB,
@@ -117,7 +179,7 @@ should enable validation only after reviewing inherited triggers and setting
 publication guards. Do not supply upstream credentials, mass-rename namespaces,
 or turn on `--auto-submit` as part of initial signing validation.
 
-## Future Wear identity
+### Future Wear identity
 
 For a phone-relayed Wear OS application, Google Data Layer requires the phone and
 Watch to share application ID and signing certificate. Reserve that relationship
