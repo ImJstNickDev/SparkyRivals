@@ -1,6 +1,6 @@
 # AGENTS.md
 
-*Last updated: 2026-09-29*
+*Last updated: 2026-10-03*
 
 This is the repo-root monorepo guide for SparkyFitness. Use it to choose the right package, understand shared repo-level rules, and find the next guide to read.
 
@@ -157,3 +157,32 @@ pnpm dev
 pnpm run build
 ```
 
+<!-- SPARKYRIVALS FORK GUIDANCE BEGIN -->
+
+## SparkyRivals fork guidance
+
+This is a non-commercial derivative of `CodeWithCJ/SparkyFitness`. Start fork work
+with `docs/fork/README.md`, then the relevant audit and roadmap documents there.
+Keep the upstream license, attribution, history, functionality, and package guides.
+
+- Minimize future upstream merge conflicts: prefer additive modules, routes,
+  components, tables, and configuration; avoid unrelated refactors or formatting.
+- Never remove upstream functionality merely because this fork does not use it.
+- Existing SparkyFitness systems own canonical health/activity data. Do not add
+  a second ingestion pipeline or copy health records into a competing store.
+- Challenge scoring, reconciliation, and winners belong on the server. Mobile
+  and watch clients consume server state; locally displayed progress is not an
+  authoritative result.
+- Read `docs/fork/IDENTIFIERS.md` before changing native identity, signing, deep
+  links, or health writeback markers. Do not submit builds to upstream accounts.
+- Run the relevant tests and validation for every changed package; validate
+  shared contracts through all affected consumers. Record baseline failures and
+  platform limitations rather than claiming unrun checks passed.
+- Update `docs/fork/` when architecture, build identity, or upstream integration
+  assumptions change. Keep proposals distinct from implemented behavior.
+- Bootstrap contains documentation only. Challenges and Wear OS begin only in
+  their explicitly requested milestones; follow `docs/fork/ROADMAP.md`.
+
+This small root section makes fork guidance discoverable from every package
+without copying or replacing upstream instructions.
+<!-- SPARKYRIVALS FORK GUIDANCE END -->
