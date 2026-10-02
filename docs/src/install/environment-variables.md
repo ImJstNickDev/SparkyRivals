@@ -83,6 +83,16 @@ Always written by the generator. These have working defaults, but the timezone i
 - **`SPARKY_FITNESS_SERVER_PORT`**: Port the backend listens on inside its container. Defaults to `3010`. Docker Compose passes the same value to the frontend, whose nginx proxies to it, so the two always move together.
 - **`SPARKY_FITNESS_SERVER_HOST`**: Hostname or IP the frontend's nginx proxies to. Defaults to the `sparkyfitness-server` service name. It is resolved dynamically from inside the frontend container via DNS. If pointing to a host defined in `/etc/hosts` (such as `host.docker.internal` on Linux, `localhost`, or `--link` aliases), the frontend entrypoint automatically detects it and resolves it to its IP address directly. nginx queries DNS directly and does not expand the `search` domains in `/etc/resolv.conf`, so a bare hostname that only resolves through a search path would not be reachable. The frontend entrypoint compensates: when the hostname contains no dot and does not resolve on its own, it is completed against each search domain in turn and the first that resolves is used (on Kubernetes, `sparkyfitness-server` becomes `sparkyfitness-server.<namespace>.svc.cluster.local`). Supplying the full in-cluster service FQDN yourself remains the most explicit option and skips that lookup entirely.
 - **`SPARKY_FITNESS_EXTRA_TRUSTED_ORIGINS`**: Comma-separated additional origins Better Auth should trust. Leave blank unless you reach the app on more than one URL.
+- **`SPARKY_FITNESS_MOBILE_AUTH_SCHEMES`**: Optional comma-separated native schemes
+  owned by your mobile applications, for example
+  `sparkyrivals,sparkyrivals-dev,sparkyrivals-preview`. The upstream
+  `sparkyfitnessmobile` scheme always remains supported. Supply scheme names only,
+  without `://`, paths, wildcards, query strings, or fragments. Malformed/reserved
+  schemes fail startup. The server constructs `<scheme>://oauth-callback` itself;
+  browser bridge requests may select only one configured scheme using `app_scheme`.
+  Session tokens remain in URL fragments; passkey registration tickets remain
+  single-use and fragment-carried. This is server runtime configuration and is
+  forwarded by Compose/Helm (`config.mobileAuthSchemes`). Restart after changes.
 - **`BETTER_AUTH_URL`**: Overrides the base URL Better Auth builds callback links from. Only needed when it cannot be derived from `SPARKY_FITNESS_FRONTEND_URL`.
 - **`SPARKY_FITNESS_DISABLE_SCHEDULED_JOBS`**: Set to `true` on every instance except one when [running multiple instances](./multiple-instances.md#run-scheduled-jobs-on-one-instance), so a single instance runs the scheduled jobs. Set it on each instance's own environment, not in a shared `.env` file, or no instance will run them. Leave it unset on a single-container install.
 

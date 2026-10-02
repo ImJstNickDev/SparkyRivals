@@ -234,8 +234,7 @@
           // Success! Redirect back to the mobile app callback with success status
           title.innerText = 'Success!';
           desc.innerText = 'Your passkey was registered. Redirecting back...';
-          window.location.href =
-            'sparkyfitnessmobile://oauth-callback?status=success';
+          window.location.href = '__MOBILE_CALLBACK_URL__?status=success';
         } catch (err) {
           console.error(err);
           spinner.style.display = 'none';

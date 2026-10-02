@@ -75,6 +75,7 @@ const realIpHeader = ref<
 const trustedProxyHops = ref("1");
 const allowPrivateNetworkCors = ref(false);
 const extraTrustedOrigins = ref("");
+const mobileAuthSchemes = ref("");
 
 // --- 4. Custom Host Storage Paths (Optional) ---
 const dbPath = ref("./postgresql");
@@ -367,6 +368,9 @@ TZ=${timezone.value}
 `;
     if (extraTrustedOrigins.value.trim()) {
       out += `SPARKY_FITNESS_EXTRA_TRUSTED_ORIGINS=${extraTrustedOrigins.value.trim()}\n`;
+    }
+    if (mobileAuthSchemes.value.trim()) {
+      out += `SPARKY_FITNESS_MOBILE_AUTH_SCHEMES=${mobileAuthSchemes.value.trim()}\n`;
     }
   }
 
@@ -1001,6 +1005,15 @@ onMounted(() => {
                 >Comma-separated additional origins Better Auth should trust.
                 Leave blank unless you reach the app on more than one URL.</span
               >
+            </div>
+            <div class="form-group">
+              <label>Owned Mobile Auth Schemes
+                <code class="var-badge">SPARKY_FITNESS_MOBILE_AUTH_SCHEMES</code>
+              </label>
+              <input v-model="mobileAuthSchemes" type="text" class="text-input"
+                placeholder="sparkyrivals,sparkyrivals-dev,sparkyrivals-preview" />
+              <span class="field-hint">Comma-separated native scheme names only.
+                Upstream mobile remains supported. Leave blank for upstream builds.</span>
             </div>
           </div>
         </div>

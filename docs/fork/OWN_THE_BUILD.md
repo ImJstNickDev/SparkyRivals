@@ -5,7 +5,10 @@ resolver and host Expo configuration now support explicit custom identities,
 derived development/preview variants, and rejection of upstream EAS destinations.
 All three Apple target configs now derive their bundle IDs and App Groups from
 the resolver and emit phone/Watch schemes in generated runtime metadata. Their
-native target names remain unchanged. Remaining steps below are pending until
+native target names remain unchanged. Mobile linking/auth and server browser
+returns now use configured schemes with an explicit server allowlist. The default
+upstream callback, API-key/session paths, and token-fragment behavior are retained.
+Remaining steps below are pending until
 their implementation and validation land.
 This milestone follows the
 [identifier inventory](IDENTIFIERS.md) at upstream

@@ -237,6 +237,7 @@ npx expo prebuild --clean
 - `OnboardingScreen` handles first-run setup, session sign-in, API keys, MFA, theme, external food source defaults, and finish-without-connection.
 - `ServerSettingsScreen` handles server list management, active server switching, connection tests, web dashboard launch, and `ServerConfigModal`.
 - `useAuth`, `ReauthModal`, `ServerConfigModal`, `authService.ts`, and `MfaForm` coordinate auth recovery, MFA, session expiry, and API-key fallback.
+- `utils/appLinks.ts` reads the configured native scheme. Custom browser auth selects that scheme through `app_scheme`; the server must explicitly allow it via `SPARKY_FITNESS_MOBILE_AUTH_SCHEMES`. Keep session tokens and registration tickets in URL fragments.
 - Production rejects HTTP server URLs. Preserve HTTPS guards in onboarding, settings, raw fetch paths, and health sync.
 - Proxy headers support reverse-proxy auth. They must be injected before auth headers in `apiClient.ts` and raw fetch clients.
 - During login before a config is saved, `authService` manages pending proxy headers via `setPendingProxyHeaders()` / `clearPendingProxyHeaders()`.

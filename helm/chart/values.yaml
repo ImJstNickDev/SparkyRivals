@@ -56,6 +56,8 @@ config:
   # For local testin and port forwarding, you can use the below commented value.
   # extraTrustedOrigins: "http://localhost:3004"
   extraTrustedOrigins: ""
+  # -- Additional owned native mobile auth schemes, comma-separated; upstream remains supported
+  mobileAuthSchemes: ""
 
   # -- Force email/password login to be enabled (fail-safe against OIDC lockout)
   forceEmailLogin: true

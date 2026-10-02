@@ -103,17 +103,23 @@ function makeRes() {
   return res;
 }
 
-describe('web-login static pages', () => {
-  it('GET /web-login/passkey serves the passkey login page', () => {
+describe('web-login pages', () => {
+  it('GET /web-login/passkey serves the passkey login page', async () => {
     const res = makeRes();
-    getHandler('/web-login/passkey')({}, res);
-    expect(res.sendFileArg).toMatch(/templates[\\/]passkey-login\.html$/);
+    await getHandler('/web-login/passkey')({ query: {} }, res);
+    expect(res.typeArg).toBe('html');
+    expect(res.sendBody).toContain('/api/auth/web-login/callback');
+    expect(res.sendBody).not.toContain('__MOBILE_LOGIN_CALLBACK__');
   });
 
-  it('GET /web-login/register-passkey serves the passkey register page', () => {
+  it('GET /web-login/register-passkey serves the passkey register page', async () => {
     const res = makeRes();
-    getHandler('/web-login/register-passkey')({}, res);
-    expect(res.sendFileArg).toMatch(/templates[\\/]passkey-register\.html$/);
+    await getHandler('/web-login/register-passkey')({ query: {} }, res);
+    expect(res.typeArg).toBe('html');
+    expect(res.sendBody).toContain(
+      'sparkyfitnessmobile://oauth-callback?status=success'
+    );
+    expect(res.sendBody).not.toContain('__MOBILE_CALLBACK_URL__');
   });
 
   it('serves the self-hosted @simplewebauthn bundle with a JS content type', () => {
@@ -130,7 +136,7 @@ describe('GET /web-login/callback', () => {
   it('returns 400 when there is no active session', async () => {
     getSessionMock.mockResolvedValue(null);
     const res = makeRes();
-    await getHandler('/web-login/callback')({ headers: {} }, res);
+    await getHandler('/web-login/callback')({ headers: {}, query: {} }, res);
     expect(res.statusCode).toBe(400);
     expect(getSessionMock).toHaveBeenCalledOnce();
   });
@@ -141,7 +147,7 @@ describe('GET /web-login/callback', () => {
       user: { email: 'a@b.com', role: 'admin' },
     });
     const res = makeRes();
-    await getHandler('/web-login/callback')({ headers: {} }, res);
+    await getHandler('/web-login/callback')({ headers: {}, query: {} }, res);
 
     expect(res.redirectArg).toBeTruthy();
     // Security: the raw token must ride in the fragment, not the query string,
@@ -156,7 +162,7 @@ describe('GET /web-login/callback', () => {
   it('returns 500 when session lookup throws', async () => {
     getSessionMock.mockRejectedValue(new Error('boom'));
     const res = makeRes();
-    await getHandler('/web-login/callback')({ headers: {} }, res);
+    await getHandler('/web-login/callback')({ headers: {}, query: {} }, res);
     expect(res.statusCode).toBe(500);
   });
 });

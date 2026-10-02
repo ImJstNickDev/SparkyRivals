@@ -173,7 +173,7 @@
           // Success! Redirect to the cookie callback to return session to the app
           title.innerText = 'Success!';
           desc.innerText = 'Redirecting back to the app...';
-          window.location.href = '/api/auth/web-login/callback';
+          window.location.href = '__MOBILE_LOGIN_CALLBACK__';
         } catch (err) {
           console.error(err);
           spinner.style.display = 'none';

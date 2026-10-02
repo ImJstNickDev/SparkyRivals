@@ -85,6 +85,46 @@ describe('OIDC origins across server instances', () => {
     vi.unstubAllEnvs();
   });
 
+  it('includes configured native origins while preserving upstream and web origins', async () => {
+    vi.stubEnv(
+      'SPARKY_FITNESS_MOBILE_AUTH_SCHEMES',
+      'sparkyrivals,sparkyrivals-preview'
+    );
+    const replica = await createReplica();
+    const origins = await readOrigins(replica);
+    expect(origins).toEqual(
+      expect.arrayContaining([
+        'sparkyfitnessmobile://',
+        'sparkyrivals://',
+        'sparkyrivals-preview://',
+        'https://sparky.example.test',
+        'https://extra.example.test',
+      ])
+    );
+    expect(origins).not.toContain('attacker://');
+    const context = await replica.auth.$context;
+    expect(
+      context.isTrustedOrigin('sparkyfitnessmobile://oauth-callback')
+    ).toBe(true);
+    expect(
+      context.isTrustedOrigin('sparkyrivals-preview://oauth-callback')
+    ).toBe(true);
+    expect(context.isTrustedOrigin('attacker://oauth-callback')).toBe(false);
+    expect(context.isTrustedOrigin('https://attacker.example/callback')).toBe(
+      false
+    );
+  });
+
+  it('fails auth initialization on malformed native scheme configuration', async () => {
+    vi.stubEnv(
+      'SPARKY_FITNESS_MOBILE_AUTH_SCHEMES',
+      'sparkyrivals,https://attacker.example'
+    );
+    await expect(createReplica()).rejects.toThrow(
+      'SPARKY_FITNESS_MOBILE_AUTH_SCHEMES'
+    );
+  });
+
   it('starts SSO on another instance after a provider address changes', async () => {
     const first = await createReplica();
     const second = await createReplica();
