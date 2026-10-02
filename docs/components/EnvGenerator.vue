@@ -565,6 +565,11 @@ onMounted(() => {
 
 <template>
   <div class="env-generator-container">
+    <p>
+      This generator configures server deployment. Mobile identity and signing
+      use a separate build environment; see
+      <a :href="withBase('/install/environment-variables#custom-mobile-identity-mobile-build')">mobile build variables</a>.
+    </p>
     <div class="security-badge">
       <span class="icon">🔒</span>
       <div>

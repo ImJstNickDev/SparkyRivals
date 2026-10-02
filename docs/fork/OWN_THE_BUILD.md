@@ -1,6 +1,10 @@
 # Milestone 1: Own the Build
 
-This is an implementation plan, not a completed milestone. It follows the
+Implementation is in progress on `milestone/own-the-build`. The central identity
+resolver and host Expo configuration now support explicit custom identities,
+derived development/preview variants, and rejection of upstream EAS destinations.
+Remaining steps below are pending until their implementation and validation land.
+This milestone follows the
 [identifier inventory](IDENTIFIERS.md) at upstream
 `f8df11ac3b019d022d3fa4a1b39c1b2f8576d361`.
 

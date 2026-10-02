@@ -217,6 +217,38 @@ Configures code signing, bundle identifiers, and shared App Groups when building
 
 - **`GOOGLE_MAPS_ANDROID_API_KEY`** (optional): Google Maps key used to draw cardio routes over a map on Android. Without it, Android shows the route as a plain line; iOS always uses Apple Maps and needs no key. The app only makes plain Maps SDK for Android loads (no map ID), which Google does not charge for, but the key's Google Cloud project still needs billing enabled. Restrict the key to the app's package name and signing certificates, and pass it to the build (for example as an EAS secret) rather than committing it.
 
+### Custom mobile identity `[Mobile Build]`
+
+`SparkyFitnessMobile/app.identifiers.js` is the shared resolver for the phone and
+Apple targets. `APP_IDENTITY` defaults to `upstream`; set it to `custom` for an
+owned derivative. `APP_VARIANT` accepts `development`/`dev`, `preview`, or
+`production`; unknown values fail.
+
+Custom mode requires production-root values in `EXPO_APP_NAME`, `EXPO_APP_SLUG`,
+`EXPO_ANDROID_PACKAGE`, `EXPO_IOS_BUNDLE_IDENTIFIER`, and `EXPO_APP_SCHEME`.
+Development/preview automatically append `.dev`/`.preview` to package/bundle,
+`-dev`/`-preview` to the scheme, and ` Dev`/` Preview` to the name. The slug stays
+stable across variants. Do not pre-suffix these inputs.
+
+The Watch scheme defaults to `<resolved-phone-scheme>-watch`. Optional
+`EXPO_WATCH_SCHEME` supplies a base Watch scheme; variant suffixes are inserted
+before its `-watch` ending. App Groups default to `group.<resolved-bundle>.shared`;
+`IOS_APP_GROUP_DEV`, `IOS_APP_GROUP_PREVIEW`, and `IOS_APP_GROUP_PROD` may override
+their own variant but must retain that variant's bundle prefix in custom mode.
+Existing Apple team variables still apply; preview uses the production team.
+Custom widget/Watch bundle IDs derive from the host. The legacy
+`WIDGET_BUNDLE_IDENTIFIER` override remains available for upstream builds.
+
+`EXPO_OWNER` and `EXPO_EAS_PROJECT_ID` must identify an actual owned Expo account
+and project. Custom builds reject the upstream project UUID. For local unsigned
+configuration inspection only, `APP_CONFIG_ONLY=1` permits missing EAS linkage
+without substituting a project. It is rejected on an EAS builder.
+
+These variables belong to the mobile build environment. They are optional for
+the server, excluded from the deployment EnvGenerator, and are not forwarded by
+Compose or Helm. Mobile signing credentials likewise never belong in running
+server containers; `docker/.env.simple.example` needs no mobile-only settings.
+
 ---
 
 ## 🔒 Docker Secrets & File-Based Configuration (`*_FILE`)
