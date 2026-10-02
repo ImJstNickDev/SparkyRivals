@@ -1,5 +1,7 @@
 import { execFileSync, spawnSync } from 'child_process';
 import path from 'path';
+import fs from 'fs';
+import os from 'os';
 import profiles from '../../eas.json';
 import { resolveAppIdentity } from '../../app.identifiers';
 import { configureReleaseSigning } from '../../plugins/withReleaseSigning';
@@ -19,7 +21,12 @@ it.each(['development', 'preview', 'production'])(
       ],
       {
         cwd: root,
-        env: { ...process.env, APP_CONFIG_ONLY: '1', EXPO_BUILD_NUMBER: '100' },
+        env: {
+          PATH: process.env.PATH,
+          EXPO_NO_DOTENV: '1',
+          APP_CONFIG_ONLY: '1',
+          EXPO_BUILD_NUMBER: '100',
+        },
         encoding: 'utf8',
       }
     );
@@ -42,7 +49,11 @@ it('requires real ownership for ordinary derivative configuration', () => {
       '-e',
       'require("./app.identifiers").resolveAppIdentity()',
     ],
-    { cwd: root, env: { PATH: process.env.PATH }, encoding: 'utf8' }
+    {
+      cwd: root,
+      env: { PATH: process.env.PATH, EXPO_NO_DOTENV: '1' },
+      encoding: 'utf8',
+    }
   );
   expect(result.status).not.toBe(0);
   expect(result.stderr).toContain('EXPO_EAS_PROJECT_ID');
@@ -72,4 +83,50 @@ it('guards local owned releases against the default versionCode', () => {
   expect(result).toContain(
     "if (true && System.getenv('EAS_BUILD') != 'true' && android.defaultConfig.versionCode <= 1)"
   );
+});
+
+it('loads ignored local build settings without overriding explicit process values', () => {
+  const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'build-profile-env-'));
+  try {
+    fs.mkdirSync(path.join(temp, 'scripts'));
+    for (const file of [
+      'scripts/with-build-profile.mjs',
+      'app.identifiers.js',
+      'eas.json',
+    ]) {
+      fs.copyFileSync(path.join(root, file), path.join(temp, file));
+    }
+    fs.symlinkSync(
+      path.join(root, 'node_modules'),
+      path.join(temp, 'node_modules')
+    );
+    fs.writeFileSync(
+      path.join(temp, '.env.local'),
+      'EXPO_BUILD_NUMBER=123\nAPP_CONFIG_ONLY=1\n'
+    );
+    for (const override of [undefined, '456']) {
+      const output = execFileSync(
+        process.execPath,
+        [
+          'scripts/with-build-profile.mjs',
+          'sparkyrivals-preview',
+          process.execPath,
+          '-e',
+          'console.log(require("./app.identifiers").resolveAppIdentity().buildNumber)',
+        ],
+        {
+          cwd: temp,
+          encoding: 'utf8',
+          env: {
+            PATH: process.env.PATH,
+            NODE_ENV: 'development',
+            ...(override ? { EXPO_BUILD_NUMBER: override } : {}),
+          },
+        }
+      );
+      expect(output.trim()).toBe(override || '123');
+    }
+  } finally {
+    fs.rmSync(temp, { recursive: true, force: true });
+  }
 });

@@ -1,8 +1,12 @@
 import { readFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
+import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
+const require = createRequire(import.meta.url);
+const expoRequire = createRequire(require.resolve('expo/config-plugins'));
+expoRequire('@expo/env').load(root, { silent: true });
 const profiles = JSON.parse(
   readFileSync(new URL('../eas.json', import.meta.url))
 ).build;

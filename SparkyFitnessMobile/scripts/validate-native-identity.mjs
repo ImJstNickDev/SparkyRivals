@@ -14,6 +14,7 @@ const plist = expoRequire('@expo/plist').default;
 const xcode = expoRequire('xcode');
 const { parseStringPromise } = expoRequire('xml2js');
 const root = fileURLToPath(new URL('../', import.meta.url));
+expoRequire('@expo/env').load(root, { silent: true });
 const id = identifiers.resolveAppIdentity();
 const args = process.argv.slice(2);
 const argument = (name) =>
