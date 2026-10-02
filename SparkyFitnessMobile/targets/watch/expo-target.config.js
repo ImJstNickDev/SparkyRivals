@@ -1,8 +1,4 @@
-const {
-  getIosAppGroup,
-  isDevVariant,
-  DEV_BUNDLE_IDENTIFIER,
-} = require('../../app.identifiers.js');
+const { resolveAppIdentity } = require('../../app.identifiers.js');
 const fs = require('fs');
 const path = require('path');
 
@@ -14,13 +10,6 @@ const escapePlistString = (value) =>
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&apos;');
 
-// URL scheme complications use to open this app on a specific page. Must stay
-// in step with `WatchDeepLink.scheme` (targets/watch/WatchDeepLink.swift) and
-// `ComplicationLink.scheme` (targets/watch-widget/ComplicationLinks.swift) —
-// three copies, because a JS config and two separately-compiled Swift targets
-// have no way to share a constant.
-const WATCH_URL_SCHEME = 'sparkyfitness-watch';
-
 // Mirrors targets/widget/expo-target.config.js's syncInfoPlist: makes the app
 // group readable at Swift runtime via Bundle.main, since declaring it in
 // `entitlements` below only wires up code-signing, not an Info.plist key.
@@ -29,7 +18,7 @@ const WATCH_URL_SCHEME = 'sparkyfitness-watch';
 // GENERATE_INFOPLIST_FILE = YES and INFOPLIST_FILE pointing at this file, so
 // Xcode merges its generated keys on top of what's written here rather than
 // replacing it.
-const syncInfoPlist = (appGroup, bundleIdentifier) => {
+const syncInfoPlist = (appGroup, bundleIdentifier, watchScheme) => {
   const plistPath = path.join(__dirname, 'Info.plist');
   fs.writeFileSync(
     plistPath,
@@ -39,6 +28,8 @@ const syncInfoPlist = (appGroup, bundleIdentifier) => {
   <dict>
     <key>APP_GROUP_IDENTIFIER</key>
     <string>${escapePlistString(appGroup)}</string>
+    <key>WATCH_URL_SCHEME</key>
+    <string>${escapePlistString(watchScheme)}</string>
     <key>CFBundleURLTypes</key>
     <array>
       <dict>
@@ -46,7 +37,7 @@ const syncInfoPlist = (appGroup, bundleIdentifier) => {
         <string>${escapePlistString(bundleIdentifier)}</string>
         <key>CFBundleURLSchemes</key>
         <array>
-          <string>${escapePlistString(WATCH_URL_SCHEME)}</string>
+          <string>${escapePlistString(watchScheme)}</string>
         </array>
       </dict>
     </array>
@@ -70,17 +61,16 @@ const syncInfoPlist = (appGroup, bundleIdentifier) => {
 
 /** @type {import('@bacons/apple-targets/app.plugin').ConfigFunction} */
 module.exports = (config) => {
-  const isDev = isDevVariant();
-  const appGroup = getIosAppGroup();
+  const identity = resolveAppIdentity();
+  const { appGroup } = identity;
   // Convention for watchOS companion apps: "<phone-bundle-id>.watchkitapp".
-  const bundleIdentifier = isDev
-    ? `${DEV_BUNDLE_IDENTIFIER}.watchkitapp`
-    : 'com.SparkyApps.SparkyFitnessMobile.watchkitapp';
-  syncInfoPlist(appGroup, bundleIdentifier);
+  const bundleIdentifier = identity.watchBundleIdentifier;
+  syncInfoPlist(appGroup, bundleIdentifier, identity.watchScheme);
 
   return {
     type: 'watch',
     name: 'SparkyFitnessWatch',
+    displayName: identity.mode === 'custom' ? identity.name : undefined,
     bundleIdentifier,
     // Reuses the phone app's adaptive icon for now — swap for a dedicated
     // Watch icon (has its own required sizes) once the design is settled.

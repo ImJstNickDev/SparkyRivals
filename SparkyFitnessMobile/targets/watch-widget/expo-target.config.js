@@ -1,8 +1,4 @@
-const {
-  getIosAppGroup,
-  isDevVariant,
-  DEV_BUNDLE_IDENTIFIER,
-} = require('../../app.identifiers.js');
+const { resolveAppIdentity } = require('../../app.identifiers.js');
 const fs = require('fs');
 const path = require('path');
 
@@ -20,7 +16,7 @@ const escapePlistString = (value) =>
 // declares the WidgetKit extension point up front. The apple-targets plugin
 // only writes an Info.plist here if one doesn't already exist, so writing it
 // ourselves at config-eval time is what makes it stick.
-const syncInfoPlist = (appGroup) => {
+const syncInfoPlist = (appGroup, watchScheme) => {
   const plistPath = path.join(__dirname, 'Info.plist');
   const escapedAppGroup = escapePlistString(appGroup);
   fs.writeFileSync(
@@ -31,6 +27,8 @@ const syncInfoPlist = (appGroup) => {
   <dict>
     <key>APP_GROUP_IDENTIFIER</key>
     <string>${escapedAppGroup}</string>
+    <key>WATCH_URL_SCHEME</key>
+    <string>${escapePlistString(watchScheme)}</string>
     <key>NSExtension</key>
     <dict>
       <key>NSExtensionPointIdentifier</key>
@@ -44,9 +42,9 @@ const syncInfoPlist = (appGroup) => {
 
 /** @type {import('@bacons/apple-targets/app.plugin').ConfigFunction} */
 module.exports = (config) => {
-  const isDev = isDevVariant();
-  const appGroup = getIosAppGroup();
-  syncInfoPlist(appGroup);
+  const identity = resolveAppIdentity();
+  const { appGroup } = identity;
+  syncInfoPlist(appGroup, identity.watchScheme);
 
   return {
     // First-class type for a watchOS complication extension — auto-includes
@@ -56,9 +54,7 @@ module.exports = (config) => {
     name: 'SparkyFitnessWatchWidget',
     // Convention: "<watch-app-bundle-id>.watch-widget", same relationship
     // targets/widget has to the phone app.
-    bundleIdentifier: isDev
-      ? `${DEV_BUNDLE_IDENTIFIER}.watchkitapp.watch-widget`
-      : 'com.SparkyApps.SparkyFitnessMobile.watchkitapp.watch-widget',
+    bundleIdentifier: identity.watchWidgetBundleIdentifier,
     // Deliberately no `icon` here. @bacons/apple-targets only special-cases
     // watchOS's single-1024/universal icon format for `type: 'watch'`; every
     // other type (including this one) falls through to its generic
