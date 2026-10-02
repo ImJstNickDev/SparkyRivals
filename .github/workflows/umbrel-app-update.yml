@@ -43,10 +43,7 @@ jobs:
     # of Publish Docker Images -- a manual re-run there rebuilds the current
     # branch under the latest release tag, not a new release, so only a real
     # release event should reach the App Store.
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      (github.event.workflow_run.conclusion == 'success' &&
-       github.event.workflow_run.event == 'release')
+    if: ${{ github.repository == 'CodeWithCJ/SparkyFitness' && (github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'release')) }}
     outputs:
       changed: ${{ steps.update.outputs.changed }}
       version: ${{ steps.update.outputs.version }}
@@ -98,7 +95,7 @@ jobs:
     name: Lint against the Umbrel App Store
     needs: update
     runs-on: ubuntu-latest
-    if: needs.update.outputs.changed == 'true'
+    if: ${{ github.repository == 'CodeWithCJ/SparkyFitness' && (needs.update.outputs.changed == 'true') }}
     # The real gate. A package that fails here never reaches the PR, and port
     # uniqueness can only be checked against the full store checkout -- which
     # means running a third party's install/lint scripts. Keep this job
@@ -127,6 +124,7 @@ jobs:
           npm run lint:apps -- sparkyfitness --check-images
 
   pr:
+    if: github.repository == 'CodeWithCJ/SparkyFitness'
     name: Open pull request
     needs: [update, lint]
     runs-on: ubuntu-latest

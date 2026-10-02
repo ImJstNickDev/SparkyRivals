@@ -12,6 +12,7 @@ on:
 
 jobs:
   attach_assets:
+    if: github.repository == 'CodeWithCJ/SparkyFitness'
     name: Attach Docker Compose, Env and Tarball
     runs-on: ubuntu-latest
     permissions:

@@ -15,6 +15,16 @@ name: Build iOS & watchOS
 
 on:
   workflow_dispatch:
+    inputs:
+      build_profile:
+        description: Local build identity profile (unsigned simulators only)
+        type: choice
+        default: development
+        options:
+          - development
+          - sparkyrivals-development
+          - sparkyrivals-preview
+          - sparkyrivals-production
 
 # A second push to the same branch makes the first build irrelevant.
 concurrency:
@@ -26,6 +36,9 @@ jobs:
     name: Compile iOS app and watchOS companion
     runs-on: macos-latest
     timeout-minutes: 60
+    env:
+      APP_CONFIG_ONLY: "1"
+      BUILD_PROFILE: ${{ inputs.build_profile }}
     permissions:
       contents: read
       actions: write
@@ -59,11 +72,17 @@ jobs:
 
       - name: Prebuild iOS project
         working-directory: SparkyFitnessMobile
-        run: npx expo prebuild --platform ios
+        run: |
+          pnpm build:profile "$BUILD_PROFILE" pnpm exec expo prebuild --clean --platform ios
+          pnpm build:profile "$BUILD_PROFILE" pnpm validate:native --platform ios
+          workspaces=(ios/*.xcworkspace)
+          test "${#workspaces[@]}" -eq 1
+          echo "NATIVE_WORKSPACE=${workspaces[0]}" >> "$GITHUB_ENV"
+          echo "PHONE_SCHEME=$(basename "${workspaces[0]}" .xcworkspace)" >> "$GITHUB_ENV"
 
       - name: List generated schemes
         working-directory: SparkyFitnessMobile
-        run: xcodebuild -list -workspace ios/SparkyFitness.xcworkspace
+        run: xcodebuild -list -workspace "$NATIVE_WORKSPACE"
 
       # Scheme name comes from `name` in targets/watch/expo-target.config.js.
       # Note it is NOT "SparkyFitness Watch" — there is a sibling
@@ -72,7 +91,7 @@ jobs:
         working-directory: SparkyFitnessMobile
         run: |
           xcodebuild \
-            -workspace ios/SparkyFitness.xcworkspace \
+            -workspace "$NATIVE_WORKSPACE" \
             -scheme 'SparkyFitnessWatch' \
             -configuration Debug \
             -destination 'generic/platform=watchOS Simulator' \
@@ -86,8 +105,8 @@ jobs:
         working-directory: SparkyFitnessMobile
         run: |
           xcodebuild \
-            -workspace ios/SparkyFitness.xcworkspace \
-            -scheme 'SparkyFitness' \
+            -workspace "$NATIVE_WORKSPACE" \
+            -scheme "$PHONE_SCHEME" \
             -configuration Debug \
             -destination 'generic/platform=iOS Simulator' \
             -derivedDataPath build \
@@ -108,7 +127,7 @@ jobs:
           set -euo pipefail
 
           APP="build/Build/Products/Debug-watchsimulator/SparkyFitnessWatch.app"
-          BUNDLE_ID="org.SparkyApps.SparkyFitnessMobile1.dev.watchkitapp"
+          BUNDLE_ID=$(/usr/libexec/PlistBuddy -c "Print CFBundleIdentifier" "$APP/Info.plist")
           mkdir -p screenshots
 
           UDID=$(xcrun simctl list devices available -j | python3 -c "

@@ -332,3 +332,13 @@ This document should be updated when:
 - Validation rules change
 
 Last updated: 2026-09-30
+
+
+## SparkyRivals fork safety
+
+Inherited publishing, deployment, translation sync, release/bot notifications and
+repository mutation jobs require `github.repository == 'CodeWithCJ/SparkyFitness'`.
+The fork keeps Actions disabled until the enablement procedure in
+[the owned build guide](../../docs/fork/BUILDING.md#github-actions) is reviewed.
+`native-config.yml` is read-only: it checks repeated unsigned prebuild metadata
+without EAS accounts, signing credentials, native compilation, or submission.

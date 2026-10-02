@@ -16,7 +16,7 @@ concurrency:
 jobs:
   notify-linked-issues:
     name: Notify Linked Issues
-    if: github.event.pull_request.merged == true
+    if: ${{ github.repository == 'CodeWithCJ/SparkyFitness' && (github.event.pull_request.merged == true) }}
     runs-on: ubuntu-latest
 
     steps:

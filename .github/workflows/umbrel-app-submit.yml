@@ -33,6 +33,7 @@ env:
 
 jobs:
   submit:
+    if: github.repository == 'CodeWithCJ/SparkyFitness'
     name: Submit to the Umbrel App Store
     runs-on: ubuntu-latest
     # Authenticates with UMBREL_APPS_TOKEN; needs no scope on this repository.

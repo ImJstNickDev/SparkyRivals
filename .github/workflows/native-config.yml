@@ -1,0 +1,40 @@
+name: Native identity configuration
+on:
+  pull_request:
+    paths:
+      - 'SparkyFitnessMobile/**'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/native-config.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  prebuild:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      matrix:
+        variant: [development, preview, production]
+    env:
+      APP_CONFIG_ONLY: '1'
+      EXPO_BUILD_NUMBER: '100'
+      CI: '1'
+      BUILD_PROFILE: sparkyrivals-${{ matrix.variant }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: node --test .github/scripts/workflow-safety.test.cjs
+      - name: Compare clean native metadata twice
+        working-directory: SparkyFitnessMobile
+        run: |
+          pnpm build:profile "$BUILD_PROFILE" pnpm exec expo prebuild --clean --platform all --no-install
+          pnpm build:profile "$BUILD_PROFILE" pnpm validate:native --snapshot "$RUNNER_TEMP/native.json"
+          pnpm build:profile "$BUILD_PROFILE" pnpm exec expo prebuild --clean --platform all --no-install
+          pnpm build:profile "$BUILD_PROFILE" pnpm validate:native --compare "$RUNNER_TEMP/native.json"

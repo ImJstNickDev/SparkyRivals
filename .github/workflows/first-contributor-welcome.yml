@@ -13,6 +13,7 @@ permissions:
 
 jobs:
   welcome:
+    if: github.repository == 'CodeWithCJ/SparkyFitness'
     name: Welcome First-Time Contributor
     runs-on: ubuntu-latest
 

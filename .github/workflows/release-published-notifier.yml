@@ -15,6 +15,7 @@ concurrency:
 
 jobs:
   notify-resolved-issues:
+    if: github.repository == 'CodeWithCJ/SparkyFitness'
     name: Notify Resolved Issues
     runs-on: ubuntu-latest
 

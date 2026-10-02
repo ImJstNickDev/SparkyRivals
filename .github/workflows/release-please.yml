@@ -35,6 +35,7 @@ concurrency:
 
 jobs:
   release-please:
+    if: github.repository == 'CodeWithCJ/SparkyFitness'
     name: Release PR / draft release
     runs-on: ubuntu-latest
     outputs:
@@ -90,7 +91,7 @@ jobs:
   draft-release-notes:
     name: Build draft release notes
     needs: release-please
-    if: ${{ needs.release-please.outputs.release_created == 'true' }}
+    if: ${{ github.repository == 'CodeWithCJ/SparkyFitness' && (needs.release-please.outputs.release_created == 'true') }}
     runs-on: ubuntu-latest
 
     steps:

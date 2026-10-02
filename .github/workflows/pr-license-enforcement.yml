@@ -23,6 +23,7 @@ concurrency:
 
 jobs:
   enforce:
+    if: github.repository == 'CodeWithCJ/SparkyFitness'
     name: Close PRs without a license agreement
     runs-on: ubuntu-latest
 

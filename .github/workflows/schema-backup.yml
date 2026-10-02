@@ -38,6 +38,7 @@ concurrency:
 
 jobs:
   regenerate:
+    if: github.repository == 'CodeWithCJ/SparkyFitness'
     name: Regenerate db_schema_backup.sql
     runs-on: ubuntu-latest
 
