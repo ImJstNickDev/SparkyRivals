@@ -53,7 +53,7 @@ function resolveAppIdentity(env = process.env) {
     : UPSTREAM_BUNDLE;
   const packagePattern = /^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$/;
   const bundlePattern = /^[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+$/;
-  const schemePattern = /^[a-z][a-z0-9+.-]*$/;
+  const schemePattern = /^[a-z][a-z0-9+.-]{1,54}$/;
   const androidPackage = custom
     ? required(env, 'EXPO_ANDROID_PACKAGE', packagePattern) + bundleSuffix
     : upstreamBundle;
@@ -161,12 +161,26 @@ function resolveAppIdentity(env = process.env) {
     }
   }
 
+  let buildNumber;
+  if (env.EXPO_BUILD_NUMBER !== undefined) {
+    if (
+      !/^[1-9][0-9]*$/.test(env.EXPO_BUILD_NUMBER) ||
+      Number(env.EXPO_BUILD_NUMBER) > 2100000000
+    ) {
+      throw new Error(
+        'EXPO_BUILD_NUMBER must be an integer from 1 to 2100000000'
+      );
+    }
+    buildNumber = Number(env.EXPO_BUILD_NUMBER);
+  }
+
   const watchBundleIdentifier = `${iosBundleIdentifier}.watchkitapp`;
   return {
     mode,
     variant,
     isDev,
     configOnly,
+    buildNumber,
     name,
     slug,
     scheme,

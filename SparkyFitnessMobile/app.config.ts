@@ -147,6 +147,7 @@ export default ({ config }: ConfigContext): Partial<ExpoConfig> => {
     ios: {
       bundleIdentifier: identity.iosBundleIdentifier,
       appleTeamId: identity.appleTeamId,
+      buildNumber: identity.buildNumber?.toString() ?? config.ios?.buildNumber,
       supportsTablet: false,
       infoPlist: {
         NSLocalNetworkUsageDescription:
@@ -185,6 +186,7 @@ export default ({ config }: ConfigContext): Partial<ExpoConfig> => {
     },
     android: {
       package: identity.androidPackage,
+      versionCode: identity.buildNumber ?? config.android?.versionCode,
       permissions: [
         ...androidPermissions,
         ...(isDev ? devAndroidPermissions : []),

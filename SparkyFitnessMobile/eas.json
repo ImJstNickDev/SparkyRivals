@@ -28,12 +28,52 @@
       "ios": {
         "resourceClass": "medium"
       }
-    }
-  },
-  "submit": {
-    "production": {
-      "ios": {
-        "ascAppId": "6757314392"
+    },
+    "sparkyrivals-base": {
+      "node": "24.20.0",
+      "autoIncrement": true,
+      "env": {
+        "APP_IDENTITY": "custom",
+        "EXPO_APP_NAME": "SparkyRivals",
+        "EXPO_APP_SLUG": "sparkyrivals",
+        "EXPO_ANDROID_PACKAGE": "com.imjstnick.sparkyrivals",
+        "EXPO_IOS_BUNDLE_IDENTIFIER": "com.imjstnick.sparkyrivals",
+        "EXPO_APP_SCHEME": "sparkyrivals",
+        "EXPO_WATCH_SCHEME": "sparkyrivals-watch"
+      }
+    },
+    "sparkyrivals-development": {
+      "extends": "sparkyrivals-base",
+      "environment": "development",
+      "env": {
+        "APP_VARIANT": "development"
+      },
+      "distribution": "internal",
+      "developmentClient": true,
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "sparkyrivals-preview": {
+      "extends": "sparkyrivals-base",
+      "environment": "preview",
+      "env": {
+        "APP_VARIANT": "preview"
+      },
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "sparkyrivals-production": {
+      "extends": "sparkyrivals-base",
+      "environment": "production",
+      "env": {
+        "APP_VARIANT": "production"
+      },
+      "distribution": "store",
+      "android": {
+        "buildType": "app-bundle"
       }
     }
   }

@@ -290,3 +290,14 @@ EAS can instead inject the owned project's signing credentials. Release tasks
 validate the final signing config and reject absent credentials or debug signing;
 local debug builds retain their normal debug certificate. `APP_CONFIG_ONLY=1`
 projects cannot run release tasks: regenerate with complete owned configuration.
+
+
+### Build numbers (build only)
+
+`EXPO_BUILD_NUMBER` sets Android `versionCode` and iOS `buildNumber` together.
+It must be an integer from 1 to 2100000000. Allocate a new monotonically increasing
+number for every locally distributed build; owned local/CI Android releases reject
+the default `versionCode` of 1. EAS profiles use remote version management and
+`autoIncrement: true`; seed/reconcile that counter before switching between local
+and EAS distribution. Configuration-only prebuilds may omit the number. This is
+build metadata and is not forwarded to any server container.

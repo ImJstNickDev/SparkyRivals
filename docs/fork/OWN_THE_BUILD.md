@@ -14,7 +14,11 @@ variant without changing source detection or the `SparkyFitnessSessionId` marker
 The prebuild signing plugin now selects `signingConfigs.release`, consumes the
 existing `MYAPP_RELEASE_*` interface, and rejects missing/debug credentials at
 release task execution. It also rejects release tasks from config-only projects.
-Remaining steps below are pending until
+Owned development/preview/production EAS profiles and local profile/native
+validation scripts are implemented. The inherited App Store submission destination
+is removed. Build numbers support explicit local allocation and remote EAS
+auto-increment. Account registration and signed native builds remain external
+setup steps. Remaining steps below are pending until
 their implementation and validation land.
 This milestone follows the
 [identifier inventory](IDENTIFIERS.md) at upstream

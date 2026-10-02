@@ -4,7 +4,8 @@ import { resolveAppIdentity } from '../app.identifiers';
 /** Durable wiring for local/CI MYAPP_RELEASE_* properties and EAS injection. */
 export function configureReleaseSigning(
   source: string,
-  configOnly: boolean
+  configOnly: boolean,
+  custom = false
 ): string {
   // Remove only our generated sections when prebuild runs without --clean.
   let result = source.replace(
@@ -47,6 +48,9 @@ gradle.taskGraph.whenReady { graph ->
         if (${configOnly}) {
             throw new GradleException('APP_CONFIG_ONLY is for unsigned configuration checks. Configure the owned EAS identity and regenerate before a release build.')
         }
+        if (${custom} && System.getenv('EAS_BUILD') != 'true' && android.defaultConfig.versionCode <= 1) {
+            throw new GradleException('Owned local/CI releases require EXPO_BUILD_NUMBER greater than 1 at prebuild. Allocate a new monotonically increasing number for every distributed build.')
+        }
         def signing = android.buildTypes.release.signingConfig
         if (signing == null || signing.name == 'debug' ||
             signing.storeFile == android.signingConfigs.debug.storeFile ||
@@ -71,9 +75,11 @@ const withReleaseSigning: ConfigPlugin = (config) =>
         '[withReleaseSigning] Only Groovy app/build.gradle is supported.'
       );
     }
+    const identity = resolveAppIdentity();
     mod.modResults.contents = configureReleaseSigning(
       mod.modResults.contents,
-      resolveAppIdentity().configOnly
+      identity.configOnly,
+      identity.mode === 'custom'
     );
     return mod;
   });

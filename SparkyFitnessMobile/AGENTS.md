@@ -329,6 +329,13 @@ When reviewing an API issue, trace screen/hook -> API client -> server route -> 
 - Run `pnpm run i18n:audit` after localization work. `pnpm run validate` includes typecheck, lint with zero warnings, and this audit.
 - Keep canonical storage/API values and user-generated content literal; localize only application-owned presentation labels.
 
+## Owned build validation
+
+- `eas.json` has `sparkyrivals-development`, `sparkyrivals-preview`, and `sparkyrivals-production` profiles; `pnpm build:profile <profile> <command> [args...]` applies their inherited environment to local commands.
+- Use `APP_CONFIG_ONLY=1` only for local unsigned config/prebuild checks without accounts. It cannot be used on EAS or for Android release tasks. Real custom builds require an owned Expo owner/project UUID.
+- After a clean prebuild, run `pnpm validate:native` with the same profile/environment. `--snapshot <file>` and `--compare <file>` verify repeated native identity metadata, excluding Xcode's random object UUIDs. Never commit generated native projects.
+- `withReleaseSigning` consumes existing `MYAPP_RELEASE_*` Gradle properties/environment or EAS-injected signing. Keep credentials out of Expo runtime config. Local owned releases need an allocated `EXPO_BUILD_NUMBER > 1`; EAS uses remote auto-incrementing versions.
+
 ## Testing Guidance
 
 - Tests live in `__tests__/` with `jest-expo`, `jsdom`, and `jest.setup.js`.
