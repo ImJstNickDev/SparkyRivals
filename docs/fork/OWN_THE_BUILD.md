@@ -11,6 +11,9 @@ upstream callback, API-key/session paths, and token-fragment behavior are retain
 Widgets, Live Activities, Android notifications and Watch complications now use
 the resolved schemes. HealthKit/Health Connect regression tests cover each owned
 variant without changing source detection or the `SparkyFitnessSessionId` marker.
+The prebuild signing plugin now selects `signingConfigs.release`, consumes the
+existing `MYAPP_RELEASE_*` interface, and rejects missing/debug credentials at
+release task execution. It also rejects release tasks from config-only projects.
 Remaining steps below are pending until
 their implementation and validation land.
 This milestone follows the

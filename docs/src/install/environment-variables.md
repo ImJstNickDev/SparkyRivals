@@ -278,3 +278,15 @@ Any backend environment variable `VAR` can be supplied via a corresponding `VAR_
 | `SPARKY_FITNESS_OIDC_CLIENT_ID`     | `SPARKY_FITNESS_OIDC_CLIENT_ID_FILE`     | OIDC Client ID                          |
 | `SPARKY_FITNESS_OIDC_CLIENT_SECRET` | `SPARKY_FITNESS_OIDC_CLIENT_SECRET_FILE` | OIDC Client Secret                      |
 | `SPARKY_FITNESS_DEMO_PASSWORD`      | `SPARKY_FITNESS_DEMO_PASSWORD_FILE`      | Demo user account password              |
+
+### Android release signing (build only)
+
+`MYAPP_RELEASE_STORE_FILE`, `MYAPP_RELEASE_STORE_PASSWORD`,
+`MYAPP_RELEASE_KEY_ALIAS`, and `MYAPP_RELEASE_KEY_PASSWORD` are read **only by
+Gradle**, from Gradle properties or the build environment. Use an absolute keystore
+path and keep passwords in a private credential store. They never belong in Expo
+public runtime configuration, Compose, Helm, server env templates or EnvGenerator.
+EAS can instead inject the owned project's signing credentials. Release tasks
+validate the final signing config and reject absent credentials or debug signing;
+local debug builds retain their normal debug certificate. `APP_CONFIG_ONLY=1`
+projects cannot run release tasks: regenerate with complete owned configuration.
