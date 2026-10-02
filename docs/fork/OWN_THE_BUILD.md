@@ -8,6 +8,9 @@ the resolver and emit phone/Watch schemes in generated runtime metadata. Their
 native target names remain unchanged. Mobile linking/auth and server browser
 returns now use configured schemes with an explicit server allowlist. The default
 upstream callback, API-key/session paths, and token-fragment behavior are retained.
+Widgets, Live Activities, Android notifications and Watch complications now use
+the resolved schemes. HealthKit/Health Connect regression tests cover each owned
+variant without changing source detection or the `SparkyFitnessSessionId` marker.
 Remaining steps below are pending until
 their implementation and validation land.
 This milestone follows the

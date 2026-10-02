@@ -34,7 +34,7 @@ class WorkoutNotificationModule(reactContext: ReactApplicationContext) :
                 return
             }
             ensureChannel(context, payload.getString("channelName") ?: "Ongoing workout")
-            val openWorkout = Intent(Intent.ACTION_VIEW, Uri.parse("sparkyfitnessmobile://active-workout"))
+            val openWorkout = Intent(Intent.ACTION_VIEW, Uri.parse("{{APP_URL_SCHEME}}://active-workout"))
                 .setPackage(context.packageName)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
             val pendingOpen = PendingIntent.getActivity(

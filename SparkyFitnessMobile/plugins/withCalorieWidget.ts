@@ -13,6 +13,7 @@ import {
   withDangerousMod,
   withMainApplication,
 } from 'expo/config-plugins';
+import { resolveAppIdentity } from '../app.identifiers';
 import fs from 'fs';
 import path from 'path';
 import {
@@ -93,6 +94,7 @@ const withCalorieWidget: ConfigPlugin = (config) => {
           const substituted = contents
             .toString('utf8')
             .replace(/\{\{APPLICATION_ID\}\}/g, applicationId)
+            .replace(/\{\{APP_URL_SCHEME\}\}/g, resolveAppIdentity().scheme)
             .replace(
               /\{\{SUPPORTED_LOCALES\}\}/g,
               SUPPORTED_LANGUAGES.map((language) => `"${language}"`).join(', ')

@@ -86,11 +86,11 @@ class MacroWidget : GlanceAppWidget() {
         // stay local to widget rendering (see WidgetLocale).
         val widgetContext = WidgetLocale.localizedContext(context)
 
-        val openAppIntent = Intent(Intent.ACTION_VIEW, Uri.parse("sparkyfitnessmobile://"))
+        val openAppIntent = Intent(Intent.ACTION_VIEW, Uri.parse("{{APP_URL_SCHEME}}://"))
             .setPackage(context.packageName)
-        val searchIntent = Intent(Intent.ACTION_VIEW, Uri.parse("sparkyfitnessmobile://search"))
+        val searchIntent = Intent(Intent.ACTION_VIEW, Uri.parse("{{APP_URL_SCHEME}}://search"))
             .setPackage(context.packageName)
-        val scanIntent = Intent(Intent.ACTION_VIEW, Uri.parse("sparkyfitnessmobile://scan"))
+        val scanIntent = Intent(Intent.ACTION_VIEW, Uri.parse("{{APP_URL_SCHEME}}://scan"))
             .setPackage(context.packageName)
         val searchFoodLabel = widgetContext.getString(R.string.widget_search_food)
         val scanBarcodeLabel = widgetContext.getString(R.string.widget_scan_barcode)
