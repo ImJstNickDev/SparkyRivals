@@ -17,6 +17,50 @@ const custom = {
 };
 
 describe('application identity', () => {
+  it('uses the EAS iOS allocation for the host and generated Apple targets', () => {
+    expect(
+      resolveAppIdentity({
+        ...custom,
+        EAS_BUILD: 'true',
+        EAS_BUILD_PLATFORM: 'ios',
+        EAS_BUILD_IOS_BUILD_NUMBER: '1005',
+        EXPO_BUILD_NUMBER: '1002',
+      }).buildNumber
+    ).toBe(1005);
+  });
+
+  it.each([
+    {},
+    { EAS_BUILD: 'true', EAS_BUILD_PLATFORM: 'android' },
+    { EAS_BUILD: 'false', EAS_BUILD_PLATFORM: 'ios' },
+    { APP_IDENTITY: 'upstream', EAS_BUILD: 'true', EAS_BUILD_PLATFORM: 'ios' },
+  ])(
+    'keeps the local/upstream build number outside owned EAS iOS: %p',
+    (env) => {
+      expect(
+        resolveAppIdentity({
+          ...custom,
+          EXPO_BUILD_NUMBER: '1002',
+          EAS_BUILD_IOS_BUILD_NUMBER: '1005',
+          ...env,
+        }).buildNumber
+      ).toBe(1002);
+    }
+  );
+
+  it.each(['', '0', '1.2', 'invalid', '2100000001'])(
+    'rejects invalid EAS iOS build number %s',
+    (number) => {
+      expect(() =>
+        resolveAppIdentity({
+          ...custom,
+          EAS_BUILD: 'true',
+          EAS_BUILD_PLATFORM: 'ios',
+          EAS_BUILD_IOS_BUILD_NUMBER: number,
+        })
+      ).toThrow('EAS_BUILD_IOS_BUILD_NUMBER');
+    }
+  );
   it.each(['development', 'dev', 'preview', 'production'])(
     'preserves upstream %s',
     (variant) => {

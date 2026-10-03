@@ -178,6 +178,14 @@ do not repeatedly distribute that number. EAS uses `appVersionSource=remote` and
 local releases before changing build systems. The application marketing version
 continues following the existing upstream version tooling.
 
+On owned EAS iOS builds, the resolver consumes the worker-provided
+`EAS_BUILD_IOS_BUILD_NUMBER` before prebuild. That remote allocation takes
+precedence over a local `EXPO_BUILD_NUMBER` and sets every Apple child target's
+version as well as the host. Do not configure that worker variable manually or
+pass it to server containers. Local and Android builds retain their existing
+number allocation. Inspect the finished IPA: all five `CFBundleVersion` values
+must match; a successful archive alone does not prove extension version parity.
+
 Use the production pair helper, with newly allocated numbers:
 
 ```sh
