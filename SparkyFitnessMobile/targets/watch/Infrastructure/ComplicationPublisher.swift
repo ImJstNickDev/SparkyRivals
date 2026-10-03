@@ -55,6 +55,10 @@ enum ComplicationPublisher {
         let progress: Double
     }
 
+    static func publish(challenges: ChallengeSnapshot?) {
+        write(ChallengeSurfaceSnapshot.make(challenges), forKey: "challengeComplicationSnapshot", reloading: "challengeComplication")
+    }
+
     // MARK: - Publishing
 
     /// Publishes nutrition progress for the Daily Energy Goal complication.

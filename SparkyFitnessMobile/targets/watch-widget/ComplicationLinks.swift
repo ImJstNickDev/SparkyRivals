@@ -10,6 +10,7 @@ enum ComplicationLink: String {
     case goals
     /// Water intake → the Water page. Used by `WaterGoalComplication`.
     case water
+    case challenge
 
     static let scheme = Bundle.main.object(forInfoDictionaryKey: "WATCH_URL_SCHEME") as? String ?? ""
 

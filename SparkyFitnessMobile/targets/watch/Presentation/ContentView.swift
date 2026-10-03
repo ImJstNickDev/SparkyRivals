@@ -129,6 +129,8 @@ struct ContentView: View {
             return .goals
         case .water:
             return .water
+        case .challenge:
+            return .challenge
         }
     }
 

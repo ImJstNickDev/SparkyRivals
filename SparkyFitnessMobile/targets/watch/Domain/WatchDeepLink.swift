@@ -11,6 +11,7 @@ enum WatchDeepLink: String {
     /// Water intake complication → the Water page. `ContentView` maps this
     /// to `.water`; `WaterGoalComplication` produces it.
     case water
+    case challenge
 
     static let scheme = Bundle.main.object(forInfoDictionaryKey: "WATCH_URL_SCHEME") as? String ?? ""
 

@@ -9,6 +9,7 @@ swiftc \
   targets/watch/Domain/WorkoutModels.swift \
   targets/watch/Domain/WatchPage.swift \
   targets/watch/Domain/ChallengeModels.swift \
+  targets/watch/Domain/ChallengeSurfaceSnapshot.swift \
   targets/watch/Adapters/ContextPayloadMapper.swift \
   targets/watch/Adapters/ChallengePayloadMapper.swift \
   targets/watch/Infrastructure/ComplicationPublisher.swift \
