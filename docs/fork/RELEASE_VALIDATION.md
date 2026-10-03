@@ -125,10 +125,9 @@ recovery after OS updates and mixed results from toggling Bluetooth on both
 devices. That is supporting evidence, not proof of a fix on this device pair.
 After requesting Bluetooth reconnection on both devices, the capture shows a
 connection reunion and a second install attempt from 00:30:48 to 00:31:52. It fails
-with the same two error codes and timeout before transfer. Available OS updates
-have been requested from the maintainer for the next diagnostic step; no update
-has been performed. No app data, pairing, certificate or provisioning resources
-were reset. Raw logs
+with the same two error codes and timeout before transfer. At that point, no OS
+update had been performed. No app data, pairing, certificate or provisioning
+resources were reset. Raw logs
 remain private under `/tmp/sparkyrivals-8a/`. Physical Watch installation and launch
 remain outstanding; corrected profile membership alone is not a device-test result.
 
@@ -151,6 +150,27 @@ trust/revocation policy or watchOS installation acceptance. This is a targeted
 Linux artifact inspection, not a replacement for macOS `codesign --verify` or a
 successful physical installation. The private report is
 `ios-1005-watch-resigned/watch-signature-audit.json` alongside the IPA above.
+
+#### Retry after the iPhone update
+
+The maintainer updated the iPhone to **iOS 26.7.1 (23H30)**; USB metadata confirmed
+the version and pairing remained valid. With the Watch still on the reported
+watchOS 26.1, the next installation attempt made further progress:
+
+- At 01:22:17 Europe/Rome the phone requested the installation socket.
+- At 01:22:22 the log recorded `Opened socket` with `Success: YES`,
+  `Socket setup successful`, and `Sending Hello` for the owned Watch bundle.
+- At 01:23:06 the connection closed during the initial exchange:
+  `ACXErrorDomain Code=4` / `Socket closed with 5 bytes remaining to read`.
+- The phone reported installation failure and an empty installation queue.
+
+The previous socket-opening timeout did not recur in this attempt, but physical
+installation still failed. The logs do not explain why the established connection
+closed and do not prove Watch-side signature acceptance. No replacement build or
+credential change was made for this retry. The maintainer has been asked to update
+the Watch to its offered watchOS 26.6 before another captured attempt. That update
+and the next installation result are pending. The private capture is
+`/tmp/sparkyrivals-8a/watch-install-ios-26.7.1-5LcITr.log`.
 
 ## Android compilation
 
