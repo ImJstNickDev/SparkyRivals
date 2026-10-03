@@ -54,7 +54,11 @@ enum ScreenshotSeed {
     /// that one screen.
     @MainActor
     static func apply() {
-        CheckInStore.shared.apply(context: SampleDay.context)
+        var context = SampleDay.context
+        context.challengeSnapshot = ScreenshotChallengeSeed.snapshot(
+            state: ProcessInfo.processInfo.environment["SPARKY_SCREENSHOT_CHALLENGE"]
+        )
+        CheckInStore.shared.apply(context: context)
 
         let workout = WorkoutSessionStore.shared
         switch workoutState {
