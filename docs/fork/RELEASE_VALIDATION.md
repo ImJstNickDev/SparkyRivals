@@ -172,6 +172,24 @@ the Watch to its offered watchOS 26.6 before another captured attempt. That upda
 and the next installation result are pending. The private capture is
 `/tmp/sparkyrivals-8a/watch-install-ios-26.7.1-5LcITr.log`.
 
+#### Subsequent storage-labelled refusal
+
+Without updating watchOS, the maintainer reported an insufficient-storage alert
+despite Settings showing approximately **13 GB available** on the Watch. A fresh
+capture reproduced it twice, at 01:29:40 and 01:30:16 Europe/Rome: the socket opens,
+the phone sends `Hello`, and the Watch immediately returns
+`ACXErrorDomain Code=12` / `Got error 12 in hello response from remote side`.
+The same capture shows that the phone maps this to
+`ACXUserPresentableErrorDomain Code=2` and the insufficient-storage alert.
+
+The exported Watch app including its complication totals **3,132,465 bytes
+uncompressed**; the complete phone IPA is 34,056,081 bytes. The captured logs do
+not expose required/available-byte values from the Watch's installer. Consequently
+neither genuinely exhausted Watch storage nor a faulty capacity check is proven.
+No user data was deleted. A normal Watch restart and one unchanged-build retry
+have been requested before considering further changes. Private capture:
+`/tmp/sparkyrivals-8a/watch-install-storage-jDO0IT.log`.
+
 ## Android compilation
 
 Actual toolchain: JDK 17.0.20.1 explicitly selected, SDK 36, Build Tools 36.0.0,
