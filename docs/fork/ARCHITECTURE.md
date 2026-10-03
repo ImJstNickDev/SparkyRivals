@@ -1,7 +1,8 @@
 # Architecture audit and future Challenges design
 
 Verified against upstream `f8df11ac3b019d022d3fa4a1b39c1b2f8576d361` on
-2026-10-02. Sections describing future work are proposals, not implemented features.
+2026-10-02. The Challenge section was updated for milestone 2 on 2026-10-03.
+Other sections describing future work remain proposals.
 Paths below are relative to the repository root.
 
 ## Workspace and server
@@ -123,7 +124,7 @@ flowchart LR
   AP --> API
   API --> H[Existing handlers and repositories]
   H --> DB[(Canonical health tables)]
-  DB -. proposed read adapters .-> C[Server challenge scoring and reconciliation]
+  DB --> C[Server challenge scoring and reconciliation]
   C -. server projections .-> CL[Web, phones and watch displays]
 ```
 
@@ -274,54 +275,47 @@ WidgetKit timelines. App Groups do not transport data between phone and Watch;
 WatchConnectivity does. Bundle nesting and entitlements must remain consistent
 across the phone, Watch app, and Watch widget extension.
 
-## Future Challenges domain
+## Challenge backend — milestone 2
 
-Use additive TypeScript routes/services/repositories and shared Zod contracts,
-with new `challenge_*` tables under the existing migration/RLS system. Proposed
-entities: challenge definition/rules, participants/invitations, scheduled periods,
-derived daily scores, versioned period results, and durable recalculation work.
-Represent participants as rows from the start, while initially limiting invitations
-to two. Store metric/scoring-rule version separately from the metric adapter.
+Implemented in isolated `challengeRoutes`, `challengeService`,
+`challengeLeaderboardService` and `challengeRepository` modules, shared contracts,
+and two PostgreSQL tables (`challenges`, `challenge_participants`). The API is
+`/api/v2/challenges`; no Challenge clients are implemented yet. Full contracts,
+security boundaries and lifecycle are in [CHALLENGES.md](CHALLENGES.md).
 
-The first adapter reads canonical daily steps. Persist derived challenge scores
-with source fingerprints, calculation version, timestamp, and result revision;
-these are rebuildable projections, not health-data duplicates. Server transactions
-and unique keys make retries idempotent. The server computes ranking, gap, ties,
-progress, and completion; clients format/present that response.
+The creator participates automatically; up to 100 participants explicitly consent.
+Invitations select existing active, unexpired family relationships. Caregiver
+permissions do not grant membership. Self context, database RLS and transition
+triggers enforce consent. Pending users preview rules only; accepted members see
+competition projections. Departure revokes sharing; cancellation stops scores.
 
-Reconciliation must reread affected dates, including decreases and deletions.
-Start with existing scheduler infrastructure, a durable bounded work queue, and
-periodic comparison of open/recent periods. Provide batched historical rebuilds
-and a periodic historical sweep so corrections outside a recent lookback are
-eventually picked up. A timestamp watermark alone misses deleted rows. If adding
-change notifications, cover manual check-ins and every provider writer after
-commit, not just `POST /health-data`. Do not place challenge logic inside health
-transformers. Return provisional/reconciled status and freshness explicitly.
+The v1 steps/sum adapter reads current `check_in_measurements.steps` on request
+through a narrowly authorized database projection. It does not grant generic
+check-in reads or copy health history. A repeatable-read snapshot and three
+SELECTs cover all accepted participants, with server ranks/ties/gaps/daily values
+and coverage metadata. There is no permanent winner, cache, reconciliation queue,
+scheduler or materialized score. This supersedes the bootstrap proposal to start
+with persisted projections: bounded live reads are simpler and immediately reflect
+late data, manual decreases, nulls and deletes, including historical competitions.
 
-Before backend implementation, resolve these limits with focused tests/design:
+Dates are inclusive canonical calendar buckets; the stored IANA Challenge zone
+controls lifecycle/current day and the scoring cutoff through today. Different
+account/device zones retain their existing bucket dates. No arbitrary historical
+rebucketing is claimed. Missing/null steps score zero but retain `present=false`;
+explicit zero has presence. Coverage timestamps are row-update metadata, never a
+proof of completed sync. Results remain reconcilable after completion.
 
-1. **Steps can decrease only through some paths.** Automated max-wins ingestion
-   discards downward provider corrections; scoring cannot reconstruct them. Keep
-   the MVP faithful to canonical stored steps and plan a separate, upstream-friendly
-   ingestion correction/provenance change if full provider correction is required.
-2. **Timezone semantics are a product rule.** Daily steps retain no raw intervals
-   or recorded timezone, so arbitrary challenge-zone rebucketing is impossible.
-   Define scoring against existing calendar-day buckets, freeze and expose period
-   semantics, and constrain timezone compatibility for the MVP. Travel and timezone
-   changes need explicit policy; do not silently pretend all totals are UTC days.
-3. **Missing data is not zero.** Distinguish no synced total from a measured zero;
-   show last calculated time and avoid declaring a definitive winner on freshness
-   assumptions the sync protocol cannot prove.
-4. **Competition access differs from family access.** Invitations grant only
-   challenge projections. Add participant-aware RLS and test owner, invitee,
-   outsider, delegate, removal, and background scorer access. Never expose raw
-   opponent health data through a broad system-client request.
-5. **Data is user-editable.** This is a personal competition layer, not verified
-   anti-cheat telemetry. Be explicit about manual entries and duplicates; do not
-   infer trust from server-authoritative arithmetic.
-6. **Other metrics are not normalized everywhere.** Distance, energy, intensity,
-   and workout counts require separate adapters and source/unit policies. Daily
-   totals and workout totals overlap. Workouts are display-only initially.
+Automated max-wins ingestion remains unchanged because canonical steps lack
+reliable source/revision/completeness provenance. A provider decrease may be lost
+before scoring; manual overwrites are reflected immediately. A future ingestion
+change needs source-aware replacement/precedence within existing canonical storage,
+without a Challenge ingestion path. Values remain user-editable; server arithmetic
+is authoritative but is not anti-cheat verification.
+
+Metrics/scoring modes are explicit constrained enums to extend deliberately. Other
+metrics need canonical adapters, units and timezone/overlap rules; workout scoring,
+recurrence, goals and social extras remain later milestones. Web/mobile/watch will
+consume server projections and must not calculate independent winners.
 
 ## Future Wear OS direction
 

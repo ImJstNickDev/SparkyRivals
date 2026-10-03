@@ -63,6 +63,9 @@ pnpm exec eslint routes/v2/foodRoutes.ts services/foodCoreService.ts
 - `utils/mobileAuthCallbacks.ts` - validates `SPARKY_FITNESS_MOBILE_AUTH_SCHEMES` and constructs allowlisted native auth returns; never accept an arbitrary client callback URL
 - `routes/` - primary HTTP route surface
 - `routes/v2/` - newer typed route surface; pair these changes with `schemas/`
+- `routes/v2/challengeRoutes.ts` — `/api/v2/challenges`: self-context consent,
+  invitations, lifecycle and server results. Contracts live in shared
+  `Challenges.api.zod.ts`; no client Challenge implementation is part of this domain yet.
 - `routes/v2/openFoodFactsContributionRoutes.ts` - owner-only single-food preview and explicit photo-backed publication; background contributions are disabled for this release
 - `routes/v2/symptomRoutes.ts` - generic symptom tracking (`symptoms` permission): definitions (`/custom`), the pick-list library (`/options`), entries and episodes (`/entries`, `/entries/ongoing`, `/entries/:id/end`, `/entries/:id/severity`), photos, and symptom-free days. Logic lives in `services/symptomService.ts` over `models/symptomRepository.ts` and `models/symptomOptionRepository.ts`; the request/response contract is `../shared/src/schemas/api/Symptoms.api.zod.ts`
 - `routes/v2/reportRoutes.ts` - weekly alcohol rollup and the zero-padded hydration/caffeine/alcohol range used by the Trends charts (`reports` permission)
@@ -71,6 +74,11 @@ pnpm exec eslint routes/v2/foodRoutes.ts services/foodCoreService.ts
 - `routes/auth/` - auth-specific route fragments mounted through `routes/authRoutes.ts`
 - `services/` - business logic and orchestration
 - `models/` - PostgreSQL repositories and persistence helpers
+- `services/challengeService.ts` and `models/challengeRepository.ts` — SparkyRivals
+  Challenge consent/lifecycle; self context only, independent of family delegation.
+  `services/challengeLeaderboardService.ts` scores canonical steps on request through
+  the narrow SQL `challenge_step_points` projection; no cached winner or health copy.
+  Read `../docs/fork/CHALLENGES.md` before changing competition permissions or scoring.
 - `middleware/` - auth, permissions, uploads, and shared Express middleware
 - `utils/uploadsPath.ts` - the uploads root plus the resolver and containment guard for stored `file_path` values; use it instead of re-deriving `SPARKY_FITNESS_CUSTOM_UPLOADS_DIRECTORY`
 - `utils/oauthState.ts` - server-issued single-use OAuth `state` nonces for provider linking (`issueOAuthState`, `persistOAuthState`, `claimOAuthState`); use it instead of hand-rolling a state value
@@ -243,6 +251,10 @@ When searching, ignore noisy/generated directories unless you explicitly need th
 
 ## Quick Routing
 
+- Challenge consent, membership or scoring:
+  inspect `routes/v2/challengeRoutes.ts`, `services/challengeService.ts`,
+  `models/challengeRepository.ts`, and `../docs/fork/CHALLENGES.md`. Never grant
+  generic check-in reads to participants or use a system client for API requests.
 - Startup, env, or deployment issue:
   inspect `index.ts`, `SparkyFitnessServer.ts`, `utils/secretLoader.ts`, `utils/preflightChecks.ts`, and `config/logging.ts`
 - Auth, session, MFA, or API key issue:

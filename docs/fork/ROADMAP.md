@@ -12,7 +12,7 @@ compatibility throughout.
 - Concrete [Own the Build plan](OWN_THE_BUILD.md).
 - Exit evidence: [BASELINE.md](BASELINE.md). No Challenges/Wear implementation.
 
-## 1. Own the Build — implementation ready for review
+## 1. Own the Build — merged; account/device setup remains
 
 Implemented: central custom identity with isolated variants, derived Apple targets,
 secure native callback allowlisting, widget/Watch links, explicit release signing,
@@ -27,19 +27,20 @@ and physical health/auth/widgets/Watch behavior. No installable binary is claime
 See [BUILDING.md](BUILDING.md) for those steps. Later milestones require a new
 explicit request; this status does not authorize Challenges or Wear OS work.
 
-## 2. Challenge backend
+## 2. Challenge backend — implemented, ready for review
 
-Start with daily/weekly steps, two participants, invitation/acceptance, ties,
-progress, and history. Model participants as rows for future N-person support.
-Resolve period/timezone, missing data, manual edits, and max-wins correction limits
-before implementation. Add challenge tables, shared schemas, services/repositories,
-typed routes, participant-aware RLS, and server scoring/reconciliation through the
-existing scheduler. Keep projections rebuildable and versioned.
+Steps/sum competitions support 1–100 participants, relationship-scoped invitations,
+explicit acceptance/decline/departure, cancellation, immutable date/zone rules,
+server lifecycle and live canonical leaderboards. RLS and narrow projections share
+only consented competition data. Results reconcile on every read, including lower,
+cleared, deleted and late canonical rows; no cached score/winner or scheduler is
+needed for v1. Automated provider downward corrections remain an ingestion limit.
 
-Exit: tested owner/invitee/outsider/delegate access; deterministic daily/weekly scores;
-late, lowered, and deleted canonical totals trigger correct recalculation; restart
-and retry are idempotent. Test fresh migrations and upgrades, and update upstream
-table/security/sharing documentation through its migration checklist.
+Evidence: [CHALLENGES.md](CHALLENGES.md) and
+[CHALLENGE_VALIDATION.md](CHALLENGE_VALIDATION.md). Fresh migrations, populated
+Milestone 1 upgrade, direct RLS, lifecycle/consent, 100-participant concurrency,
+calendar/DST and full regressions pass. This PR remains unmerged. Milestone 3 needs
+an explicit maintainer request; no client Challenge work has started.
 
 ## 3. Web and mobile Challenge UI
 

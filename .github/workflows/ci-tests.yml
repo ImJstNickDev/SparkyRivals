@@ -7,6 +7,7 @@ on:
       - "SparkyFitnessFrontend/**"
       - "SparkyFitnessMobile/**"
       - "SparkyFitnessServer/**"
+      - "shared/**"
       - "SparkyFitnessGarmin/**"
       - ".github/workflows/ci-tests.yml"
   push:
@@ -15,6 +16,7 @@ on:
       - "SparkyFitnessFrontend/**"
       - "SparkyFitnessMobile/**"
       - "SparkyFitnessServer/**"
+      - "shared/**"
       - "SparkyFitnessGarmin/**"
       - ".github/workflows/ci-tests.yml"
 
@@ -40,10 +42,13 @@ jobs:
           filters: |
             frontend:
               - 'SparkyFitnessFrontend/**'
+              - 'shared/**'
             mobile:
               - 'SparkyFitnessMobile/**'
+              - 'shared/**'
             server:
               - 'SparkyFitnessServer/**'
+              - 'shared/**'
             garmin:
               - 'SparkyFitnessGarmin/**'
             # Files whose change can break a fresh-install migration run.
@@ -58,6 +63,13 @@ jobs:
               - 'SparkyFitnessServer/utils/initializeDatabase.ts'
               - 'SparkyFitnessServer/tests/migrate.script.ts'
               - 'SparkyFitnessServer/tests/initializeDatabase.integration.test.ts'
+              - 'SparkyFitnessServer/tests/challenge*.ts'
+              - 'SparkyFitnessServer/tests/helpers/challengeTestDatabase.ts'
+              - 'SparkyFitnessServer/models/challengeRepository.ts'
+              - 'SparkyFitnessServer/services/challenge*.ts'
+              - 'SparkyFitnessServer/routes/v2/challengeRoutes.ts'
+              - 'shared/src/schemas/api/Challenges.api.zod.ts'
+              - 'shared/src/schemas/database/Challenge*.zod.ts'
               - 'SparkyFitnessServer/tests/rlsPermissionMatrix.integration.test.ts'
               - 'SparkyFitnessServer/tests/stravaActivityDetailCleanup.integration.test.ts'
               - 'SparkyFitnessServer/tests/oidcProviderRepository.integration.test.ts'
@@ -266,7 +278,8 @@ jobs:
       # behaviour as the app role (superuser DB user seeds, app role is enforced).
       - name: Verify RLS, Strava cleanup, OIDC providers, Better Auth schema, sign-in rate limits and startup locking
         run: |
-          pnpm exec vitest run tests/rlsPermissionMatrix.integration.test.ts tests/stravaActivityDetailCleanup.integration.test.ts tests/betterAuthSchemaCheck.integration.test.ts tests/oidcProviderRepository.integration.test.ts tests/authRateLimitDatabase.integration.test.ts
+          pnpm exec vitest run tests/rlsPermissionMatrix.integration.test.ts tests/stravaActivityDetailCleanup.integration.test.ts tests/betterAuthSchemaCheck.integration.test.ts tests/oidcProviderRepository.integration.test.ts tests/authRateLimitDatabase.integration.test.ts --maxWorkers=1 --no-file-parallelism
+          RUN_CHALLENGE_DB_TESTS=1 pnpm exec vitest run tests/challengeDatabase.integration.test.ts tests/challengeLeaderboard.integration.test.ts tests/challengeCapacity.integration.test.ts --maxWorkers=1 --no-file-parallelism
           # Initialization reapplies policies, so run it after the other database tests.
           RUN_DATABASE_INITIALIZATION_TEST=1 pnpm exec vitest run tests/initializeDatabase.integration.test.ts
         env:

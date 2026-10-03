@@ -1029,3 +1029,85 @@ CREATE POLICY deny_all_policy ON public.openfoodfacts_product_read_rate_limit FO
 -- own owner pool, which bypasses RLS; the rows hold client addresses, so the
 -- app role is denied entirely.
 CREATE POLICY deny_all_policy ON public.rate_limit FOR ALL TO PUBLIC USING (false) WITH CHECK (false);
+
+-- SparkyRivals Challenges: independent consent, never inherited caregiver access.
+-- Definer helpers avoid recursive policies on the two membership-linked tables.
+-- They expose only the caller's own membership/ownership, not arbitrary user lookup.
+CREATE OR REPLACE FUNCTION public.challenge_actor() RETURNS uuid
+LANGUAGE sql STABLE SET search_path = pg_catalog, public AS $$
+  SELECT CASE WHEN public.current_user_id() = public.authenticated_user_id()
+    THEN public.authenticated_user_id() END;
+$$;
+CREATE OR REPLACE FUNCTION public.challenge_membership(p_challenge_id uuid) RETURNS text
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = pg_catalog, public AS $$
+  SELECT status FROM public.challenge_participants
+  WHERE challenge_id = p_challenge_id AND user_id = public.challenge_actor();
+$$;
+CREATE OR REPLACE FUNCTION public.owns_challenge(p_challenge_id uuid) RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = pg_catalog, public AS $$
+  SELECT EXISTS (SELECT 1 FROM public.challenges
+    WHERE id = p_challenge_id AND creator_user_id = public.challenge_actor());
+$$;
+ALTER TABLE public.challenges ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.challenge_participants ENABLE ROW LEVEL SECURITY;
+CREATE POLICY challenge_read ON public.challenges FOR SELECT
+USING (creator_user_id = public.challenge_actor() OR public.challenge_membership(id) IN ('pending', 'accepted'));
+CREATE POLICY challenge_create ON public.challenges FOR INSERT
+WITH CHECK (creator_user_id = public.challenge_actor());
+CREATE POLICY challenge_update ON public.challenges FOR UPDATE
+USING (creator_user_id = public.challenge_actor())
+WITH CHECK (creator_user_id = public.challenge_actor());
+CREATE POLICY challenge_participant_read ON public.challenge_participants FOR SELECT
+USING (
+  public.owns_challenge(challenge_id)
+  OR (user_id = public.challenge_actor())
+  OR (status = 'accepted' AND public.challenge_membership(challenge_id) = 'accepted')
+);
+CREATE POLICY challenge_participant_invite ON public.challenge_participants FOR INSERT
+WITH CHECK (public.owns_challenge(challenge_id) AND invited_by_user_id = public.challenge_actor());
+CREATE POLICY challenge_participant_respond ON public.challenge_participants FOR UPDATE
+USING (user_id = public.challenge_actor())
+WITH CHECK (user_id = public.challenge_actor());
+-- No DELETE policies: departure is an audited transition; user deletion cascades.
+
+-- Only display names are projected from profiles. Challenge membership never
+-- makes profile/body-measurement rows available through their ordinary policies.
+CREATE OR REPLACE FUNCTION public.challenge_roster(p_challenge_id uuid)
+RETURNS TABLE (
+  challenge_id uuid, user_id uuid, status text, invited_by_user_id uuid,
+  invited_at timestamptz, accepted_at timestamptz, declined_at timestamptz,
+  left_at timestamptz, created_at timestamptz, updated_at timestamptz, display_name text
+)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = pg_catalog, public AS $$
+  SELECT cp.*, COALESCE(NULLIF(btrim(p.full_name), ''), 'Participant')
+  FROM public.challenge_participants cp
+  LEFT JOIN public.profiles p ON p.id = cp.user_id
+  WHERE cp.challenge_id = p_challenge_id
+    AND public.challenge_membership(p_challenge_id) IN ('pending', 'accepted')
+    AND (public.owns_challenge(p_challenge_id)
+      OR cp.user_id = public.challenge_actor()
+      OR (cp.status = 'accepted' AND public.challenge_membership(p_challenge_id) = 'accepted'))
+  ORDER BY cp.created_at, cp.user_id;
+$$;
+
+-- Narrow, read-only consent projection. Do not broaden check-in RLS: a full
+-- check-in row includes private body measurements. No user/date selector exists.
+-- The caller must be accepted; all returned people must be accepted too. Bounds
+-- come only from immutable challenge rules and the transaction's current day.
+CREATE OR REPLACE FUNCTION public.challenge_step_points(p_challenge_id uuid)
+RETURNS TABLE (
+  user_id uuid, display_name text, entry_date date, steps integer, data_updated_at timestamptz
+)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = pg_catalog, public AS $$
+  SELECT cp.user_id, COALESCE(NULLIF(btrim(p.full_name), ''), 'Participant'),
+    cm.entry_date, cm.steps, COALESCE(cm.updated_at, cm.created_at)
+  FROM public.challenges c
+  JOIN public.challenge_participants cp ON cp.challenge_id = c.id AND cp.status = 'accepted'
+  LEFT JOIN public.profiles p ON p.id = cp.user_id
+  LEFT JOIN public.check_in_measurements cm ON cm.user_id = cp.user_id
+    AND cm.entry_date BETWEEN c.start_date AND LEAST(c.end_date, (CURRENT_TIMESTAMP AT TIME ZONE c.timezone)::date)
+    AND cm.steps IS NOT NULL
+  WHERE c.id = p_challenge_id AND c.cancelled_at IS NULL
+    AND public.challenge_membership(c.id) = 'accepted'
+  ORDER BY cp.user_id, cm.entry_date;
+$$;

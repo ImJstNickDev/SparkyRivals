@@ -1,6 +1,6 @@
 # AGENTS.md
 
-*Last updated: 2026-09-29*
+*Last updated: 2026-10-03*
 
 `@workspace/shared` is a source-first TypeScript workspace library package for schemas, constants, and timezone/day helpers consumed by SparkyFitnessServer, SparkyFitnessFrontend, and SparkyFitnessMobile.
 
@@ -14,6 +14,9 @@
 
 - `src/schemas/database/` - one Zod file per table (`Foods.zod.ts`, `Exercises.zod.ts`, ~60 files). Agent shortcut: to learn a table shape, read the matching file here instead of the SQL dump.
 - `src/schemas/api/` - API request/response contracts (`*api.zod.ts`).
+- `src/schemas/api/Challenges.api.zod.ts` — server-authoritative SparkyRivals
+  competition contracts; `Challenges.zod.ts` and `ChallengeParticipants.zod.ts`
+  mirror the database. Clients must consume server scores, never decide winners.
 - `src/constants/` - shared constants and enums (exercises, nutrients, meal types, fasting protocols, medication schedules, cycle phases, etc.).
 - `src/utils/` - timezone helpers (`todayInZone`, `instantToDay`, `dayToUtcRange`, `compareDays`, `addDays`, `isDayString`), cycle/menstruation helpers, and unit/calculation utilities.
 - `src/ai/`, `src/cycle/`, `src/medications/`, `src/mood/` - domain-specific helpers.
@@ -28,7 +31,7 @@
 ## Cross-Package Contract Rules
 
 - Changes to `src/schemas/api/` usually affect server routes and both frontend/mobile API clients.
-- Changes to `src/schemas/database/` require a matching migration in the server (`SparkyFitnessServer/db/migrations/`), RLS policies, and the schema backup.
+- Changes to `src/schemas/database/` require a matching migration in the server (`SparkyFitnessServer/db/migrations/`) and RLS policies. CI owns the schema backup; never edit it manually.
 - Timezone/day-string helpers prevent bugs; prefer them over `toISOString().split('T')[0]`.
 - Test any shared change from the consumer packages (`pnpm run validate` in SparkyFitnessServer, SparkyFitnessFrontend, and SparkyFitnessMobile after modifying shared).
 

@@ -167,6 +167,8 @@ describe.runIf(RUN)('RLS permission matrix', () => {
     | 'custom';
 
   const DOMAIN: Record<string, Domain> = {
+    challenges: 'custom',
+    challenge_participants: 'custom',
     // owner-only (no delegation)
     api_key: 'owner',
     sparky_chat_history: 'owner',

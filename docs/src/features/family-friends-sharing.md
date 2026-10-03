@@ -83,3 +83,21 @@ If someone else still uses the item — they have logged it, or it sits in their
 
 ### 7. Meal-to-Meal Composition
 A meal's ingredient list can link another reusable meal (e.g. a sauce or side) instead of a plain food. Linking a sub-meal into a parent meal requires the same library access to the sub-meal that reading it directly would require — you cannot link a sub-meal you cannot otherwise view. This check applies independently of, and in addition to, owning the parent meal.
+
+## SparkyRivals Challenges (backend foundation)
+
+Challenges require separate consent. An active, unexpired Family & Friends
+relationship allows the creator to invite the connected account; it does not join
+anyone automatically or grant new health permissions. No account directory is
+added. Invitations must be accepted from the invitee's own account, never through
+a switched profile. The creator participates automatically.
+
+Accepted participants share only competition display names and steps for the
+Challenge's calendar dates. Pending invitees can preview the rules and their own
+invitation, but cannot see scores. Declining or leaving removes Challenge access;
+leaving also removes that participant from future results, including historical
+results. Creators cancel instead of leaving. Cancellation stops step sharing.
+Existing family permissions remain independent and unchanged.
+
+There is no Challenge UI in this release; the API is preparation for future web,
+phone and watch clients.

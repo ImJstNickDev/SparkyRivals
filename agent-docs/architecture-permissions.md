@@ -52,3 +52,13 @@ When you add a new domain (e.g., a new feature category):
 4. **Test delegation** with `permissionUtils.test.ts` patterns — write a test proving that read/write is inherited or blocked correctly.
 
 Example: symptom tracking has its own `symptoms` permission (`routes/v2/symptomRoutes.ts`), and its RLS resolves through `has_symptom_access(user_id)` / `has_symptom_read_access(user_id)` (`create_symptom_policy`). It was split from `medications`, with a migration that copied the grant to existing medications delegates.
+
+## SparkyRivals Challenge membership
+
+Challenges are a separate, self-context consent domain (`/api/v2/challenges`), not
+another `family_access` health permission. Active family relationships permit an
+invitation; only the invited actor can accept. RLS on `challenges` and
+`challenge_participants` uses nonrecursive membership helpers. Narrow database
+functions expose roster display names and accepted competitors' daily steps;
+ordinary health/profile policies remain unchanged. See
+[`../docs/fork/CHALLENGES.md`](../docs/fork/CHALLENGES.md) before extending this domain.

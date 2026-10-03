@@ -168,8 +168,15 @@ Keep the upstream license, attribution, history, functionality, and package guid
 - Minimize future upstream merge conflicts: prefer additive modules, routes,
   components, tables, and configuration; avoid unrelated refactors or formatting.
 - Never remove upstream functionality merely because this fork does not use it.
+- `CodeWithCJ/SparkyFitness` is strictly read-only: fetch/inspect only, never
+  push or create/edit issues, PRs, comments, reviews, releases, workflows or settings.
+  All GitHub writes target `ImJstNickDev/SparkyRivals` explicitly (`gh --repo`).
+  Keep `upstream`'s push URL disabled (`disabled://read-only/CodeWithCJ/SparkyFitness`)
+  while preserving its fetch URL; push only to `origin`.
 - Existing SparkyFitness systems own canonical health/activity data. Do not add
   a second ingestion pipeline or copy health records into a competing store.
+- Challenge backend: see `docs/fork/CHALLENGES.md` for `/api/v2/challenges`,
+  consent/RLS, live canonical steps and the shared response contract.
 - Challenge scoring, reconciliation, and winners belong on the server. Mobile
   and watch clients consume server state; locally displayed progress is not an
   authoritative result.
