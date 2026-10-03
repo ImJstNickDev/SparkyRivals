@@ -79,7 +79,7 @@ class ChallengeProtocolTest {
     }
     @Test fun unknownVersionsAndMalformedPayloadFailSafely() {
         invalid { ChallengeProtocol.decode(JSONObject(envelope().encode()).put("version", 2).toString()) }
-        invalid { ChallengeProtocol.snapshot(fixture().put("version", 2).toString()) }
+        invalid { ChallengeProtocol.snapshot(fixture().put("version", 3).toString()) }
         invalid { ChallengeProtocol.decode("{") }
         invalid { ChallengeProtocol.decode(JSONObject(envelope().encode()).put("sequence", "-1").toString()) }
         invalid { ChallengeProtocol.decode(JSONObject(envelope().encode()).put("publisherId", "wrong").toString()) }
@@ -125,4 +125,26 @@ class ChallengeProtocolTest {
         }
     }
 
+
+    @Test fun workoutMetricRoundTripsWithCountsAndPresence() {
+        val json = fixture().put("version", 2)
+        val item = json.getJSONArray("items").getJSONObject(0)
+        item.put("metric", "workout_time").put("scoreUnit", "seconds")
+        val rows = item.getJSONArray("rows")
+        for (i in 0 until rows.length()) rows.getJSONObject(i).put("daysWithData", 1).put("workoutCount", 3)
+        val parsed = ChallengeProtocol.snapshot(json.toString())
+        assertEquals("workout_time", parsed.items[0].metric)
+        assertEquals(3L, parsed.items[0].rows[0].workoutCount)
+        assertTrue(parsed.items[0].rows[0].today!!.present)
+        assertFalse(parsed.items[0].rows[1].today!!.present)
+        assertEquals(parsed, ChallengeProtocol.snapshot(parsed.json().toString()))
+        invalid { ChallengeProtocol.snapshot(json.put("version", 1).toString()) }
+        json.put("version", 2); item.put("scoreUnit", "steps")
+        invalid { ChallengeProtocol.snapshot(json.toString()) }
+    }
+    @Test fun durationFormattingRetainsSecondsAndZero() {
+        assertEquals(listOf(1L to "hour", 8L to "minute"), workoutDurationParts(4080))
+        assertEquals(listOf(0L to "minute"), workoutDurationParts(0))
+        assertEquals(listOf(1L to "hour", 1L to "second"), workoutDurationParts(3601))
+    }
 }

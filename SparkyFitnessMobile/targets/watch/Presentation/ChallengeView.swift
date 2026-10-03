@@ -13,7 +13,7 @@ struct ChallengeView: View {
                 } else if snapshot.items.isEmpty {
                     ChallengeMessageView(
                         title: snapshot.hasMore ? "More challenges on iPhone" : "No challenges yet", symbol: "figure.walk",
-                        message: snapshot.hasMore ? "Open Challenges on your iPhone to see older items." : "Create a steps challenge on your iPhone.",
+                        message: snapshot.hasMore ? "Open Challenges on your iPhone to see older items." : "Create a challenge on your iPhone.",
                         updatedAt: snapshot.generatedAt
                     )
                 } else {
@@ -53,11 +53,11 @@ private struct ChallengeSummary: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Label(item.statusLabel, systemImage: item.isInvitation ? "envelope" : "figure.walk")
+            Label(item.statusLabel, systemImage: item.isInvitation ? "envelope" : item.isWorkoutTime ? "timer" : "figure.walk")
                 .font(.caption2).foregroundStyle(.secondary)
             Text(item.name).font(.headline).lineLimit(2)
             if let own = item.ownRow {
-                Text("\(ChallengeFormat.steps(own.total)) steps")
+                Text(ChallengeFormat.score(own.total, item: item))
                     .font(.system(.title3, design: .rounded, weight: .semibold))
                     .monospacedDigit()
                 Text(ChallengeFormat.rank(own)).font(.caption2)
@@ -124,6 +124,10 @@ extension WatchChallenge {
 }
 
 enum ChallengeFormat {
+    static func score(_ value: Double, item: WatchChallenge) -> String {
+        item.isWorkoutTime ? ChallengeDurationFormat.string(value) : String(localized: "\(steps(value)) steps")
+    }
+
     static func steps(_ value: Double) -> String {
         value.formatted(.number.precision(.fractionLength(0)))
     }

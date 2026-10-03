@@ -9,11 +9,21 @@ export interface CompanionChallengeRow {
   tied: boolean;
   leader: boolean;
   gapToLeader?: number;
-  today?: { date: string; value: number; present: boolean; eligible: boolean };
-  daysWithSteps: number;
+  today?: {
+    date: string;
+    value: number;
+    present: boolean;
+    eligible: boolean;
+    workoutCount?: number;
+  };
+  daysWithSteps?: number;
+  daysWithData?: number;
+  workoutCount?: number;
   eligibleDays: number;
 }
 export interface CompanionChallengeItem {
+  metric?: 'steps' | 'workout_time';
+  scoreUnit?: 'steps' | 'seconds';
   id: string;
   name: string;
   lifecycle: 'upcoming' | 'active' | 'completed';
@@ -30,7 +40,7 @@ export interface CompanionChallengeItem {
   rows: CompanionChallengeRow[];
 }
 export interface CompanionChallengeSnapshot {
-  version: 1;
+  version: 1 | 2;
   /** Local config id + authenticated user id, never server URL/token. */
   accountKey: string;
   state: 'unavailable' | 'ready';

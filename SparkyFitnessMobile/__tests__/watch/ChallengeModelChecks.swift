@@ -25,7 +25,7 @@ struct ChallengeModelChecks {
         check(ChallengePayloadMapper.snapshot(from: nil) == nil, "old phone")
         check(ChallengePayloadMapper.snapshot(from: ["version": 1]) == nil, "partial snapshot")
         var modified = payload
-        modified["version"] = 2
+        modified["version"] = 3
         check(ChallengePayloadMapper.snapshot(from: modified) == nil, "unknown version")
         modified = payload
         modified["state"] = "unavailable"
@@ -83,6 +83,18 @@ struct ChallengeModelChecks {
         check(!WatchPage.visible(order: nil, hidden: ["challenge"], workoutActive: false).contains(.challenge), "page hides")
         check(WatchPage.visible(order: nil, hidden: ["workout"], workoutActive: true).contains(.workout), "active workout preserved")
         check(!WatchPage.visible(order: nil, hidden: WatchPage.allCases.map(\.rawValue), workoutActive: false).isEmpty, "no empty page deck")
+        var workout = payload
+        workout["version"] = 2
+        var workoutItem = (payload["items"] as! [[String: Any]])[0]
+        workoutItem["metric"] = "workout_time"
+        workoutItem["scoreUnit"] = "seconds"
+        workout["items"] = [workoutItem]
+        let parsedWorkout = ChallengePayloadMapper.snapshot(from: workout)!.items[0]
+        check(parsedWorkout.isWorkoutTime && parsedWorkout.isVersus, "workout unit")
+        check(!ChallengeDurationFormat.string(4080).contains("4080"), "duration is formatted")
+        check(!item.isWorkoutTime, "legacy Steps default")
+        workout["version"] = 1
+        check(ChallengePayloadMapper.snapshot(from: workout)!.items.isEmpty, "workout cannot masquerade as v1")
         print("Watch Challenge model checks: \(checks) passed")
     }
 }

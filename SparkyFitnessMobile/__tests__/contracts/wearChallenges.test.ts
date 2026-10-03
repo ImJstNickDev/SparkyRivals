@@ -73,7 +73,8 @@ it('uses current-account data and supplied rank/tie/gap without reranking', () =
   expect(ui()).toContain('row.tied');
   expect(ui()).toContain('own.gapToLeader');
   expect(ui()).not.toMatch(/\.sorted|\.sumOf|\.fold\(/);
-  expect(ui()).toContain('!point.present -> stringResource(R.string.no_steps)');
+  expect(ui()).toContain('R.string.no_workout else R.string.no_steps');
+  expect(ui()).toContain('workoutDurationParts(value)');
 });
 it('includes every requested developer preview only in debug sources', () => {
   const previews = wear(

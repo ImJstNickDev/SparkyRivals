@@ -6,7 +6,7 @@ import CoreFoundation
 enum ChallengePayloadMapper {
     static func snapshot(from raw: Any?) -> ChallengeSnapshot? {
         guard let payload = raw as? [String: Any],
-              integer(payload["version"]) == 1,
+              let version = integer(payload["version"]), [1, 2].contains(version),
               payload["state"] as? String == "ready",
               let accountKey = text(payload["accountKey"], limit: 300),
               let timestamp = number(payload["generatedAt"]), timestamp > 0,
@@ -14,7 +14,7 @@ enum ChallengePayloadMapper {
         else { return nil }
         var seen = Set<String>()
         let parsed = items.prefix(8).compactMap { item -> WatchChallenge? in
-            guard let challenge = challenge(from: item), seen.insert(challenge.id).inserted else { return nil }
+            guard let challenge = challenge(from: item, version: version), seen.insert(challenge.id).inserted else { return nil }
             return challenge
         }
         return ChallengeSnapshot(
@@ -25,7 +25,7 @@ enum ChallengePayloadMapper {
         )
     }
 
-    private static func challenge(from raw: Any) -> WatchChallenge? {
+    private static func challenge(from raw: Any, version: Int) -> WatchChallenge? {
         guard let item = raw as? [String: Any],
               let id = text(item["id"]), let name = text(item["name"]),
               let state = item["lifecycle"] as? String,
@@ -36,6 +36,11 @@ enum ChallengePayloadMapper {
               let timezone = text(item["timezone"]), TimeZone(identifier: timezone) != nil,
               let totalDays = integer(item["totalDays"]), (1...366).contains(totalDays),
               let daysRemaining = integer(item["daysRemaining"]), (0...366).contains(daysRemaining)
+        else { return nil }
+        let metricName = item["metric"] as? String ?? "steps"
+        guard let metric = ChallengeMetric(rawValue: metricName),
+              metric != .workoutTime || (version == 2 && item["scoreUnit"] as? String == "seconds"),
+              metric != .steps || item["scoreUnit"] == nil || item["scoreUnit"] as? String == "steps"
         else { return nil }
         var seen = Set<String>()
         // Defense in depth: pending/upcoming payloads cannot smuggle scores.
@@ -51,7 +56,7 @@ enum ChallengePayloadMapper {
             participantCount: membership == "accepted" ? integer(item["participantCount"]) : nil,
             calculatedAt: ContextPayloadMapper.isoDate(from: item["calculatedAt"]),
             leadMargin: membership == "accepted" ? number(item["leadMargin"]) : nil,
-            rows: rows
+            rows: rows, metric: metric
         )
     }
 
@@ -61,12 +66,13 @@ enum ChallengePayloadMapper {
               let isSelf = row["isSelf"] as? Bool,
               let total = number(row["total"]),
               let tied = row["tied"] as? Bool, let leader = row["leader"] as? Bool,
-              let days = integer(row["daysWithSteps"]), let eligible = integer(row["eligibleDays"])
+              let days = integer(row["daysWithData"] ?? row["daysWithSteps"]), let eligible = integer(row["eligibleDays"])
         else { return nil }
         return ChallengeParticipant(
             id: id, name: name, isSelf: isSelf, total: total, rank: integer(row["rank"]),
             tied: tied, leader: leader, gapToLeader: number(row["gapToLeader"]),
-            today: point(from: row["today"]), daysWithSteps: days, eligibleDays: eligible
+            today: point(from: row["today"]), daysWithSteps: integer(row["daysWithSteps"]) ?? 0, eligibleDays: eligible,
+            daysWithData: days, workoutCount: integer(row["workoutCount"])
         )
     }
 
@@ -74,7 +80,7 @@ enum ChallengePayloadMapper {
         guard let row = raw as? [String: Any], let date = day(row["date"]),
               let value = number(row["value"]), let present = row["present"] as? Bool,
               let eligible = row["eligible"] as? Bool else { return nil }
-        return ChallengeDay(date: date, value: value, present: present, eligible: eligible)
+        return ChallengeDay(date: date, value: value, present: present, eligible: eligible, workoutCount: integer(row["workoutCount"]))
     }
 
     private static func text(_ raw: Any?, limit: Int = 100) -> String? {

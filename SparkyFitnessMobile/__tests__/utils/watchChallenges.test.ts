@@ -4,7 +4,13 @@ import {
   emptyWatchChallenges,
   selectWatchChallenges,
 } from '../../src/utils/watchChallenges';
-import { actor, challenge, peer, results } from '../helpers/challenges';
+import {
+  actor,
+  challenge,
+  peer,
+  results,
+  workoutResults,
+} from '../helpers/challenges';
 import type { ChallengeResponse } from '@workspace/shared';
 
 const build = (
@@ -228,4 +234,89 @@ it('bounds worst-case UTF-8 payload and contains only property-list-safe values'
 
 it('shares the exact wire fixture with the native mapper tests', () => {
   expect(build()).toEqual(nativeFixture);
+});
+
+it('transmits workout units, secondary counts and zero/missing through the same projection', () => {
+  const snapshot = build({
+    challenges: [workoutResults.challenge],
+    results: new Map([
+      [challenge.id, { data: workoutResults, dataUpdatedAt: 1000 }],
+    ]),
+  });
+  expect(snapshot.version).toBe(2);
+  expect(snapshot.items[0]).toMatchObject({
+    metric: 'workout_time',
+    scoreUnit: 'seconds',
+    leadMargin: 1440,
+  });
+  expect(snapshot.items[0].rows[0]).toMatchObject({
+    total: 13320,
+    workoutCount: 4,
+    daysWithData: 2,
+    today: { value: 0, present: true, workoutCount: 1 },
+  });
+  expect(snapshot.items[0].rows[1].today?.present).toBe(false);
+  expect(snapshot.items[0].rows[0]).not.toHaveProperty('daysWithSteps');
+});
+it.each(['upcoming', 'completed'] as const)(
+  'preserves workout metric in %s state',
+  (lifecycle) => {
+    const c = { ...workoutResults.challenge, lifecycle };
+    const snapshot = build({
+      challenges: [c],
+      results: new Map([
+        [
+          c.id,
+          { data: { ...workoutResults, challenge: c }, dataUpdatedAt: 1000 },
+        ],
+      ]),
+    });
+    expect(snapshot.items[0].metric).toBe('workout_time');
+    expect(snapshot.items[0].rows).toHaveLength(
+      lifecycle === 'upcoming' ? 0 : 2
+    );
+  }
+);
+it('includes workout invitation rules without disclosing cached scores', () => {
+  const snapshot = build({
+    challenges: [{ ...workoutResults.challenge, my_membership: 'pending' }],
+  });
+  expect(snapshot.items[0]).toMatchObject({ metric: 'workout_time', rows: [] });
+});
+it('does not attach a stale Steps response to a workout item', () => {
+  expect(
+    build({ challenges: [workoutResults.challenge] }).items[0].rows
+  ).toEqual([]);
+});
+it('bounds workout payload below 32 KB with eight 100-person Challenges', () => {
+  const challenges = Array.from({ length: 8 }, (_, i) => ({
+    ...workoutResults.challenge,
+    id: String(i),
+    name: '🏋️'.repeat(100),
+  }));
+  const snapshot = build({
+    challenges,
+    results: new Map(
+      challenges.map((c) => [
+        c.id,
+        {
+          data: {
+            ...workoutResults,
+            challenge: c,
+            entries: Array.from({ length: 100 }, (_, i) => ({
+              ...workoutResults.entries[0],
+              user_id: i === 99 ? actor : String(i),
+              display_name: '🏋️'.repeat(100),
+              rank: i + 1,
+            })),
+          },
+          dataUpdatedAt: 1000,
+        },
+      ])
+    ),
+  });
+  expect(snapshot.items).toHaveLength(8);
+  expect(snapshot.items[0].rows.map((r) => r.rank)).toEqual([1, 2, 3, 100]);
+  const bytes = Buffer.byteLength(JSON.stringify(snapshot), 'utf8');
+  expect(bytes).toBeLessThan(32000);
 });

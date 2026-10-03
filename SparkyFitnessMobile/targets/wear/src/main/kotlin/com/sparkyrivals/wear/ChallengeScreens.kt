@@ -34,6 +34,7 @@ import com.sparkyrivals.companion.ChallengeItem
 import com.sparkyrivals.companion.ChallengeProtocol
 import com.sparkyrivals.companion.ChallengeRow
 import com.sparkyrivals.companion.ChallengeSnapshot
+import com.sparkyrivals.companion.workoutDurationParts
 import java.text.NumberFormat
 import java.time.Instant
 import java.time.LocalDate
@@ -66,7 +67,7 @@ fun ChallengeApp(state: CompanionState, now: Long) {
                                 items(snapshot.items.size, key = { snapshot.items[it].id }) { index ->
                                     val item = snapshot.items[index]
                                     Button(onClick = { nav.navigate("detail/${Uri.encode(item.id)}") }, modifier = Modifier.fillMaxWidth(),
-                                        secondaryLabel = { Text(status(item)) }, label = { Text(item.name) })
+                                        secondaryLabel = { Text(stringResource(if (item.metric == "workout_time") R.string.workout_time else R.string.steps_label) + " · " + status(item)) }, label = { Text(item.name) })
                                 }
                                 if (snapshot.hasMore) item { Hint(stringResource(R.string.more_phone)) }
                                 item { Freshness(snapshot, now) }
@@ -114,16 +115,17 @@ private fun day(value: String) = LocalDate.parse(value).format(DateTimeFormatter
 
 @Composable
 fun ChallengeDetail(item: ChallengeItem, snapshot: ChallengeSnapshot, now: Long) = WearList {
+    item { Hint(stringResource(if (item.metric == "workout_time") R.string.workout_time else R.string.steps_label)) }
     item { Hint(status(item)) }
     item { Heading(item.name) }
     when {
         item.membership == "pending" -> {
             item { Heading(stringResource(if (item.lifecycle == "completed") R.string.review_phone else R.string.accept_phone)) }
-            item { Hint(stringResource(R.string.steps_rule)) }
+            item { Hint(stringResource(if (item.metric == "workout_time") R.string.workout_rule else R.string.steps_rule)) }
         }
         item.lifecycle == "upcoming" -> {
             item { Heading(stringResource(R.string.start_date, day(item.startDate))) }
-            item { Hint(stringResource(R.string.steps_rule)) }
+            item { Hint(stringResource(if (item.metric == "workout_time") R.string.workout_rule else R.string.steps_rule)) }
         }
         else -> {
             val own = item.rows.firstOrNull { it.isSelf }
@@ -132,7 +134,7 @@ fun ChallengeDetail(item: ChallengeItem, snapshot: ChallengeSnapshot, now: Long)
             // Presentation only: 1v1 places self first; group keeps server order/ranks.
             val rows = if (item.participantCount == 2L) item.rows.filter { it.isSelf } + item.rows.filterNot { it.isSelf } else item.rows
             items(rows.size, key = { rows[it].id }) { index -> ParticipantScore(rows[index], item, now, item.participantCount == 2L) }
-            if (item.rows.any { it.daysWithSteps < it.eligibleDays }) item { Hint(stringResource(R.string.coverage)) }
+            if (item.rows.any { it.daysWithData < it.eligibleDays }) item { Hint(stringResource(if (item.metric == "workout_time") R.string.workout_coverage else R.string.coverage)) }
             if (item.lifecycle == "completed") item { Hint(stringResource(R.string.reconciled)) }
         }
     }
@@ -145,8 +147,8 @@ fun ChallengeDetail(item: ChallengeItem, snapshot: ChallengeSnapshot, now: Long)
 @Composable private fun Lead(own: ChallengeRow, item: ChallengeItem) {
     val text = when {
         own.leader && own.tied -> stringResource(R.string.tied_lead)
-        own.leader && item.leadMargin != null -> stringResource(R.string.lead, number(item.leadMargin))
-        own.gapToLeader != null && own.gapToLeader > 0 -> stringResource(R.string.behind, number(own.gapToLeader))
+        own.leader && item.leadMargin != null -> stringResource(R.string.lead, score(item.leadMargin, item))
+        own.gapToLeader != null && own.gapToLeader > 0 -> stringResource(R.string.behind, score(own.gapToLeader, item))
         own.rank != null -> stringResource(R.string.rank, number(own.rank))
         else -> null
     }
@@ -159,14 +161,15 @@ fun ChallengeDetail(item: ChallengeItem, snapshot: ChallengeSnapshot, now: Long)
         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(3.dp)) {
         val color = if (row.isSelf) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
         Text(if (row.isSelf) stringResource(R.string.you) else row.name, style = MaterialTheme.typography.titleSmall, color = color, textAlign = TextAlign.Center)
-        Text(stringResource(R.string.steps, number(row.total)), style = if (versus) MaterialTheme.typography.displaySmall else MaterialTheme.typography.numeralSmall, color = color, textAlign = TextAlign.Center)
+        Text(score(row.total, item), style = if (versus) MaterialTheme.typography.displaySmall else MaterialTheme.typography.numeralSmall, color = color, textAlign = TextAlign.Center)
+        row.workoutCount?.let { Text(pluralStringResource(R.plurals.workouts, it.toInt(), number(it)), color = color) }
         row.rank?.let { Text(stringResource(R.string.rank, number(it)), color = color) }
         if (row.tied) Text(stringResource(R.string.tied), color = color)
         if (row.leader) Text(stringResource(if (item.lifecycle == "completed") { if (row.tied) R.string.current_tied_winner else R.string.current_winner } else R.string.leader), color = color)
         row.today?.let { point ->
             val today = Instant.ofEpochMilli(now).atZone(ZoneId.of(item.timezone)).toLocalDate().toString()
             Text(if (point.date == today) stringResource(R.string.today) else day(point.date), style = MaterialTheme.typography.labelSmall, color = color)
-            Text(when { !point.eligible -> stringResource(R.string.not_started); !point.present -> stringResource(R.string.no_steps); else -> stringResource(R.string.steps, number(point.value)) }, color = color)
+            Text(when { !point.eligible -> stringResource(R.string.not_started); !point.present -> stringResource(if (item.metric == "workout_time") R.string.no_workout else R.string.no_steps); else -> score(point.value, item) }, color = color)
         }
     }
 }
@@ -175,4 +178,11 @@ fun ChallengeDetail(item: ChallengeItem, snapshot: ChallengeSnapshot, now: Long)
         Hint(stringResource(R.string.updated, DateUtils.getRelativeTimeSpanString(snapshot.generatedAt, now, DateUtils.MINUTE_IN_MILLIS).toString()))
         if (ChallengeProtocol.stale(snapshot, now)) Text(stringResource(R.string.stale), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
     }
+}
+
+@Composable private fun score(value: Long, item: ChallengeItem): String {
+    if (item.metric == "steps") return stringResource(R.string.steps, number(value))
+    return workoutDurationParts(value).map { (amount, unit) ->
+        stringResource(when (unit) { "hour" -> R.string.hours_short; "minute" -> R.string.minutes_short; else -> R.string.seconds_short }, number(amount))
+    }.joinToString(" ")
 }
