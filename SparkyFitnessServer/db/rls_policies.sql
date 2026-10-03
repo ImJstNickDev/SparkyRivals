@@ -1069,3 +1069,23 @@ CREATE POLICY challenge_participant_respond ON public.challenge_participants FOR
 USING (user_id = public.challenge_actor())
 WITH CHECK (user_id = public.challenge_actor());
 -- No DELETE policies: departure is an audited transition; user deletion cascades.
+
+-- Only display names are projected from profiles. Challenge membership never
+-- makes profile/body-measurement rows available through their ordinary policies.
+CREATE OR REPLACE FUNCTION public.challenge_roster(p_challenge_id uuid)
+RETURNS TABLE (
+  challenge_id uuid, user_id uuid, status text, invited_by_user_id uuid,
+  invited_at timestamptz, accepted_at timestamptz, declined_at timestamptz,
+  left_at timestamptz, created_at timestamptz, updated_at timestamptz, display_name text
+)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = pg_catalog, public AS $$
+  SELECT cp.*, COALESCE(NULLIF(btrim(p.full_name), ''), 'Participant')
+  FROM public.challenge_participants cp
+  LEFT JOIN public.profiles p ON p.id = cp.user_id
+  WHERE cp.challenge_id = p_challenge_id
+    AND public.challenge_membership(p_challenge_id) IN ('pending', 'accepted')
+    AND (public.owns_challenge(p_challenge_id)
+      OR cp.user_id = public.challenge_actor()
+      OR (cp.status = 'accepted' AND public.challenge_membership(p_challenge_id) = 'accepted'))
+  ORDER BY cp.created_at, cp.user_id;
+$$;

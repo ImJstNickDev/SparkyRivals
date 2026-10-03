@@ -1,3 +1,8 @@
+import service from '../services/challengeService.js';
+import {
+  createChallengeRequestSchema,
+  challengeDetailResponseSchema,
+} from '@workspace/shared';
 import { randomUUID } from 'node:crypto';
 import type { PoolClient } from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -297,5 +302,57 @@ describe.runIf(RUN)('Challenge database constraints and RLS', () => {
         ).rowCount
       ).toBe(0);
     });
+  });
+  it('serves typed detail through the real repository, with separate invitation consent', async () => {
+    const today = todayInZone('UTC');
+    const result = await service.create(
+      owner,
+      createChallengeRequestSchema.parse({
+        name: 'Service flow',
+        start_date: today,
+        end_date: addDays(today, 6),
+        timezone: 'UTC',
+        participant_ids: [invitee],
+      })
+    );
+    expect(challengeDetailResponseSchema.safeParse(result).success).toBe(true);
+    const id = result.challenge.id;
+    expect(result.participants).toHaveLength(2);
+    const pending = await service.detail(invitee, id);
+    expect(pending.participants.map((p) => p.user_id)).toEqual([invitee]);
+    await service.respond(invitee, id, 'accept');
+    expect((await service.detail(invitee, id)).participants).toHaveLength(2);
+    await service.respond(invitee, id, 'leave');
+    await expect(service.detail(invitee, id)).rejects.toMatchObject({
+      status: 404,
+    });
+    expect(
+      (await service.list(invitee, { limit: 20, offset: 0 })).challenges.find(
+        (c) => c.id === id
+      )
+    ).toBeUndefined();
+  });
+  it('rolls back creation when any invitation is unauthorized, without account enumeration', async () => {
+    const before = await service.list(owner, { limit: 50, offset: 0 });
+    for (const target of [outsider, randomUUID()]) {
+      await expect(
+        service.create(
+          owner,
+          createChallengeRequestSchema.parse({
+            name: 'Atomic',
+            start_date: todayInZone('UTC'),
+            end_date: todayInZone('UTC'),
+            timezone: 'UTC',
+            participant_ids: [invitee, target],
+          })
+        )
+      ).rejects.toMatchObject({
+        status: 403,
+        message: 'Invitation or action unavailable',
+      });
+    }
+    expect(
+      (await service.list(owner, { limit: 50, offset: 0 })).challenges
+    ).toHaveLength(before.challenges.length);
   });
 });

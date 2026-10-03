@@ -71,6 +71,9 @@ pnpm exec eslint routes/v2/foodRoutes.ts services/foodCoreService.ts
 - `routes/auth/` - auth-specific route fragments mounted through `routes/authRoutes.ts`
 - `services/` - business logic and orchestration
 - `models/` - PostgreSQL repositories and persistence helpers
+- `services/challengeService.ts` and `models/challengeRepository.ts` — SparkyRivals
+  Challenge consent/lifecycle; self context only, independent of family delegation.
+  Read `../docs/fork/CHALLENGES.md` before changing competition permissions or scoring.
 - `middleware/` - auth, permissions, uploads, and shared Express middleware
 - `utils/uploadsPath.ts` - the uploads root plus the resolver and containment guard for stored `file_path` values; use it instead of re-deriving `SPARKY_FITNESS_CUSTOM_UPLOADS_DIRECTORY`
 - `utils/oauthState.ts` - server-issued single-use OAuth `state` nonces for provider linking (`issueOAuthState`, `persistOAuthState`, `claimOAuthState`); use it instead of hand-rolling a state value
