@@ -4,6 +4,10 @@ import path from 'node:path';
 const mobileRoot = path.resolve(__dirname, '../..');
 
 const NATIVE_TABS_ROUTE_EXCLUSIONS = {
+  Challenges:
+    'Root-stack competition hub entered from Dashboard; preserves the existing native tab layout.',
+  ChallengeDetail: 'Root-stack competition results route above the tab host.',
+  CreateChallenge: 'Root-stack competition creation form above the tab host.',
   Onboarding: 'First-run setup route shown before the tab host exists.',
   FoodsLibrary: 'Root-stack library drill-in presented above the tab host.',
   MealsLibrary: 'Root-stack library drill-in presented above the tab host.',

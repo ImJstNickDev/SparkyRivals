@@ -27,7 +27,7 @@ and physical health/auth/widgets/Watch behavior. No installable binary is claime
 See [BUILDING.md](BUILDING.md) for those steps. Later milestones require a new
 explicit request; this status does not authorize Challenges or Wear OS work.
 
-## 2. Challenge backend — implemented, ready for review
+## 2. Challenge backend — merged as PR #2
 
 Steps/sum competitions support 1–100 participants, relationship-scoped invitations,
 explicit acceptance/decline/departure, cancellation, immutable date/zone rules,
@@ -39,19 +39,24 @@ needed for v1. Automated provider downward corrections remain an ingestion limit
 Evidence: [CHALLENGES.md](CHALLENGES.md) and
 [CHALLENGE_VALIDATION.md](CHALLENGE_VALIDATION.md). Fresh migrations, populated
 Milestone 1 upgrade, direct RLS, lifecycle/consent, 100-participant concurrency,
-calendar/DST and full regressions pass. This PR remains unmerged. Milestone 3 needs
-an explicit maintainer request; no client Challenge work has started.
+calendar/DST and full regressions pass. Normal merge main was
+`eff06b7b6e522145e037f4ce08a7e5d732a4fbb1`.
 
-## 3. Web and mobile Challenge UI
+## 3. Web and mobile Challenge UI — implemented, ready for review
 
-Add feature routes/screens and a clear overview using existing design systems,
-navigation, query keys, and localization. Show competitors, lead/gap, today/period
-progress, recent activity, remaining time, and freshness. Include invitation,
-empty/offline/tied/completed states. Display existing workouts read-only if useful;
-do not attach workout points yet.
+Web routes and native root-stack screens now provide the hub, invitations,
+creation, 1v1/group results, daily history, owner/member actions and refresh.
+They consume server ranks/scores/lifecycle/coverage, use existing themes and
+localization, and preserve missing-data semantics and explicit membership consent.
+A mobile Dashboard entry preserves the native tab/Add arrangement. No workouts,
+Watch transport, Wear OS or deployment are included.
 
-Exit: responsive web, iPhone, and Android agree on server result revisions and
-remain usable across themes, text sizes, account switches, and interrupted sync.
+The feature starts from the validated frozen upstream sync merged through fork
+PR #3 (`747280650d58fcfde1617a12eab04b829eb3bff2`). Its own PR remains unmerged.
+See [CHALLENGE_UI.md](CHALLENGE_UI.md) and
+[CHALLENGE_UI_VALIDATION.md](CHALLENGE_UI_VALIDATION.md). Package tests, web build
+and fixture-backed browser visuals pass. Native device accessibility, keyboard,
+calendar, theme and real-server flows remain a follow-up acceptance boundary.
 
 ## 4. Apple Watch Challenge page
 

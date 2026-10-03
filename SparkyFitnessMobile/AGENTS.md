@@ -102,6 +102,16 @@ npx expo prebuild --clean
 - JS bridges to native modules live in `src/services/` (`CalorieWidgetBridge.ts`, `ExactAlarmBridge.ts`); there is no `src/native/` directory.
 - `plugins/`, `targets/widget/`, `targets/android-widget/`, `targets/android-exact-alarm/` - Expo plugins and widget/native extension sources.
 
+## Challenge clients (SparkyRivals)
+
+- Dashboard opens `Challenges`, `ChallengeDetail` and `CreateChallenge` through
+  safe root-stack screens; preserve existing tabs and detached Add behavior.
+- `src/components/challenges/`, `src/hooks/useChallenges.ts`, Challenge keys in
+  `src/hooks/queryKeys.ts` and `src/services/api/challengesApi.ts` consume shared
+  server results. No local ranking, second health sync or offline membership queue.
+- Details, consent, refresh and device-verification boundaries live in
+  `../docs/fork/CHALLENGE_UI.md`. No Watch payload/page was added in this milestone.
+
 ## React Query And Local State
 
 - Query setup lives in `src/hooks/queryClient.ts`; keys live in `src/hooks/queryKeys.ts`.

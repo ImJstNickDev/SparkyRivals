@@ -1,3 +1,6 @@
+import ChallengesScreen from '../screens/ChallengesScreen';
+import ChallengeDetailScreen from '../screens/ChallengeDetailScreen';
+import CreateChallengeScreen from '../screens/CreateChallengeScreen';
 import SyncScreen from '../screens/SyncScreen';
 import ImportHistoryScreen from '../screens/ImportHistoryScreen';
 import LogScreen from '../screens/LogScreen';
@@ -172,3 +175,9 @@ export const SafeSymptomLog = withErrorBoundary(SymptomLogScreen, 'SymptomLog', 
 export const SafeSymptomHistory = withErrorBoundary(SymptomHistoryScreen, 'SymptomHistory', { canGoBack: true });
 export const SafeManageSymptoms = withErrorBoundary(ManageSymptomsScreen, 'ManageSymptoms', { canGoBack: true });
 export const SafeSymptomDefinitionEditor = withErrorBoundary(SymptomDefinitionEditorScreen, 'SymptomDefinitionEditor', { canGoBack: true });
+
+export const SafeChallenges = withErrorBoundary(ChallengesScreen, 'Challenges', { canGoBack: true });
+
+export const SafeChallengeDetail = withErrorBoundary(ChallengeDetailScreen, 'ChallengeDetail', { canGoBack: true });
+
+export const SafeCreateChallenge = withErrorBoundary(CreateChallengeScreen, 'CreateChallenge', { canGoBack: true });
