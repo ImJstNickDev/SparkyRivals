@@ -48,7 +48,15 @@ required-source assertions. No database permissions were changed.
 The retry uploaded successfully and started EAS internal iOS build **1004** from
 `bd47a3b9f2b8374941c52c2b0ddfc3d855e3e80f`:
 [build 36d8444f-9c5d-4547-b17a-82c75c5b84bf](https://expo.dev/accounts/imjstnickdev/projects/sparkyrivals/builds/36d8444f-9c5d-4547-b17a-82c75c5b84bf).
-Compilation is in progress; no installation or store submission has occurred.
+EAS completed Xcode compilation and ad-hoc IPA export successfully (Xcode 26.6
+on the EAS macOS worker). The IPA contains all five bundles with the owned team,
+shared App Group, ad-hoc provisioning and shared Distribution Certificate. No
+installation or store submission occurred. Inspection caught a version mismatch:
+phone `1004`, four children `1`. The resolver now consumes EAS's allocated iOS
+build number before prebuild; config tests and simulated EAS prebuild confirm
+all five match. Replacement build **1005** is compiling with the existing credentials:
+[aea3b147-8244-4e6c-8030-b92b11e337e7](https://expo.dev/accounts/imjstnickdev/projects/sparkyrivals/builds/aea3b147-8244-4e6c-8030-b92b11e337e7).
+Inspect its five embedded versions before requesting iPhone installation.
 
 ## Android compilation
 
@@ -91,7 +99,30 @@ The owned release helper now carries the profile through compilation, the Gradle
 guard compares resolver/native package identity, and final APK verification checks
 bundled `assets/app.config` as well as Android metadata/signature.
 
-No emulator, physical Android phone or Galaxy Watch acceptance has been performed.
+Physical Samsung Galaxy A25 (Android 14 / API 34): release 1001 installed
+successfully over authorized USB ADB and cold-launched to localized onboarding
+in 1.49 seconds. No process crash was observed; Challenge/calorie/macro widget
+receivers are registered. No server URL, account credentials or health access
+was configured. The first-launch log exposed notification channel creation before
+i18n initialization; native startup now waits for the existing language/route
+bootstrap. Focused startup tests: **83 passed**. Full mobile validate passed;
+full CI: **506 suites / 7,794 tests passed**. Config tests: **195 passed**.
+Corrected phone/Wear release builds **1002 / 1000001002** passed in 4m 50s
+(1,350 tasks), including **34 Wear JVM tests**. Both retain the exact permanent
+certificate and production package. APK SHA-256:
+
+- Phone: `261f0f7b75afd96f9ac5469c56a188e01dae66f6912d80519e2478836577d0a1`.
+- Wear: `491550697a4627c64c88c2070f7783cc1a60a426a7245ff0746a2c43f76a840c`.
+
+Artifacts and verification JSON are privately archived in
+`~/.local/share/sparkyrivals/artifacts/milestone-8a/1002-1000001002/`.
+Phone 1002 updated the connected device without clearing app data. Cold launch
+completed in **1.237 seconds**; the app remained foreground on localized onboarding
+and its new process log contained no crash or notification-channel initialization
+failure. Screenshots/logs remain private. Authentication, actual notification
+delivery, health synchronization, widget interaction and Challenge server flows
+are not established by this launch check. No emulator or Galaxy Watch acceptance
+has been performed.
 
 ## Local production stack — passed
 
