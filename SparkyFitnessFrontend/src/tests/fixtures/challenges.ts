@@ -91,3 +91,29 @@ export const connection: ChallengeConnection = {
   access_start_date: '2026-01-01T00:00:00Z',
   access_end_date: null,
 };
+
+export const workoutResults: ChallengeLeaderboardResponse = {
+  ...results,
+  contract_version: 2,
+  score_unit: 'seconds',
+  challenge: { ...challenge, metric: 'workout_time' },
+  lead_margin: 1440,
+  entries: results.entries.map((entry, index) => ({
+    ...entry,
+    total_score: index ? 11880 : 13320,
+    total_workout_count: index ? 3 : 4,
+    gap_to_leader: index ? 1440 : 0,
+    gap_to_next_rank: index ? null : 1440,
+    daily: entry.daily.map((day, dayIndex) => ({
+      ...day,
+      value: dayIndex === 0 ? (index ? 11880 : 13320) : 0,
+      workout_count: dayIndex === 0 ? 3 : day.present ? 1 : 0,
+    })),
+    today: { ...entry.today!, workout_count: index ? 0 : 1 },
+    coverage: {
+      days_with_data: index ? 1 : 2,
+      eligible_days: 2,
+      latest_data_update_at: '2026-10-04T10:00:00Z',
+    },
+  })),
+};

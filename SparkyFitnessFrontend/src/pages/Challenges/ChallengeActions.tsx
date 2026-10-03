@@ -168,15 +168,25 @@ export function ChallengeActions({
             <DialogTitle>{dialog && labels[dialog]}</DialogTitle>
             <DialogDescription>
               {dialog === 'cancel'
-                ? t(
-                    'challenges.cancelConfirm',
-                    'Cancel for everyone? Step sharing stops and this cannot be undone.'
-                  )
-                : dialog === 'leave'
-                  ? t(
-                      'challenges.leaveConfirm',
-                      'Leave this Challenge? Your steps will be removed from its results, and you cannot rejoin.'
+                ? challenge.metric === 'workout_time'
+                  ? t('challenges.workoutCancelConfirm', {
+                      defaultValue:
+                        'Cancel for everyone? Workout time sharing stops and this cannot be undone.',
+                    })
+                  : t(
+                      'challenges.cancelConfirm',
+                      'Cancel for everyone? Step sharing stops and this cannot be undone.'
                     )
+                : dialog === 'leave'
+                  ? challenge.metric === 'workout_time'
+                    ? t('challenges.workoutLeaveConfirm', {
+                        defaultValue:
+                          'Leave this Challenge? Your workout time will be removed from its results, and you cannot rejoin.',
+                      })
+                    : t(
+                        'challenges.leaveConfirm',
+                        'Leave this Challenge? Your steps will be removed from its results, and you cannot rejoin.'
+                      )
                   : t(
                       'challenges.rulesFixed',
                       'Dates, timezone and scoring stay the same.'
