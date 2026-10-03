@@ -223,6 +223,7 @@ export default ({ config }: ConfigContext): Partial<ExpoConfig> => {
       ],
       './plugins/withGlanceAndroidSupport',
       './plugins/withReleaseSigning',
+      './plugins/withWearOsCompanion',
       './plugins/withAppLanguage',
       './plugins/withCalorieWidget',
       './plugins/withExactAlarmModule',

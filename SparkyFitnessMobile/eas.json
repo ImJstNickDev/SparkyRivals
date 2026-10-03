@@ -34,6 +34,7 @@
       "autoIncrement": true,
       "env": {
         "APP_IDENTITY": "custom",
+        "EXPO_WEAR_ENABLED": "1",
         "EXPO_APP_NAME": "SparkyRivals",
         "EXPO_APP_SLUG": "sparkyrivals",
         "EXPO_ANDROID_PACKAGE": "com.imjstnick.sparkyrivals",

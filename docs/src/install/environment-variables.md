@@ -301,3 +301,15 @@ the default `versionCode` of 1. EAS profiles use remote version management and
 `autoIncrement: true`; seed/reconcile that counter before switching between local
 and EAS distribution. Configuration-only prebuilds may omit the number. This is
 build metadata and is not forwarded to any server container.
+
+### Wear companion builds (build only)
+
+`EXPO_WEAR_ENABLED=1` enables the optional native Wear module in custom identity
+builds. It is enabled by the SparkyRivals profiles and rejected in upstream mode.
+`EXPO_WEAR_BUILD_NUMBER` is an integer from 1000000000 through 2100000000, required
+explicitly for Wear release tasks. Phone codes must remain below 1000000000 when
+Wear is enabled. Allocate increasing codes within each range; never reuse a
+distributed code. Debug/config checks default Wear to 1000000001. Neither variable
+is a server setting: Compose, Helm, the simple server template and EnvGenerator
+do not forward them. Wear uses the phone's existing owned release signing config,
+not another secret interface.

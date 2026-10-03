@@ -1,7 +1,7 @@
 // Read-only checks of clean prebuild output. Run with the SAME profile/env as prebuild.
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { readFileSync, readdirSync, writeFileSync, existsSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -160,7 +160,56 @@ if (platform !== 'ios') {
     if (id.mode === 'custom')
       assert.ok(!source.includes('sparkyfitnessmobile://'));
   }
-  snapshot.platforms.android = { gradle, manifest, sources };
+  let wear;
+  const settings = read('android/settings.gradle');
+  if (id.wearEnabled) {
+    assert.match(settings, /include ':wear'/);
+    const wearGradle = read('android/wear/build.gradle');
+    assert.ok(wearGradle.includes(`applicationId '${id.androidPackage}'`));
+    assert.ok(wearGradle.includes(`versionCode ${id.wearBuildNumber}`));
+    assert.ok(wearGradle.includes('phone.buildTypes.debug.signingConfig'));
+    assert.ok(wearGradle.includes('phone.buildTypes.release.signingConfig'));
+    assert.ok(wearGradle.includes('!signing.storePassword'));
+    assert.ok(
+      wearGradle.includes('phone.defaultConfig.versionCode >= 1000000000')
+    );
+    assert.ok(wearGradle.includes('play-services-wearable:20.0.1'));
+    assert.ok(!wearGradle.includes('com.facebook.react'));
+    assert.ok(!wearGradle.includes('{{'));
+    const wearManifest = await parseStringPromise(
+      read('android/wear/src/main/AndroidManifest.xml')
+    );
+    assert.deepEqual(wearManifest.manifest['uses-feature'][0].$, {
+      'android:name': 'android.hardware.type.watch',
+      'android:required': 'true',
+    });
+    assert.equal(wearManifest.manifest['uses-permission'], undefined);
+    assert.equal(
+      wearManifest.manifest.application[0]['meta-data'][0].$['android:value'],
+      'false'
+    );
+    assert.equal(
+      wearManifest.manifest.application[0]['meta-data'][0].$['android:name'],
+      'com.google.android.wearable.standalone'
+    );
+    const files = {};
+    const visit = (dir) => {
+      for (const entry of readdirSync(join(root, dir), {
+        withFileTypes: true,
+      })) {
+        const file = join(dir, entry.name);
+        if (entry.isDirectory()) visit(file);
+        else
+          files[file] = createHash('sha256').update(read(file)).digest('hex');
+      }
+    };
+    visit('android/wear');
+    wear = { gradle: wearGradle, manifest: wearManifest, files };
+  } else {
+    assert.ok(!settings.includes("include ':wear'"));
+    assert.ok(!existsSync(join(root, 'android/wear')));
+  }
+  snapshot.platforms.android = { gradle, manifest, sources, wear };
 }
 function canonical(value) {
   if (Array.isArray(value)) return value.map(canonical);
