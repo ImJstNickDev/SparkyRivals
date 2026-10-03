@@ -78,8 +78,38 @@ describe('WatchSettingsScreen', () => {
       'water',
       'entry',
       'trend',
+      'challenge',
     ]);
     expect(orderedRowKeys()).toHaveLength(WATCH_PAGE_KEYS.length);
+  });
+
+  test('Challenges uses the normal label, hide/show and reorder controls', () => {
+    renderScreen();
+    expect(screen.getByText('Challenges')).toBeTruthy();
+    fireEvent(
+      screen.getByTestId('watch-page-switch-challenge'),
+      'valueChange',
+      false
+    );
+    expect(useAppPreferencesStore.getState().hiddenWatchPages).toContain(
+      'challenge'
+    );
+    fireEvent(
+      screen.getByTestId('watch-page-switch-challenge'),
+      'valueChange',
+      true
+    );
+    expect(useAppPreferencesStore.getState().hiddenWatchPages).not.toContain(
+      'challenge'
+    );
+    fireEvent(
+      screen.getByTestId('watch-page-drag-handle-challenge'),
+      'accessibilityAction',
+      { nativeEvent: { actionName: 'decrement' } }
+    );
+    expect(useAppPreferencesStore.getState().watchPageOrder.at(-2)).toBe(
+      'challenge'
+    );
   });
 
   test('toggling a page hides and shows it', () => {
@@ -110,12 +140,13 @@ describe('WatchSettingsScreen', () => {
       'entry',
       'trend',
       'workout',
+      'challenge',
     ]);
   });
 
   test('the last page still shown cannot be turned off', () => {
     useAppPreferencesStore.setState({
-      hiddenWatchPages: ['goals', 'water', 'entry', 'trend'],
+      hiddenWatchPages: ['goals', 'water', 'entry', 'trend', 'challenge'],
     });
 
     renderScreen();

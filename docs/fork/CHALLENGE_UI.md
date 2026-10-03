@@ -37,6 +37,8 @@ Shared contracts and the small relationship projection in
   `hooks/Challenges/useChallenges.ts`; uses existing authenticated `apiCall`.
 - Mobile: `services/api/challengesApi.ts`, `hooks/queryKeys.ts`,
   `hooks/useChallenges.ts`; uses existing `apiFetch`, server selection and auth.
+  Milestone 4 extracts `hooks/challengeQueryOptions.ts` for the same list/results
+  queries to serve the headless Watch snapshot without a second API client.
 - Responses are parsed with shared Zod contracts. Keys include the authenticated
   actor. Mobile server switches retain the upstream query-cache clearing behavior.
 - Web blocks the Challenge surface while acting on another account. Family diary
@@ -154,8 +156,9 @@ real-server end-to-end device behavior still need device verification. No native
 binary, Xcode, emulator, paid build or store submission is claimed.
 
 There are no Challenge notifications, workout points, offline writes or account
-search. Apple Watch and Wear OS remain separate future milestones. They should
-consume the same server response via a future deliberate transport integration;
-this milestone changes no WatchConnectivity Challenge payload, Watch page or
-complication. No service deployment or Docker persistence change is involved:
+search. Milestone 4 adds a [read-only Apple Watch page](APPLE_WATCH_CHALLENGES.md)
+using this mobile query cache and the existing composed application context.
+Phone mutations and canonical health refresh invalidate the shared Challenge
+family, so refreshed results also reach the Watch. Watch mutations, complications
+and Wear OS remain later work. No service deployment or Docker persistence change is involved:
 production remains a separate checkout with bind-mounted `dockerdata/` only.

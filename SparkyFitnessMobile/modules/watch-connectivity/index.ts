@@ -1,5 +1,6 @@
 import { NativeModule, requireOptionalNativeModule } from 'expo';
 import { Platform } from 'react-native';
+import type { WatchChallengeSnapshot } from '../../src/types/watchChallenges';
 
 /** One row of the watch's Goals page: a nutrient's amount against its goal. */
 export interface WatchGoalNutrientPayload {
@@ -87,6 +88,8 @@ export interface WatchContainerPayload {
 
 /** Seed values, history and acknowledgements pushed to the watch. */
 export interface WatchContextPayload {
+  /** Optional additive read state in the ONE composed application context. */
+  challengeSnapshot?: WatchChallengeSnapshot;
   /**
    * Milliseconds since the epoch at push time. Not read by the watch — it
    * exists purely to guarantee two consecutive pushes are never byte-identical.

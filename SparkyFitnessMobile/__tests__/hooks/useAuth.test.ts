@@ -1,3 +1,7 @@
+import {
+  getWatchChallengeSession,
+  invalidateWatchChallengeSession,
+} from '../../src/services/watchChallengeSession';
 import { renderHook, act } from '@testing-library/react-native';
 import { Image } from 'expo-image';
 import { useAuth } from '../../src/hooks/useAuth';
@@ -73,7 +77,34 @@ describe('useAuth', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    invalidateWatchChallengeSession(false);
     queryClient = createTestQueryClient();
+  });
+
+  test('blocks Watch data synchronously through the cookie/account transition', async () => {
+    let finish: (ok: boolean) => void = () => {};
+    mockClearAuthCookies.mockReturnValueOnce(
+      new Promise<boolean>((resolve) => {
+        finish = resolve;
+      })
+    );
+    renderUseAuth();
+    const pending = mockSetOnIdentityChanged.mock.calls[0][0]();
+    expect(getWatchChallengeSession().blocked).toBe(true);
+    await act(async () => {
+      finish(true);
+      await pending;
+    });
+    expect(getWatchChallengeSession().blocked).toBe(false);
+  });
+
+  test('session expiry and logout block the Watch projection', async () => {
+    renderUseAuth();
+    act(() => mockSetOnSessionExpired.mock.calls[0][0]('server'));
+    expect(getWatchChallengeSession().blocked).toBe(true);
+    invalidateWatchChallengeSession(false);
+    act(() => mockSetOnNoConfigs.mock.calls[0][0]());
+    expect(getWatchChallengeSession().blocked).toBe(true);
   });
 
   test('does not auto-show any modal on mount', async () => {

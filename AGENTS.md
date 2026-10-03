@@ -178,7 +178,9 @@ Keep the upstream license, attribution, history, functionality, and package guid
 - Challenge backend: see `docs/fork/CHALLENGES.md` for `/api/v2/challenges`,
   consent/RLS, live canonical steps and the shared response contract.
 - Challenge web/mobile source maps, consent-aware cache rules and native test
-  boundaries: `docs/fork/CHALLENGE_UI.md`. Keep future Watch/Wear work separate.
+  boundaries: `docs/fork/CHALLENGE_UI.md`. Apple Watch source maps and the single
+  composed-context/account-clearing contract: `docs/fork/APPLE_WATCH_CHALLENGES.md`.
+  Keep future Watch mutations, complications and Wear OS work separate.
 - Challenge scoring, reconciliation, and winners belong on the server. Mobile
   and watch clients consume server state; locally displayed progress is not an
   authoritative result.

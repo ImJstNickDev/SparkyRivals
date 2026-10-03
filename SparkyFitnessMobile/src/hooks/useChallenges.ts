@@ -15,6 +15,10 @@ import { challengesApi } from '../services/api/challengesApi';
 import { challengeKeys } from './queryKeys';
 import { useProfile } from './useProfile';
 import { useRefetchOnFocus } from './useRefetchOnFocus';
+import {
+  challengeListOptions,
+  challengeResultsOptions,
+} from './challengeQueryOptions';
 
 export function useChallengeIdentity() {
   const profile = useProfile();
@@ -31,13 +35,7 @@ export function useChallenges() {
   const { actor, enabled } = useChallengeIdentity();
   const focused = useIsFocused();
   return useInfiniteQuery({
-    queryKey: challengeKeys.list(actor),
-    initialPageParam: 0,
-    queryFn: ({ pageParam }) => challengesApi.list(pageParam),
-    getNextPageParam: (page) =>
-      page.has_more && page.offset + page.limit <= 10000
-        ? page.offset + page.limit
-        : undefined,
+    ...challengeListOptions(actor),
     enabled: enabled && focused,
     ...freshness,
   });
@@ -56,8 +54,7 @@ export function useChallengeResults(challenge?: ChallengeResponse) {
   const { actor, enabled } = useChallengeIdentity();
   const focused = useIsFocused();
   return useQuery({
-    queryKey: challengeKeys.results(actor, challenge?.id ?? ''),
-    queryFn: () => challengesApi.results(challenge!.id),
+    ...challengeResultsOptions(actor, challenge?.id ?? ''),
     enabled:
       enabled &&
       focused &&

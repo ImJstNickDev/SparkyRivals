@@ -44,6 +44,12 @@ import type { CheckInMeasurement } from '../types/measurements';
 import type { WorkoutPreset } from '../types/workoutPresets';
 import { useWorkoutPresets } from './useWorkoutPresets';
 import { getActiveServerConfigId } from '../services/storage';
+import { useWatchChallenges } from './useWatchChallenges';
+import { emptyWatchChallenges } from '../utils/watchChallenges';
+import {
+  getWatchChallengeSession,
+  subscribeWatchChallengeSession,
+} from '../services/watchChallengeSession';
 
 /** Saved workouts the watch may start. Presets with no exercises are omitted:
  * the server rejects a session that has none. */
@@ -67,6 +73,8 @@ function goalProgress(consumed: number, goal: number): number {
 
 /** Days of history relayed to the watch — matches the watch's 14-day chart. */
 const HISTORY_DAYS = 14;
+const EMPTY_MEASUREMENTS: Awaited<ReturnType<typeof fetchMeasurementsRange>> =
+  [];
 
 /**
  * Every day-scoped figure, blanked.
@@ -157,6 +165,12 @@ type StoredAckState = {
  * iOS-only; a no-op everywhere else.
  */
 export function useWatchCheckInBridge(enabled: boolean): void {
+  const {
+    snapshot: challengeSnapshot,
+    refresh: refreshChallenges,
+    sessionRevision: challengeSessionRevision,
+    configId: challengeConfigId,
+  } = useWatchChallenges(enabled);
   // Acks are relayed inside the application context (which is latest-value-only
   // and survives the watch app being asleep), so they must accumulate across
   // pushes rather than being sent once and forgotten.
@@ -451,6 +465,31 @@ export function useWatchCheckInBridge(enabled: boolean): void {
     ]
   );
 
+  // Observe the existing range cache instead of making every context push wait
+  // for HTTP. This also lets offline account clears reach WCSession immediately.
+  const { data: measurementRange = EMPTY_MEASUREMENTS } = useQuery({
+    queryKey: measurementsRangeQueryKey(
+      addDays(summaryDate, -(HISTORY_DAYS - 1)),
+      summaryDate
+    ),
+    queryFn: () =>
+      fetchMeasurementsRange(
+        addDays(summaryDate, -(HISTORY_DAYS - 1)),
+        summaryDate
+      ),
+    staleTime: 30_000,
+    enabled: enabled && WatchConnectivity?.isSupported() === true,
+  });
+  const refreshContextData = useCallback(() => {
+    refreshChallenges();
+    void queryClient.invalidateQueries({
+      queryKey: measurementsRangeQueryKey(
+        addDays(getTodayDate(), -(HISTORY_DAYS - 1)),
+        getTodayDate()
+      ),
+    });
+  }, [refreshChallenges]);
+
   const pushContext = useCallback(async (): Promise<void> => {
     if (!WatchConnectivity) return;
     // Claimed before the first await, checked again before publishing: this
@@ -465,11 +504,17 @@ export function useWatchCheckInBridge(enabled: boolean): void {
     // keeps only the last value written, which makes late-and-stale the one
     // ordering that sticks.
     const generation = ++pushGenerationRef.current;
+    const identity = getWatchChallengeSession();
+    const clearPrivateData =
+      identity.blocked ||
+      identity.revision !== challengeSessionRevision ||
+      (!enabled && challengeSnapshot.state === 'unavailable');
     try {
-      const workoutServerId = await getActiveServerConfigId();
+      const workoutServerId = clearPrivateData
+        ? null
+        : await getActiveServerConfigId();
       const today = getTodayDate();
-      const startDate = addDays(today, -(HISTORY_DAYS - 1));
-      const range = await fetchMeasurementsRange(startDate, today);
+      const range = clearPrivateData ? EMPTY_MEASUREMENTS : measurementRange;
 
       // The API returns DESC by updated_at, so the first row seen for a date is
       // the most recent one for that date.
@@ -518,7 +563,9 @@ export function useWatchCheckInBridge(enabled: boolean): void {
       // them expires at midnight, and a watch that loses its containers because
       // the phone woke up on a new day is the bug we fixed once already.
       const figures =
-        summaryDate === today ? figuresForSummaryDate : NO_FIGURES_FOR_TODAY;
+        !clearPrivateData && summaryDate === today
+          ? figuresForSummaryDate
+          : NO_FIGURES_FOR_TODAY;
 
       const context: WatchContextPayload = {
         // Keeps consecutive pushes distinct — see the field's own comment.
@@ -535,7 +582,7 @@ export function useWatchCheckInBridge(enabled: boolean): void {
         ackedClientIds: ackedClientIdsRef.current.slice(-20),
         failedClientIds: failedClientIdsRef.current.slice(-20),
         weightUnit,
-        containers: watchContainers,
+        containers: clearPrivateData ? [] : watchContainers,
         // Goal and display unit ride outside the day gate: the watch treats
         // both as account configuration and carries them forward, which is
         // what lets a phone-free morning still draw a tap against a scale.
@@ -543,19 +590,33 @@ export function useWatchCheckInBridge(enabled: boolean): void {
         waterDisplayUnit,
         hapticsEnabled,
         restAlertsEnabled,
-        startableWorkouts,
+        startableWorkouts: clearPrivateData ? [] : startableWorkouts,
         workoutServerId,
+        challengeSnapshot:
+          !clearPrivateData && workoutServerId === challengeConfigId
+            ? challengeSnapshot
+            : emptyWatchChallenges(),
         pageOrder: resolveKeyOrder(watchPageOrder, WATCH_PAGE_KEYS),
         hiddenPages: hiddenWatchPages,
         setInputStyle: watchSetInputStyle,
         ...figures,
       };
 
-      // Superseded while the fetch above was in flight — a newer push has
+      // Superseded while the storage read above was in flight — a newer push has
       // already sent, or is about to, from fresher state than this one holds.
       if (generation !== pushGenerationRef.current) return;
-      if ((await getActiveServerConfigId()) !== workoutServerId) return;
-
+      if (
+        !clearPrivateData &&
+        (await getActiveServerConfigId()) !== workoutServerId
+      )
+        return;
+      // Recheck AFTER the final await: an account change may have cleared the
+      // wrist while this older push was waiting for storage/network I/O.
+      if (
+        generation !== pushGenerationRef.current ||
+        identity !== getWatchChallengeSession()
+      )
+        return;
       await WatchConnectivity.updateContext(context);
     } catch (error) {
       // A failed push is recoverable: the watch keeps its cached context and asks
@@ -568,6 +629,11 @@ export function useWatchCheckInBridge(enabled: boolean): void {
     // within a render rather than waiting for its next request. All four
     // aggregates are memoized, so an identical refetch doesn't cause a push.
   }, [
+    enabled,
+    measurementRange,
+    challengeSnapshot,
+    challengeConfigId,
+    challengeSessionRevision,
     weightUnit,
     hapticsEnabled,
     restAlertsEnabled,
@@ -932,6 +998,21 @@ export function useWatchCheckInBridge(enabled: boolean): void {
     [ensureAckStateHydrated, persistAckState]
   );
 
+  // Auth transitions use this same composer and its sole updateContext call.
+  // This subscription stays mounted offline; otherwise logout while offline
+  // would strand the previous account's snapshot on the wrist.
+  useEffect(
+    () =>
+      subscribeWatchChallengeSession(() => {
+        if (
+          getWatchChallengeSession().blocked &&
+          WatchConnectivity?.isSupported()
+        )
+          void pushContextRef.current();
+      }),
+    []
+  );
+
   // Latest handlers, read by the subscriptions below.
   //
   // Without this, the subscription effect had to list every handler as a dep,
@@ -948,6 +1029,7 @@ export function useWatchCheckInBridge(enabled: boolean): void {
     handleWaterDelete,
     pushContext,
     catchUpToToday,
+    refreshChallenges: refreshContextData,
   });
   useEffect(() => {
     handlersRef.current = {
@@ -956,6 +1038,7 @@ export function useWatchCheckInBridge(enabled: boolean): void {
       handleWaterDelete,
       pushContext,
       catchUpToToday,
+      refreshChallenges: refreshContextData,
     };
   });
 
@@ -993,6 +1076,7 @@ export function useWatchCheckInBridge(enabled: boolean): void {
       'onContextRequest',
       () => {
         handlersRef.current.catchUpToToday();
+        handlersRef.current.refreshChallenges();
         void handlersRef.current.pushContext();
       }
     );
@@ -1001,6 +1085,7 @@ export function useWatchCheckInBridge(enabled: boolean): void {
       ({ isReachable }) => {
         if (!isReachable) return;
         handlersRef.current.catchUpToToday();
+        handlersRef.current.refreshChallenges();
         void handlersRef.current.pushContext();
       }
     );
@@ -1009,6 +1094,7 @@ export function useWatchCheckInBridge(enabled: boolean): void {
     // — the app can sit resident for days without re-rendering this hook.
     const appStateSub = AppState.addEventListener('change', (state) => {
       if (state !== 'active') return;
+      handlersRef.current.refreshChallenges();
       handlersRef.current.catchUpToToday();
       void handlersRef.current.pushContext();
     });
@@ -1029,8 +1115,8 @@ export function useWatchCheckInBridge(enabled: boolean): void {
   // covers the second push after a day rollover, once react-query has fetched
   // the new day.
   useEffect(() => {
-    if (!enabled || !WatchConnectivity || !WatchConnectivity.isSupported())
-      return;
+    if (!WatchConnectivity || !WatchConnectivity.isSupported()) return;
+    if (!enabled && challengeSnapshot.state === 'ready') return;
     void pushContext();
-  }, [enabled, pushContext]);
+  }, [enabled, pushContext, challengeSnapshot.state]);
 }

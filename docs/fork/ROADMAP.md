@@ -42,7 +42,7 @@ Milestone 1 upgrade, direct RLS, lifecycle/consent, 100-participant concurrency,
 calendar/DST and full regressions pass. Normal merge main was
 `eff06b7b6e522145e037f4ce08a7e5d732a4fbb1`.
 
-## 3. Web and mobile Challenge UI — implemented, ready for review
+## 3. Web and mobile Challenge UI — merged as PR #4
 
 Web routes and native root-stack screens now provide the hub, invitations,
 creation, 1v1/group results, daily history, owner/member actions and refresh.
@@ -52,21 +52,26 @@ A mobile Dashboard entry preserves the native tab/Add arrangement. No workouts,
 Watch transport, Wear OS or deployment are included.
 
 The feature starts from the validated frozen upstream sync merged through fork
-PR #3 (`747280650d58fcfde1617a12eab04b829eb3bff2`). Its own PR remains unmerged.
+PR #3 (`747280650d58fcfde1617a12eab04b829eb3bff2`). PR #4 merged normally at
+`b333a116724e8c0899a8a036ae1a1ad29e4d2d42`.
 See [CHALLENGE_UI.md](CHALLENGE_UI.md) and
 [CHALLENGE_UI_VALIDATION.md](CHALLENGE_UI_VALIDATION.md). Package tests, web build
 and fixture-backed browser visuals pass. Native device accessibility, keyboard,
 calendar, theme and real-server flows remain a follow-up acceptance boundary.
 
-## 4. Apple Watch Challenge page
+## 4. Apple Watch Challenge page — implemented; native acceptance remains
 
-Add a SwiftUI page to `WatchPage` and phone page settings. Extend the composed
-WatchConnectivity context with an optional versioned server projection; keep one
-application-context publisher. Add freshness/account clearing and compatible
-decoding. Preserve workout/session transport and existing page ordering.
+The native page participates in normal ordering/hiding and displays bounded
+server results through the existing composed WatchConnectivity context. It covers
+1v1, groups, multiple Challenges, invitations, upcoming/completed and empty states.
+Account clearing, stale indicators, tolerant decoding, shared mobile queries,
+DEBUG screenshot seeds and compatibility tests are included. No Watch mutations,
+Challenge complication, backend change or Wear OS implementation is included.
 
-Exit: old/missing payloads degrade cleanly, reconnect refreshes, account switches
-do not show the previous user's challenge, and paired-device checks pass.
+See [APPLE_WATCH_CHALLENGES.md](APPLE_WATCH_CHALLENGES.md) for implementation and
+validation evidence. Linux checks do not replace Xcode compilation, simulator
+visual/accessibility acceptance or paired-device checks. Those remain outstanding;
+no native binary or screenshot is claimed. The feature PR remains unmerged.
 
 ## 5. Wear OS companion
 
