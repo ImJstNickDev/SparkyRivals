@@ -155,8 +155,9 @@ SparkyRivals DataItem transfer: **371 bytes written by the phone and read by the
 watch**. This establishes real paired transport under the matching package and
 certificate. The phone remains unauthenticated; these transfer counters do not
 establish payload contents, authenticated Challenge results or account-switch acceptance.
-Watch UI/Tile interaction has been requested from the maintainer; full scores,
-offline state, account transitions and complication visuals still need acceptance.
+The maintainer confirmed the Watch app works and displays **“Challenges not synced
+yet”**, as expected without a phone account. Full scores, offline state, account
+transitions, explicit Tile interaction and complication visuals still need acceptance.
 
 ## Local production stack — passed
 
