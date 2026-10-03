@@ -1,3 +1,4 @@
+import { assertChallengeTestDatabase } from './helpers/challengeTestDatabase.js';
 import { randomUUID } from 'node:crypto';
 import type { PoolClient } from 'pg';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -15,6 +16,7 @@ import {
   upsertStepData,
 } from '../models/measurementRepository.js';
 const RUN = process.env.RUN_CHALLENGE_DB_TESTS === '1';
+let fixturesAuthorized = false;
 const ids = Array.from({ length: 7 }, () => randomUUID());
 const [owner, first, second, pending, declined, left, outsider] = ids as [
   string,
@@ -74,8 +76,8 @@ async function setSteps(
 }
 describe.runIf(RUN)('Challenge live canonical leaderboard and privacy', () => {
   beforeAll(async () => {
-    if (!/(^|[_-])test([_-]|$)/i.test(process.env.SPARKY_FITNESS_DB_NAME ?? ''))
-      throw new Error('Requires disposable test database');
+    assertChallengeTestDatabase();
+    fixturesAuthorized = true;
     await system(async (c) => {
       for (const user of ids)
         await c.query(
@@ -117,7 +119,10 @@ describe.runIf(RUN)('Challenge live canonical leaderboard and privacy', () => {
     await period(addDays(today, -1), today);
   });
   afterAll(async () => {
-    if (!RUN) return;
+    if (!fixturesAuthorized) {
+      await endPool();
+      return;
+    }
     await system((c) =>
       c.query('DELETE FROM public."user" WHERE id=ANY($1::uuid[])', [ids])
     );

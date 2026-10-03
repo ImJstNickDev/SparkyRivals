@@ -1,3 +1,4 @@
+import { assertChallengeTestDatabase } from './helpers/challengeTestDatabase.js';
 import service from '../services/challengeService.js';
 import {
   createChallengeRequestSchema,
@@ -10,6 +11,7 @@ import { addDays, todayInZone } from '@workspace/shared';
 import { endPool, getClient, getSystemClient } from '../db/poolManager.js';
 
 const RUN = process.env.RUN_CHALLENGE_DB_TESTS === '1';
+let fixturesAuthorized = false;
 const owner = randomUUID();
 const invitee = randomUUID();
 const outsider = randomUUID();
@@ -31,8 +33,8 @@ async function asActor<T>(
 
 describe.runIf(RUN)('Challenge database constraints and RLS', () => {
   beforeAll(async () => {
-    if (!/(^|[_-])test([_-]|$)/i.test(process.env.SPARKY_FITNESS_DB_NAME ?? ''))
-      throw new Error('Requires a disposable test database');
+    assertChallengeTestDatabase();
+    fixturesAuthorized = true;
     const sys: PoolClient = await getSystemClient();
     try {
       for (const id of ids)
@@ -49,7 +51,10 @@ describe.runIf(RUN)('Challenge database constraints and RLS', () => {
     }
   });
   afterAll(async () => {
-    if (!RUN) return;
+    if (!fixturesAuthorized) {
+      await endPool();
+      return;
+    }
     const sys: PoolClient = await getSystemClient();
     try {
       await sys.query('DELETE FROM public."user" WHERE id = ANY($1::uuid[])', [
