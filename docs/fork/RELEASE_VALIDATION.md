@@ -71,8 +71,10 @@ successful compilation, signing and ad-hoc export; no store submission occurred.
 The IPA and a non-secret verification report are privately archived under
 `~/.local/share/sparkyrivals/artifacts/milestone-8a/ios-1005/`.
 IPA SHA-256: `1556b050b548be57196e0443906fa9ce0d044a9d3f6904b255dd253976c14749`.
-Physical iPhone installation has been requested and remains a separate acceptance
-step; no iPhone/Apple Watch device result is inferred from the cloud build.
+The maintainer installed build 1005 on the registered physical iPhone and confirmed
+that it opens to onboarding. This is a user-observed installation/launch result,
+separate from IPA inspection and cloud compilation. Authentication, HealthKit,
+widgets and paired Apple Watch behavior are not established by that confirmation.
 
 ## Android compilation
 

@@ -118,11 +118,12 @@ Owned EAS identity and Apple team are integrated, including production-identity
 internal distribution. Android phone/Wear releases compiled and passed permanent
 certificate verification; both installed and launched on physical Samsung devices.
 An initial paired Data Layer transfer was observed. EAS compiled/exported the
-five-target internal iOS build 1005 with matching versions. Local final Compose
-startup, isolated routing, migration and backup/restore checks passed.
+five-target internal iOS build 1005 with matching versions; the maintainer installed
+it on the registered iPhone and confirmed onboarding. Local final Compose startup,
+isolated routing, migration and backup/restore checks passed.
 
-iPhone installation and fuller native surface/account acceptance remain in
-progress; this milestone is not marked complete prematurely. See
+Fuller native surface/account acceptance remains in progress; this milestone is
+not marked complete prematurely. See
 [release evidence](RELEASE_VALIDATION.md), [BUILDING.md](BUILDING.md) and
 [DEPLOYMENT.md](DEPLOYMENT.md). Source tests do not waive device acceptance.
 
