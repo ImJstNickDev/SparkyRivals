@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { invalidateWatchChallengeSession } from '../services/watchChallengeSession';
 import { useQueryClient } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import {
@@ -32,6 +33,7 @@ export function useAuth() {
 
   useEffect(() => {
     setOnSessionExpired((configId) => {
+      invalidateWatchChallengeSession(true);
       setSwitchToApiKeyConfig(null);
       setExpiredConfigId(configId);
       setAuthModalReason((prev) => {
@@ -43,6 +45,7 @@ export function useAuth() {
       });
     });
     setOnNoConfigs(() => {
+      invalidateWatchChallengeSession(true);
       setSwitchToApiKeyConfig(null);
       setAuthModalReason('no_configs');
     });
@@ -52,6 +55,8 @@ export function useAuth() {
     // Everything cached under the previous account has to go, or the new one
     // reads it until each query happens to refetch.
     setOnIdentityChanged(async () => {
+      // Clear the wrist synchronously, before a new account can populate caches.
+      invalidateWatchChallengeSession(true);
       // Watch telemetry is kept per config, so every config the old identity
       // may have used is purged: the ones switched away from, captured
       // before the switch, and the active one. The reader is retried until it
@@ -82,6 +87,8 @@ export function useAuth() {
           'Identity changed but the cookie jar was not cleared; requests may still carry the previous session.',
           'ERROR'
         );
+      } else {
+        invalidateWatchChallengeSession(false);
       }
       // The image caches go too, but for data at rest rather than for what the
       // next account can see: every server-backed image URI carries a uuid --

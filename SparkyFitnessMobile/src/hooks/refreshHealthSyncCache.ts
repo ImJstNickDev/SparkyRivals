@@ -16,6 +16,8 @@ export function refreshHealthSyncCache(queryClient: QueryClient) {
   void queryClient.invalidateQueries({
     queryKey: measurementsRangeQueryFamily,
   });
+  // Canonical step corrections must also refresh the phone/Watch projection.
+  void queryClient.invalidateQueries({ queryKey: ['challenges'] });
   // Sleep is uploaded by the same health-sync run. Default staleTime is Infinity,
   // so without this the diary keeps a partial observer payload until a process
   // restart (reload) refetches /api/sleep.
