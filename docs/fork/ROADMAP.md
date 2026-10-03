@@ -99,7 +99,7 @@ calories/points/combined score. See [WORKOUT_CHALLENGES.md](WORKOUT_CHALLENGES.m
 and [WORKOUT_VALIDATION.md](WORKOUT_VALIDATION.md). Native compile/device debt from
 Milestones 4/5 remains explicit; no workout logging was added to Wear.
 
-## 7. Challenge polish and native surfaces — implemented; review/native acceptance pending
+## 7. Challenge polish and native surfaces — merged as PR #8; native acceptance pending
 
 Editable web/mobile Rematch, local phone notification reconciliation/preferences,
 iOS/Android Challenge widgets, an Apple Watch complication and Wear Tile/complication
@@ -107,9 +107,23 @@ reuse existing authoritative data and account-clearing transports. See
 [CHALLENGE_POLISH.md](CHALLENGE_POLISH.md) and [POLISH_VALIDATION.md](POLISH_VALIDATION.md).
 Remote push, recurrence, goals, streak engines and new scoring remain deferred.
 
-## 8. Productionization — not started
+## 8A. Release engineering and local production preparation — in progress
 
-Complete the explicit native/device acceptance checklist, account-owned credential
-and distribution setup, and a separately authorized server deployment plan. No
-native compile/device debt is waived by Linux tests. Preserve the separate server
-checkout and repository-root `dockerdata/` bind mounts in [DEPLOYMENT.md](DEPLOYMENT.md).
+PR #8 merged normally at `02d6ab39a98e912c8c60052575fa95950da1d7be`.
+Frozen upstream `e132d4b0192cf474728920e17cbcdbc9f5058d1c` was validated and
+merged through fork PR #9; milestone base is
+`5891bf15d134744117d90505bbe3029fb104d08c`.
+
+Owned EAS identity and Apple team are integrated, including production-identity
+internal distribution. Real Android phone/Wear release compilation, permanent
+certificate verification, EAS iOS provisioning/build, physical native acceptance
+and local final Compose validation are tracked during this milestone. It is not
+complete until the acceptance evidence supports that claim. See [BUILDING.md](BUILDING.md)
+and [DEPLOYMENT.md](DEPLOYMENT.md). Existing device debt is not waived by source tests.
+
+## 8B. Real production deployment — deferred
+
+Requires separate authorization for the server checkout, actual hostname/runtime
+secrets, existing `prod-frontend`, NPM/TLS, migrations/startup, backups/restores and
+production E2E. No production server or NPM changes occur in 8A. Persistent state
+remains repository-root `dockerdata/` with bind mounts only.
