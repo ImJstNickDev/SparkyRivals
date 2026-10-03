@@ -159,6 +159,8 @@ There are no Challenge notifications, workout points, offline writes or account
 search. Milestone 4 adds a [read-only Apple Watch page](APPLE_WATCH_CHALLENGES.md)
 using this mobile query cache and the existing composed application context.
 Phone mutations and canonical health refresh invalidate the shared Challenge
-family, so refreshed results also reach the Watch. Watch mutations, complications
-and Wear OS remain later work. No service deployment or Docker persistence change is involved:
+family, so refreshed results also reach the Watch. Milestone 5 adds a
+[read-only Wear OS companion](WEAR_OS_CHALLENGES.md) through the same compact
+projection and a durable Android Data Layer publisher. Watch mutations and
+complications remain later work. No service deployment or Docker persistence change is involved:
 production remains a separate checkout with bind-mounted `dockerdata/` only.

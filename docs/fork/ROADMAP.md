@@ -59,7 +59,7 @@ See [CHALLENGE_UI.md](CHALLENGE_UI.md) and
 and fixture-backed browser visuals pass. Native device accessibility, keyboard,
 calendar, theme and real-server flows remain a follow-up acceptance boundary.
 
-## 4. Apple Watch Challenge page — implemented; native acceptance remains
+## 4. Apple Watch Challenge page — merged as PR #5; native acceptance remains
 
 The native page participates in normal ordering/hiding and displays bounded
 server results through the existing composed WatchConnectivity context. It covers
@@ -71,18 +71,24 @@ Challenge complication, backend change or Wear OS implementation is included.
 See [APPLE_WATCH_CHALLENGES.md](APPLE_WATCH_CHALLENGES.md) for implementation and
 validation evidence. Linux checks do not replace Xcode compilation, simulator
 visual/accessibility acceptance or paired-device checks. Those remain outstanding;
-no native binary or screenshot is claimed. The feature PR remains unmerged.
+no native binary or screenshot is claimed. PR #5 merged normally at
+`e52c89b1314927309d42a351da8f509f44970ec5`.
 
-## 5. Wear OS companion
+## 5. Wear OS companion — implemented; native/device acceptance remains
 
-Add tracked Kotlin/Compose source outside generated Android directories, a small
-phone bridge, and a compatible server-backed display contract. Verify shared
-phone/Watch application ID and signing identity for Data Layer. Evaluate direct
-server reads versus constrained phone relay before expanding functionality.
-Continue Samsung Health → Health Connect → phone → existing server ingestion.
+Tracked Kotlin/Wear Material 3 source is generated into a separate `:wear` module
+by clean Expo prebuild. Custom opt-in profiles share phone application ID and
+signing authority, with disjoint form-factor version codes. The existing bounded
+Challenge projection now feeds Data Layer through a durable Android publisher.
+Wear handles 1v1/groups/invitations/lifecycle states, account clears, persisted
+revision guards and stale/offline results. Samsung Health → Health Connect → phone
+→ canonical server health ingestion is unchanged. Wear collects no health data.
 
-Exit: glanceable competition state on Galaxy Watch/Wear OS with reconnect, stale
-state, logout, and phone-unavailable behavior. No new health collection pipeline.
+See [WEAR_OS_CHALLENGES.md](WEAR_OS_CHALLENGES.md) for protocol, source maps,
+validation and the physical Galaxy Watch checklist. Linux prebuild/mobile tests
+and actual protocol JVM compilation pass. Android/Compose APK compilation,
+emulator/device visuals, TalkBack and paired Data Layer acceptance remain open.
+The Wear PR is intentionally unmerged; no credentials or deployment were created.
 
 ## 6. Workout integration
 

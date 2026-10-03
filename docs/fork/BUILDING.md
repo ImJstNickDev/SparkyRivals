@@ -246,3 +246,36 @@ disable all mutation/publishing workflows individually; keep token permissions
 read-only by default; then deliberately enable Actions and the reviewed validation
 workflows. Recheck this classification after each upstream workflow merge. No
 repository settings were enabled by this milestone.
+
+## Wear OS companion (Milestone 5)
+
+The `sparkyrivals-*` profiles now opt into `EXPO_WEAR_ENABLED=1`. Custom builds
+copy tracked `targets/wear/` into generated `android/wear/`; default upstream
+builds omit it. Phone and Wear share applicationId and the final selected phone
+signing config, including Debug. No separate Wear signing key may be introduced.
+Wear Release rejects debug/absent credentials, inspection mode and an implicit
+Wear build number. EAS ownership and permanent signing setup above remain open.
+
+With Wear enabled, allocate phone `EXPO_BUILD_NUMBER` below 1000000000 and Wear
+`EXPO_WEAR_BUILD_NUMBER` from 1000000000 through 2100000000. Wear release requires
+an explicit allocation; increase each form-factor counter independently and keep
+a release ledger synchronized with future Play/EAS counters. Debug/config checks
+default Wear to 1000000001. A test-only pair is phone 100 / Wear 1000000100.
+
+After clean prebuild and `pnpm validate:native --platform android`, a configured
+JDK 17/Android SDK host can independently run `:app:assembleDebug` and
+`:wear:assembleDebug` from generated `android/`. `:wear:testDebugUnitTest` runs the
+native protocol tests. `python3 scripts/test-wear-models.py --download` runs those
+protocol JVM tests without installing an Android SDK, using pinned disposable
+compiler dependencies. It does not compile Compose or Android services.
+
+Use the same generated variant/signing configuration for both APKs; compare their
+`apksigner verify --print-certs` SHA-256 certificate digests before paired testing
+or release. Future phone/Wear distribution uses separate artifacts and distinct
+version codes under the same package/listing. No store setup or submission is
+configured. The watch feature is required and standalone is false.
+
+[WEAR_OS_CHALLENGES.md](WEAR_OS_CHALLENGES.md) contains exact prebuild/test commands,
+source maps, limits, recovery and the physical Galaxy Watch checklist. This Linux
+host ran native protocol JVM tests and metadata checks, but no Gradle APK build,
+Compose instrumentation, emulator or physical-watch acceptance.
