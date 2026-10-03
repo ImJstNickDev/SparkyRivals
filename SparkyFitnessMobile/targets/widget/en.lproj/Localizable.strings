@@ -15,3 +15,7 @@
 "widget.a11y.kcal" = "%@ kcal";
 "widget.search_food" = "Search food";
 "widget.scan_barcode" = "Scan barcode";
+
+"widget.challenge.name" = "Challenges";
+"widget.challenge.description" = "Your latest Challenge result at a glance.";
+"widget.challenge.not_synced" = "Open the app to sync Challenges.";

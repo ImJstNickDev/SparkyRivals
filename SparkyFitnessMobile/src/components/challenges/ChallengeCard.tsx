@@ -53,7 +53,7 @@ export function ChallengeCard({
           {t('challenges.daysLeft', {
             defaultValue: '{{days}} days left',
             count: challenge.progress.days_remaining,
-            number: number(challenge.progress.days_remaining),
+            days: number(challenge.progress.days_remaining),
           })}
         </Text>
       )}

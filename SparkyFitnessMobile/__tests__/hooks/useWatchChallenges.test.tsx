@@ -288,3 +288,24 @@ it('starts observing when a watch pairs and makes no Watch requests on unsupport
     expect(result.current.snapshot.items[0]?.rows).toHaveLength(2)
   );
 });
+
+it('deduplicates simultaneous foreground refreshes from companion and widget observers', async () => {
+  const ctx = setup();
+  const { result } = renderHook(
+    () => ({
+      first: useWatchChallenges(true),
+      second: useWatchChallenges(true),
+    }),
+    ctx
+  );
+  await waitFor(() =>
+    expect(result.current.first.snapshot.items[0]?.rows).toHaveLength(2)
+  );
+  expect(api.results).toHaveBeenCalledTimes(1);
+  act(() => {
+    result.current.first.refresh();
+    result.current.second.refresh();
+  });
+  await waitFor(() => expect(api.results).toHaveBeenCalledTimes(2));
+  expect(api.list).toHaveBeenCalledTimes(2);
+});

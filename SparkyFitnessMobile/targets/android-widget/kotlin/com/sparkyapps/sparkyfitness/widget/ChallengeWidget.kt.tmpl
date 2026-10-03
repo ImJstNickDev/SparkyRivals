@@ -1,0 +1,64 @@
+package com.sparkyapps.sparkyfitness.widget
+
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.glance.GlanceId
+import androidx.glance.GlanceModifier
+import androidx.glance.GlanceTheme
+import androidx.glance.LocalSize
+import androidx.glance.action.clickable
+import androidx.glance.appwidget.GlanceAppWidget
+import androidx.glance.appwidget.SizeMode
+import androidx.glance.appwidget.action.actionStartActivity
+import androidx.glance.appwidget.cornerRadius
+import androidx.glance.appwidget.provideContent
+import androidx.glance.background
+import androidx.glance.currentState
+import androidx.glance.layout.Column
+import androidx.glance.layout.fillMaxSize
+import androidx.glance.layout.padding
+import androidx.glance.state.PreferencesGlanceStateDefinition
+import androidx.glance.text.FontWeight
+import androidx.glance.text.Text
+import androidx.glance.text.TextStyle
+import {{APPLICATION_ID}}.R
+import org.json.JSONObject
+
+/** Latest presentation only. No auth, server access or independent scoring. */
+class ChallengeWidget : GlanceAppWidget() {
+    override val stateDefinition = PreferencesGlanceStateDefinition
+    override val sizeMode = SizeMode.Responsive(setOf(DpSize(160.dp,180.dp),DpSize(300.dp,180.dp)))
+    override suspend fun provideGlance(context: Context, id: GlanceId) {
+        val stored = context.getSharedPreferences(ChallengeWidgetReceiver.PREFS_NAME,Context.MODE_PRIVATE).getString("snapshot",null)
+        provideContent {
+            val json = currentState<Preferences>()[SNAPSHOT_STATE_KEY] ?: stored
+            val value = runCatching { JSONObject(json ?: "{}") }.getOrNull()
+                ?.takeIf { it.optInt("version")==1 && it.optString("state")=="ready" }
+            val localized = WidgetLocale.localizedContext(context)
+            val url = value?.optString("url")?.takeIf { it.startsWith("{{APP_URL_SCHEME}}://challenges/") } ?: "{{APP_URL_SCHEME}}://challenges"
+            GlanceTheme {
+                Column(GlanceModifier.fillMaxSize().background(GlanceTheme.colors.surface).cornerRadius(20.dp).padding(16.dp)
+                    .clickable(actionStartActivity(Intent(Intent.ACTION_VIEW,Uri.parse(url)).setPackage(context.packageName)))) {
+                    Text(value?.optString("title") ?: localized.getString(R.string.sparky_challenge_widget_name),style=TextStyle(color=GlanceTheme.colors.onSurface,fontWeight=FontWeight.Bold,fontSize=16.sp),maxLines=1)
+                    Text(value?.optString("status") ?: localized.getString(R.string.challenge_widget_not_synced),style=TextStyle(color=GlanceTheme.colors.onSurfaceVariant,fontSize=12.sp),maxLines=2)
+                    if (value != null) {
+                        Text(value.optString("score"),style=TextStyle(color=GlanceTheme.colors.primary,fontSize=24.sp,fontWeight=FontWeight.Bold),maxLines=1)
+                        Text(value.optString("rank"),style=TextStyle(color=GlanceTheme.colors.onSurface,fontSize=13.sp),maxLines=1)
+                        Text(value.optString("gap"),style=TextStyle(color=GlanceTheme.colors.onSurface,fontSize=13.sp),maxLines=1)
+                        if (LocalSize.current.width>=300.dp) Text(value.optString("peer"),style=TextStyle(color=GlanceTheme.colors.onSurface,fontSize=13.sp),maxLines=1)
+                        val age=System.currentTimeMillis()-value.optLong("generatedAt")
+                        // Periodic OS rendering changes age only, never verified time.
+                        if (age>900000 || age < -300000) Text(value.optString("staleLabel"),style=TextStyle(color=GlanceTheme.colors.onSurfaceVariant,fontSize=11.sp),maxLines=1)
+                    }
+                }
+            }
+        }
+    }
+    companion object { val SNAPSHOT_STATE_KEY = stringPreferencesKey("challengeSnapshot") }
+}

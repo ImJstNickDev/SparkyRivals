@@ -73,6 +73,9 @@ func localizedWidgetString(_ key: String) -> String {
 /// only when every localization bundle is missing the key.
 private func fallbackWidgetString(_ key: String) -> String {
     switch key {
+    case "widget.challenge.name": return "Challenges"
+    case "widget.challenge.description": return "Your latest Challenge result at a glance."
+    case "widget.challenge.not_synced": return "Open the app to sync Challenges."
     case "widget.calorie.name": return "Calories"
     case "widget.calorie.description": return "Today's calorie intake at a glance."
     case "widget.macro.name": return "Macros"

@@ -27,6 +27,22 @@ class CalorieWidgetModule(reactContext: ReactApplicationContext) :
     }
 
     @ReactMethod
+    fun setChallengeSnapshot(json: String, promise: Promise) {
+        val ctx = reactApplicationContext
+        moduleScope.launch {
+            try {
+                if (!ctx.getSharedPreferences(ChallengeWidgetReceiver.PREFS_NAME, Context.MODE_PRIVATE)
+                    .edit().putString("snapshot", json).commit()) throw IllegalStateException("Challenge widget persistence failed")
+                GlanceAppWidgetManager(ctx).getGlanceIds(ChallengeWidget::class.java).forEach { id ->
+                    updateAppWidgetState(ctx, id) { state -> state[ChallengeWidget.SNAPSHOT_STATE_KEY] = json }
+                    ChallengeWidget().update(ctx, id)
+                }
+                promise.resolve(null)
+            } catch (e: Exception) { promise.reject("E_CHALLENGE_WIDGET", e) }
+        }
+    }
+
+    @ReactMethod
     fun setCalorieSnapshot(json: String, promise: Promise) {
         val ctx = reactApplicationContext
         moduleScope.launch {

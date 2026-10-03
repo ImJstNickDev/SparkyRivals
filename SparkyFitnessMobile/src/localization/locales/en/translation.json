@@ -5920,6 +5920,21 @@
       "ended": "Challenge ends",
       "leadChanges": "Lead changes",
       "hint": "Alerts use results refreshed on this phone. Lead changes are checked when the app refreshes."
+    },
+    "surfaces": {
+      "empty": "No Challenges. Create one in the app.",
+      "notSynced": "Open the app to sync Challenges.",
+      "steps": "{{value}} steps",
+      "tied": "Tied for the lead",
+      "ahead": "Ahead by {{value}}",
+      "behind": "{{value}} behind",
+      "invitation": "Invitation · Review in the app",
+      "upcoming": "Starts {{date}}",
+      "completed": "Completed · Reconciled results",
+      "rank": "Rank {{rank}} of {{participants}}",
+      "stale": "May be out of date",
+      "remaining_one": "{{number}} day remaining",
+      "remaining_other": "{{number}} days remaining"
     }
   }
 }

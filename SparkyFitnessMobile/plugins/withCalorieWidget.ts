@@ -27,6 +27,11 @@ const WIDGET_PACKAGE_ADD_LINE = 'add(CalorieWidgetPackage())';
 
 const WIDGET_RECEIVERS = [
   {
+    name: `${WIDGET_PACKAGE}.ChallengeWidgetReceiver`,
+    label: '@string/sparky_challenge_widget_name',
+    provider: '@xml/sparky_challenge_widget_info',
+  },
+  {
     name: `${WIDGET_PACKAGE}.CalorieWidgetReceiver`,
     label: '@string/sparky_calorie_widget_name',
     provider: '@xml/sparky_calorie_widget_info',

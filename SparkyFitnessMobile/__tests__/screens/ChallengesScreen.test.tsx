@@ -179,6 +179,9 @@ it('groups invitations, active, upcoming, completed and cancelled without invita
   );
   const view = screen('Challenges');
   expect(view.getByText('Invitations')).toBeTruthy();
+  expect(
+    view.getAllByText(`${challenge.progress.days_remaining} days left`).length
+  ).toBeGreaterThan(0);
   expect(view.getAllByText('Completed')[0]).toBeTruthy();
   expect(view.getByText('Scores are visible after you accept.')).toBeTruthy();
   expect(view.getByText('Cancelled. Step sharing has stopped.')).toBeTruthy();
