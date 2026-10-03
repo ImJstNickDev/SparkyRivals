@@ -8,6 +8,7 @@ export type WidgetLocalePreference = LanguagePreference;
 export type WidgetEffectiveLanguage = SupportedLanguage;
 
 interface CalorieWidgetNativeModule {
+  setChallengeSnapshot(json: string): Promise<void>;
   setCalorieSnapshot(json: string): Promise<void>;
   setMacroSnapshot(json: string): Promise<void>;
   prepareWidgetLocale(
@@ -24,6 +25,10 @@ const nativeModule: CalorieWidgetNativeModule | undefined =
     : undefined;
 
 export const CalorieWidgetBridge = {
+  async setChallengeSnapshot(json: string): Promise<void> {
+    if (!nativeModule) return;
+    await nativeModule.setChallengeSnapshot(json);
+  },
   async setCalorieSnapshot(json: string): Promise<void> {
     if (!nativeModule) return;
     await nativeModule.setCalorieSnapshot(json);

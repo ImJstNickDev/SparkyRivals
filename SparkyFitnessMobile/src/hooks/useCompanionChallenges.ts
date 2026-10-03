@@ -1,3 +1,5 @@
+import type { CompanionChallengeSnapshot } from '../types/companionChallenges';
+import type { ChallengeResponse } from '@workspace/shared';
 import { useCallback, useMemo, useRef, useSyncExternalStore } from 'react';
 import {
   useInfiniteQuery,
@@ -100,13 +102,6 @@ export function useCompanionChallenges(connected: boolean, supported: boolean) {
             ])
           ),
         });
-  // Query observers can rerender without a data change. Stable wire bytes avoid
-  // a composed-context push on each such render.
-  const serialized = JSON.stringify(snapshot);
-  const stableSnapshot = useMemo(
-    () => JSON.parse(serialized) as typeof snapshot,
-    [serialized]
-  );
   const lastRefresh = useRef(0);
   const refetchAccount = account.refetch;
   const refresh = useCallback(() => {
@@ -119,7 +114,11 @@ export function useCompanionChallenges(connected: boolean, supported: boolean) {
       return;
     lastRefresh.current = Date.now();
     if (!identity) void refetchAccount();
-    else void client.invalidateQueries({ queryKey: challengeKeys.all(actor) });
+    else
+      void client.invalidateQueries(
+        { queryKey: challengeKeys.all(actor) },
+        { cancelRefetch: false }
+      );
   }, [
     supported,
     connected,
@@ -129,8 +128,37 @@ export function useCompanionChallenges(connected: boolean, supported: boolean) {
     client,
     actor,
   ]);
+  // Serialize the projections together after reading all observer metadata.
+  const serialized = JSON.stringify({
+    snapshot,
+    observation: {
+      challenges,
+      freshList: list.isFetchedAfterMount && list.isSuccess && !list.isFetching,
+      freshResultIds: scored
+        .filter(
+          (_, i) =>
+            results[i].isFetchedAfterMount &&
+            results[i].isSuccess &&
+            !results[i].isFetching
+        )
+        .map((c) => c.id),
+    },
+  });
+  const projected = useMemo(
+    () =>
+      JSON.parse(serialized) as {
+        snapshot: CompanionChallengeSnapshot;
+        observation: {
+          challenges: ChallengeResponse[];
+          freshList: boolean;
+          freshResultIds: string[];
+        };
+      },
+    [serialized]
+  );
   return {
-    snapshot: stableSnapshot,
+    observation: projected.observation,
+    snapshot: projected.snapshot,
     refresh,
     sessionRevision: session.revision,
     configId: identity?.configId,

@@ -1,6 +1,8 @@
 import { useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
+  prepareChallengeRematch,
+  type ChallengeRematchDraft,
   addDays,
   todayInZone,
   createChallengeRequestSchema,
@@ -8,36 +10,81 @@ import {
 } from '@workspace/shared';
 import { Footprints, Timer } from 'lucide-react';
 import { usePreferences } from '@/contexts/PreferencesContext';
-import { useChallengeMutation } from '@/hooks/Challenges/useChallenges';
+import {
+  useChallengeMutation,
+  useChallengeDetail,
+  useChallengeConnections,
+  useChallengeIdentity,
+} from '@/hooks/Challenges/useChallenges';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { TimezoneSelect } from '@/pages/Settings/TimezoneSelect';
 import { ChallengeInvitees } from './ChallengeInvitees';
-import { ChallengeShell } from './ChallengeChrome';
+import {
+  ChallengeShell,
+  ChallengeLoading,
+  ChallengeError,
+} from './ChallengeChrome';
 import { useChallengeFormat } from './presentation';
 
 export default function CreateChallengePage() {
   const preferences = usePreferences();
+  const [params] = useSearchParams();
+  const rematchId = params.get('rematch');
   return (
     <ChallengeShell back>
-      <CreateForm
-        key={preferences.timezone}
-        defaultTimezone={preferences.timezone}
-      />
+      {rematchId ? (
+        <RematchForm id={rematchId} />
+      ) : (
+        <CreateForm
+          key={preferences.timezone}
+          defaultTimezone={preferences.timezone}
+        />
+      )}
     </ChallengeShell>
   );
 }
-function CreateForm({ defaultTimezone }: { defaultTimezone: string }) {
-  const [metric, setMetric] = useState<'steps' | 'workout_time'>('steps');
+function RematchForm({ id }: { id: string }) {
+  const detail = useChallengeDetail(id);
+  const connections = useChallengeConnections();
+  const { actor } = useChallengeIdentity();
+  if (detail.isError || connections.isError)
+    return (
+      <ChallengeError
+        retry={() => {
+          void detail.refetch();
+          void connections.refetch();
+        }}
+      />
+    );
+  if (!detail.data || !connections.data) return <ChallengeLoading />;
+  const draft = prepareChallengeRematch(detail.data, connections.data, actor);
+  if (!draft) return <ChallengeError retry={() => void detail.refetch()} />;
+  return <CreateForm key={id} defaultTimezone={draft.timezone} draft={draft} />;
+}
+function CreateForm({
+  defaultTimezone,
+  draft,
+}: {
+  defaultTimezone: string;
+  draft?: ChallengeRematchDraft;
+}) {
+  const [metric, setMetric] = useState<'steps' | 'workout_time'>(
+    draft?.metric ?? 'steps'
+  );
   const { t, day, rules } = useChallengeFormat(metric);
   const [timezone, setTimezone] = useState(
     defaultTimezone || Intl.DateTimeFormat().resolvedOptions().timeZone
   );
-  const [start, setStart] = useState(todayInZone(timezone));
-  const [end, setEnd] = useState(addDays(start, 6));
-  const [name, setName] = useState('');
-  const [selected, setSelected] = useState<string[]>([]);
+  const [start, setStart] = useState(
+    draft?.start_date ?? todayInZone(timezone)
+  );
+  const [end, setEnd] = useState(draft?.end_date ?? addDays(start, 6));
+  const [name, setName] = useState(draft?.name ?? '');
+  const [selected, setSelected] = useState<string[]>(
+    draft?.participant_ids ?? []
+  );
   const [validationError, setValidationError] = useState(false);
   const mutation = useChallengeMutation();
   const busy = useRef(false);
@@ -234,6 +281,22 @@ function CreateForm({ defaultTimezone }: { defaultTimezone: string }) {
           </p>
         </div>
       </details>
+      {draft && (
+        <p role="status" className="rounded-2xl bg-muted p-4">
+          {t(
+            'challenges.rematchReview',
+            'Review your rematch. Everyone you invite will choose whether to join again.'
+          )}
+        </p>
+      )}
+      {!!draft?.omitted && (
+        <p role="status">
+          {t(
+            'challenges.rematchOmitted',
+            'Some previous participants are no longer eligible and have not been selected.'
+          )}
+        </p>
+      )}
       <ChallengeInvitees selected={selected} onChange={setSelected} />
       <div className="space-y-3 rounded-3xl bg-muted/50 p-5">
         <h2 className="font-semibold">

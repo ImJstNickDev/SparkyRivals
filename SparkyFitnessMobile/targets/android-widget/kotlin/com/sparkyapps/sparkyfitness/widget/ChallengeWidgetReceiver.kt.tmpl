@@ -1,0 +1,9 @@
+package com.sparkyapps.sparkyfitness.widget
+
+import androidx.glance.appwidget.GlanceAppWidget
+import androidx.glance.appwidget.GlanceAppWidgetReceiver
+
+class ChallengeWidgetReceiver : GlanceAppWidgetReceiver() {
+    override val glanceAppWidget: GlanceAppWidget = ChallengeWidget()
+    companion object { const val PREFS_NAME = "SparkyChallengeWidget" }
+}

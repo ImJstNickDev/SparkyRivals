@@ -1,5 +1,13 @@
 # Apple Watch Challenges — Milestone 4
 
+## Challenge polish extension — Milestone 7
+
+[CHALLENGE_POLISH.md](CHALLENGE_POLISH.md) documents the implemented Rematch,
+local notification and native widget/Tile/complication additions. These reuse
+current score units, account guards and source freshness; watches remain read-only.
+Earlier milestone scope statements below describe their original implementation.
+Native compile/device acceptance remains open in [POLISH_VALIDATION.md](POLISH_VALIDATION.md).
+
 ## Workout Time extension — Milestone 6
 
 [WORKOUT_CHALLENGES.md](WORKOUT_CHALLENGES.md) documents the implemented second
@@ -280,9 +288,9 @@ database or web test reruns.
 
 No Watch accept/decline/create/invite/rename/leave/cancel transport exists. Those
 remain iPhone actions; a future Watch write protocol needs durability, idempotency
-and acknowledgments. No Challenge complication or Smart Stack widget is added.
-A later complication should consume the same small server projection through the
-existing shared-store boundary without affecting calorie/water complications.
+and acknowledgments. Milestone 7 adds a Challenge complication through the existing shared-store
+boundary without changing calorie/water data. See [CHALLENGE_POLISH.md](CHALLENGE_POLISH.md)
+for implementation and outstanding Xcode/device acceptance.
 
 No workout scoring, Wear OS, backend/RLS change, new account credentials, cloud
 build, publication or deployment occurred. `SparkyFitnessSessionId` and existing

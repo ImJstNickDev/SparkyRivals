@@ -95,6 +95,17 @@ struct ChallengeModelChecks {
         check(!item.isWorkoutTime, "legacy Steps default")
         workout["version"] = 1
         check(ChallengePayloadMapper.snapshot(from: workout)!.items.isEmpty, "workout cannot masquerade as v1")
+        let surface = ChallengeSurfaceSnapshot.make(snapshot)
+        check(surface.accountKey == snapshot.accountKey, "complication account")
+        check(surface.generatedAt == 1, "complication source freshness")
+        check(surface.rank.contains("1"), "complication original rank")
+        let cleared = ChallengeSurfaceSnapshot.make(nil)
+        check(cleared.accountKey.isEmpty && cleared.score == "—", "complication clear")
+        workout["version"] = 2
+        let workoutSurface = ChallengeSurfaceSnapshot.make(ChallengePayloadMapper.snapshot(from: workout))
+        check(workoutSurface.score == ChallengeDurationFormat.string(item.ownRow!.total), "complication duration")
+        let roundTrip = try JSONDecoder().decode(ChallengeSurfaceSnapshot.self, from: JSONEncoder().encode(surface))
+        check(roundTrip == surface, "minimal shared persistence")
         print("Watch Challenge model checks: \(checks) passed")
     }
 }

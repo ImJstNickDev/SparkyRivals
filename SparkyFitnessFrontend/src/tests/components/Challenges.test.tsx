@@ -620,3 +620,52 @@ describe('Workout time presentation', () => {
     expect(screen.queryByText('3h 42m')).not.toBeInTheDocument();
   });
 });
+
+describe('Rematch', () => {
+  it.each(['completed', 'cancelled'] as const)(
+    'offers an editable rematch for %s',
+    (lifecycle) => {
+      h.useChallengeDetail.mockReturnValue(
+        query({
+          ...detail,
+          challenge: { ...challenge, lifecycle },
+        }) as unknown as ReturnType<typeof hooks.useChallengeDetail>
+      );
+      show(<ChallengeDetailPage />, `/challenges/${challenge.id}`);
+      expect(screen.getByRole('link', { name: 'Rematch' })).toHaveAttribute(
+        'href',
+        `/challenges/new?rematch=${challenge.id}`
+      );
+    }
+  );
+  it('prefills Workout Time and eligible friends, then uses ordinary create', async () => {
+    h.useChallengeDetail.mockReturnValue(
+      query({
+        ...detail,
+        challenge: {
+          ...challenge,
+          metric: 'workout_time',
+          lifecycle: 'completed',
+        },
+      }) as unknown as ReturnType<typeof hooks.useChallengeDetail>
+    );
+    show(<CreateChallengePage />, `/challenges/new?rematch=${challenge.id}`);
+    expect(screen.getByRole('radio', { name: 'Workout time' })).toBeChecked();
+    expect(screen.getByRole('checkbox')).toBeChecked();
+    fireEvent.change(screen.getByLabelText('Challenge name'), {
+      target: { value: 'Another round' },
+    });
+    expect(mutateAsync).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Create Challenge' }));
+    await waitFor(() =>
+      expect(mutateAsync).toHaveBeenCalledWith({
+        action: 'create',
+        body: expect.objectContaining({
+          name: 'Another round',
+          metric: 'workout_time',
+          participant_ids: [peer],
+        }),
+      })
+    );
+  });
+});

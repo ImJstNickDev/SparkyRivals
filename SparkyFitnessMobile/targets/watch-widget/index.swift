@@ -6,5 +6,6 @@ struct exportWatchWidgets: WidgetBundle {
     var body: some Widget {
         EnergyGoalComplication()
         WaterGoalComplication()
+        ChallengeComplication()
     }
 }

@@ -48,3 +48,6 @@
 - `src/challenges/duration.ts` formats integer seconds without scoring; Challenge
   result v1 Steps compatibility and v2 workout units/counts are described in
   `../docs/fork/WORKOUT_CHALLENGES.md`. Validate all consumers after edits.
+- `src/challenges/rematch.ts` prepares a calendar-safe editable creation draft,
+  intersecting former accepted members with current invite eligibility. It never
+  creates a Challenge or transfers consent; see `../docs/fork/CHALLENGE_POLISH.md`.

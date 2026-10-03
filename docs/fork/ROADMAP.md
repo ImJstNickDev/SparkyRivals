@@ -90,7 +90,7 @@ and actual protocol JVM compilation pass. Android/Compose APK compilation,
 emulator/device visuals, TalkBack and paired Data Layer acceptance remain open.
 PR #6 is merged. No credentials or deployment were created.
 
-## 6. Workout integration — implemented; review and native acceptance pending
+## 6. Workout integration — merged as PR #7; native acceptance pending
 
 Workout Time (`workout_time`, integer seconds) joins Steps end-to-end. Canonical
 session projection, consent-only aggregates, generic ranking, secondary session
@@ -99,12 +99,17 @@ calories/points/combined score. See [WORKOUT_CHALLENGES.md](WORKOUT_CHALLENGES.m
 and [WORKOUT_VALIDATION.md](WORKOUT_VALIDATION.md). Native compile/device debt from
 Milestones 4/5 remains explicit; no workout logging was added to Wear.
 
-## 7. Polish and expansion
+## 7. Challenge polish and native surfaces — implemented; review/native acceptance pending
 
-Prioritize based on actual use: reliable notifications/rematches, streak/history,
-recurring challenges and personal goals, larger groups, accessible motion,
-phone widgets, Apple complications, and Wear tiles/complications. Use existing
-notification/widget infrastructure and server projections.
+Editable web/mobile Rematch, local phone notification reconciliation/preferences,
+iOS/Android Challenge widgets, an Apple Watch complication and Wear Tile/complication
+reuse existing authoritative data and account-clearing transports. See
+[CHALLENGE_POLISH.md](CHALLENGE_POLISH.md) and [POLISH_VALIDATION.md](POLISH_VALIDATION.md).
+Remote push, recurrence, goals, streak engines and new scoring remain deferred.
 
-Exit each small increment with focused tests, device/visual checks where relevant,
-documented reconciliation semantics, and no unrelated upstream refactoring.
+## 8. Productionization — not started
+
+Complete the explicit native/device acceptance checklist, account-owned credential
+and distribution setup, and a separately authorized server deployment plan. No
+native compile/device debt is waived by Linux tests. Preserve the separate server
+checkout and repository-root `dockerdata/` bind mounts in [DEPLOYMENT.md](DEPLOYMENT.md).

@@ -1,6 +1,8 @@
 import { useRef, useState } from 'react';
 import { Text, View } from 'react-native';
 import {
+  prepareChallengeRematch,
+  type ChallengeRematchDraft,
   addDays,
   todayInZone,
   createChallengeRequestSchema,
@@ -8,6 +10,8 @@ import {
 } from '@workspace/shared';
 import type { RootStackScreenProps } from '../types/navigation';
 import {
+  useChallengeDetail,
+  useChallengeConnections,
   useChallengeIdentity,
   useChallengeMutation,
 } from '../hooks/useChallenges';
@@ -29,7 +33,7 @@ import {
 import { ChallengeInvitees } from '../components/challenges/ChallengeInvitees';
 
 type Props = RootStackScreenProps<'CreateChallenge'>;
-export default function CreateChallengeScreen({ navigation }: Props) {
+export default function CreateChallengeScreen({ navigation, route }: Props) {
   const { t } = useChallengeFormat();
   const identity = useChallengeIdentity();
   const preferences = usePreferences({ enabled: identity.enabled });
@@ -48,6 +52,8 @@ export default function CreateChallengeScreen({ navigation }: Props) {
         <ChallengeLoading />
       ) : preferences.isError ? (
         <ChallengeProblem retry={() => void preferences.refetch()} />
+      ) : route?.params?.rematchId ? (
+        <RematchForm id={route.params.rematchId} navigation={navigation} />
       ) : (
         <CreateForm
           key={timezone}
@@ -58,28 +64,66 @@ export default function CreateChallengeScreen({ navigation }: Props) {
     </ChallengeFrame>
   );
 }
+function RematchForm({
+  id,
+  navigation,
+}: {
+  id: string;
+  navigation: Props['navigation'];
+}) {
+  const detail = useChallengeDetail(id);
+  const connections = useChallengeConnections();
+  const { actor } = useChallengeIdentity();
+  if (detail.isError || connections.isError)
+    return (
+      <ChallengeProblem
+        retry={() => {
+          void detail.refetch();
+          void connections.refetch();
+        }}
+      />
+    );
+  if (!detail.data || !connections.data) return <ChallengeLoading />;
+  const draft = prepareChallengeRematch(detail.data, connections.data, actor);
+  if (!draft) return <ChallengeProblem retry={() => void detail.refetch()} />;
+  return (
+    <CreateForm
+      key={id}
+      timezoneDefault={draft.timezone}
+      draft={draft}
+      navigation={navigation}
+    />
+  );
+}
 function CreateForm({
   timezoneDefault,
   navigation,
+  draft,
 }: {
+  draft?: ChallengeRematchDraft;
   timezoneDefault: string;
   navigation: Props['navigation'];
 }) {
-  const [metric, setMetric] = useState<'steps' | 'workout_time'>('steps');
+  const [metric, setMetric] = useState<'steps' | 'workout_time'>(
+    draft?.metric ?? 'steps'
+  );
   const { t, day, rules } = useChallengeFormat(metric);
   const mutation = useChallengeMutation();
   const busy = useRef(false);
   const [timezone, setTimezone] = useState(timezoneDefault);
   const [start, setStart] = useState(
-    todayInZone(
-      challengeTimezoneSchema.safeParse(timezoneDefault).success
-        ? timezoneDefault
-        : 'UTC'
-    )
+    draft?.start_date ??
+      todayInZone(
+        challengeTimezoneSchema.safeParse(timezoneDefault).success
+          ? timezoneDefault
+          : 'UTC'
+      )
   );
-  const [end, setEnd] = useState(addDays(start, 6));
-  const [name, setName] = useState('');
-  const [selected, setSelected] = useState<string[]>([]);
+  const [end, setEnd] = useState(draft?.end_date ?? addDays(start, 6));
+  const [name, setName] = useState(draft?.name ?? '');
+  const [selected, setSelected] = useState<string[]>(
+    draft?.participant_ids ?? []
+  );
   const [advanced, setAdvanced] = useState(false);
   const [invalid, setInvalid] = useState(false);
   const startCalendar = useRef<CalendarSheetRef>(null);
@@ -226,6 +270,22 @@ function CreateForm({
           {day(end)}
         </Button>
       </View>
+      {draft && (
+        <Text accessibilityRole="text" className="text-text-secondary">
+          {t('challenges.rematchReview', {
+            defaultValue:
+              'Review your rematch. Everyone you invite will choose whether to join again.',
+          })}
+        </Text>
+      )}
+      {!!draft?.omitted && (
+        <Text className="text-text-secondary">
+          {t('challenges.rematchOmitted', {
+            defaultValue:
+              'Some previous participants are no longer eligible and have not been selected.',
+          })}
+        </Text>
+      )}
       <ChallengeInvitees selected={selected} onChange={setSelected} />
       <Button
         accessibilityRole="button"

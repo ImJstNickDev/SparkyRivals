@@ -359,6 +359,7 @@ final class WatchSessionManager: NSObject, ObservableObject {
     /// This is the one path that feeds the complications from the store rather
     /// than from a payload — see `handle(context:)` for the normal one.
     func refreshComplications() {
+        ComplicationPublisher.publish(challenges: CheckInStore.shared.context.challengeSnapshot)
         let context = store.context
 
         // The `isToday` checks are now belt to the publisher's braces — it

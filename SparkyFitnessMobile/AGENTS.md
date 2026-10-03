@@ -418,3 +418,19 @@ const androidService = require('../../src/services/healthConnectService.ts');
   edits. `companionChallenges` emits v1 for Steps-only or v2 for workout items.
   See `../docs/fork/WORKOUT_CHALLENGES.md`; preserve native account clears and
   the HealthKit `SparkyFitnessSessionId` marker.
+
+## Challenge polish source map
+
+- Read `../docs/fork/CHALLENGE_POLISH.md` before changing reminders/native surfaces.
+- `useChallengeSurfaces` observes the existing shared Challenge cache; no new API
+  or polling. `challengeNotificationPlan` is pure; `challengeNotifications` owns
+  account-scoped device-local ledger/schedules. Settings live in existing local
+  app preferences. Never claim remote/realtime delivery or request exact alarms.
+- `CompanionChallengePublisher` serializes Wear/widget writes behind the existing
+  auth-session barrier. `challengeSurfaceLinking` rejects stale account destinations.
+- Phone widgets extend existing WidgetKit/Glance targets. Apple complications use
+  the sole `ComplicationPublisher`; Wear Tile/complication read `ChallengeStore`.
+  Preserve timestamp, explicit zero/missing data, units and tombstone clearing.
+- `../shared/src/challenges/rematch.ts` prepares an editable create draft; new
+  invitations always require fresh consent. Native acceptance evidence is in
+  `../docs/fork/POLISH_VALIDATION.md`; source contracts are not binary/device tests.

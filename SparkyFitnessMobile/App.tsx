@@ -1,3 +1,5 @@
+import { challengeSurfaceLinking } from './src/services/challengeSurfaceLinking';
+import { useChallengeSurfaces } from './src/hooks/useChallengeSurfaces';
 import { useWearChallenges } from './src/hooks/useWearChallenges';
 import './global.css'
 import { getAppUrl } from './src/utils/appLinks';
@@ -172,6 +174,7 @@ function WatchCheckInGate() {
   const { isConnected: isServerConnected } = useServerConnection();
   useWatchCheckInBridge(isServerConnected);
   useWearChallenges(isServerConnected);
+  useChallengeSurfaces(isServerConnected);
   return null;
 }
 
@@ -361,6 +364,7 @@ function AppContent() {
 
   const linking = useMemo<LinkingOptions<RootStackParamList>>(() => ({
     prefixes: [getAppUrl()],
+    ...challengeSurfaceLinking,
     config: {
       initialRouteName: 'Tabs',
       screens: {

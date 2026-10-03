@@ -224,8 +224,10 @@ export async function initNotifications(): Promise<void> {
         const restPingOwnsCue =
           isRestPing && AppState.currentState !== 'active';
         return {
-          shouldShowBanner: isMedReminder || restPingOwnsCue,
-          shouldShowList: isMedReminder || restPingOwnsCue,
+          shouldShowBanner:
+            isMedReminder || restPingOwnsCue || category === 'challenge',
+          shouldShowList:
+            isMedReminder || restPingOwnsCue || category === 'challenge',
           // Muted only while the chime owns the cue, so the two never double up.
           shouldPlaySound: !(isRestPing && willPlayRestCompleteSound()),
           shouldSetBadge: false,

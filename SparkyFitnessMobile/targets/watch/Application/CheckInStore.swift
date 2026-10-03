@@ -200,6 +200,7 @@ final class CheckInStore: ObservableObject {
 
     func apply(context incoming: WatchContext) {
         context = incoming
+        ComplicationPublisher.publish(challenges: incoming.challengeSnapshot)
         // Applied here rather than only from the callers' own prune calls,
         // because an inbound context is not always a fresh one: an
         // `adoptReceivedContext()` replay hands back whatever the phone last

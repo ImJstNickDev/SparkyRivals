@@ -27,8 +27,11 @@ class ChallengeStore private constructor(private val context: Context) {
     } catch (_: Exception) { ChallengeReceipt(resetRequired = true) }
 
     private fun persist(receipt: ChallengeReceipt) {
+        val changed = mutable.value.receipt != receipt
+        val privacyChange = mutable.value.receipt.snapshot.accountKey != receipt.snapshot.accountKey || receipt.snapshot.state != "ready"
         // Publish a privacy clear immediately even if storage is unavailable.
         mutable.value = mutable.value.copy(receipt = receipt)
+        if (changed) ChallengeSurfaceUpdates.request(context, privacyChange)
         val output = file.startWrite()
         try { output.write(receipt.encode().toByteArray(Charsets.UTF_8)); file.finishWrite(output) }
         catch (error: Exception) { file.failWrite(output); throw error }
@@ -40,7 +43,6 @@ class ChallengeStore private constructor(private val context: Context) {
             persist(next)
         } catch (_: Exception) {
             val cleared = mutable.value.receipt.invalidate()
-            mutable.value = mutable.value.copy(receipt = cleared)
             runCatching { persist(cleared) }
         }
     }

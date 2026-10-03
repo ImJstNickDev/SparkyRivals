@@ -56,7 +56,7 @@ export type RootStackParamList = {
   Tabs: NavigatorScreenParams<TabParamList>;
   Challenges: undefined;
   ChallengeDetail: { id: string };
-  CreateChallenge: undefined;
+  CreateChallenge: { rematchId?: string } | undefined;
   FamilyMembers: undefined;
   FamilyDiary: { familyUser: FamilyDiaryUser };
   FamilyMealDetail: {

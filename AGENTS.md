@@ -185,6 +185,9 @@ Keep the upstream license, attribution, history, functionality, and package guid
   Wear source/build/Data Layer privacy rules: `docs/fork/WEAR_OS_CHALLENGES.md`.
   Keep Wear applicationId/signing identical to the phone; maintain source outside
   generated `android/`. Keep Watch mutations, complications and workouts separate.
+- Challenge polish source maps and local notification/widget privacy rules:
+  `docs/fork/CHALLENGE_POLISH.md`. Keep reminders local, preserve source freshness,
+  and clear every native surface on account changes; no watch mutations.
 - Challenge scoring, reconciliation, and winners belong on the server. Mobile
   and watch clients consume server state; locally displayed progress is not an
   authoritative result.

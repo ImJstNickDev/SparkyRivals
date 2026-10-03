@@ -1,5 +1,13 @@
 # Wear OS Challenges — Milestone 5
 
+## Challenge polish extension — Milestone 7
+
+[CHALLENGE_POLISH.md](CHALLENGE_POLISH.md) documents the implemented Rematch,
+local notification and native widget/Tile/complication additions. These reuse
+current score units, account guards and source freshness; watches remain read-only.
+Earlier milestone scope statements below describe their original implementation.
+Native compile/device acceptance remains open in [POLISH_VALIDATION.md](POLISH_VALIDATION.md).
+
 ## Workout Time extension — Milestone 6
 
 [WORKOUT_CHALLENGES.md](WORKOUT_CHALLENGES.md) documents the implemented second
@@ -10,7 +18,7 @@ boundaries below remain intact. Native device acceptance remains outstanding.
 SparkyRivals has a read-only, non-standalone Android/Wear OS Challenge companion.
 It displays server results relayed by the Android phone. It does not authenticate
 to the server, read health sensors, ingest health data or calculate competition
-results. No Challenge mutations, workout logging/scoring, Tile, complication,
+results. The original Milestone 5 scope excluded Challenge mutations, workout logging/scoring, Tile, complication,
 notification, store publication or deployment is included.
 
 ## Integration base

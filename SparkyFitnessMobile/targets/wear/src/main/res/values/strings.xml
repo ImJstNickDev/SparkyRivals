@@ -48,4 +48,13 @@
     <string name="minutes_short">%1$sm</string>
     <string name="seconds_short">%1$ss</string>
     <plurals name="workouts"><item quantity="one">%1$s workout</item><item quantity="other">%1$s workouts</item></plurals>
+    <string name="surface_rank">Rank %1$d</string>
+    <string name="surface_tied">Tied for lead</string>
+    <string name="surface_ahead">Ahead by %1$s</string>
+    <string name="surface_behind">%1$s behind</string>
+    <string name="surface_leading">Leading</string>
+    <string name="surface_stale_short">Stale</string>
+    <string name="surface_time_short">Time</string>
+    <string name="surface_invite_short">Invite</string>
+    <string name="surface_soon_short">Soon</string>
 </resources>
