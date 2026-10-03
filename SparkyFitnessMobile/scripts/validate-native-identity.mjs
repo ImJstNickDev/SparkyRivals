@@ -113,6 +113,16 @@ if (platform !== 'android') {
         .sort(),
       ['Debug', 'Release']
     );
+  // Apple targets use Xcode synchronized filesystem groups, not per-file references.
+  const groups = Object.values(
+    project.hash.project.objects.PBXFileSystemSynchronizedRootGroup || {}
+  ).filter((entry) => typeof entry === 'object');
+  for (const target of ['widget', 'watch', 'watch-widget']) {
+    assert.ok(
+      groups.some((group) => unquote(group.path) === target),
+      `Missing synchronized ${target} sources`
+    );
+  }
   snapshot.platforms.ios = targets.sort((a, b) =>
     `${a.bundle}/${a.configuration}`.localeCompare(
       `${b.bundle}/${b.configuration}`
@@ -150,6 +160,7 @@ if (platform !== 'ios') {
   const sources = [
     'widget/CalorieWidget.kt',
     'widget/MacroWidget.kt',
+    'widget/ChallengeWidget.kt',
     'workoutnotification/WorkoutNotificationModule.kt',
   ].map((file) =>
     read(`android/app/src/main/java/com/sparkyapps/sparkyfitness/${file}`)
@@ -160,6 +171,11 @@ if (platform !== 'ios') {
     if (id.mode === 'custom')
       assert.ok(!source.includes('sparkyfitnessmobile://'));
   }
+  const receivers = manifest.manifest.application
+    .flatMap((app) => app.receiver || [])
+    .map((r) => r.$['android:name']);
+  for (const name of ['Calorie', 'Macro', 'Challenge'])
+    assert.ok(receivers.some((r) => r.endsWith(`${name}WidgetReceiver`)));
   let wear;
   const settings = read('android/settings.gradle');
   if (id.wearEnabled) {
@@ -174,6 +190,12 @@ if (platform !== 'ios') {
       wearGradle.includes('phone.defaultConfig.versionCode >= 1000000000')
     );
     assert.ok(wearGradle.includes('play-services-wearable:20.0.1'));
+    for (const dependency of [
+      'androidx.wear.tiles:tiles:1.5.0',
+      'androidx.wear.protolayout:protolayout:1.3.0',
+      'watchface-complications-data-source:1.2.1',
+    ])
+      assert.ok(wearGradle.includes(dependency));
     assert.ok(gradle.includes('play-services-wearable:20.0.1'));
     assert.ok(gradle.includes('androidx.work:work-runtime:2.10.1'));
     assert.equal((settings.match(/include ':wear'/g) || []).length, 1);
@@ -231,6 +253,30 @@ if (platform !== 'ios') {
       wearManifest.manifest.application[0]['meta-data'][0].$['android:name'],
       'com.google.android.wearable.standalone'
     );
+    const services = wearManifest.manifest.application[0].service;
+    for (const [name, permission] of [
+      [
+        'ChallengeTileService',
+        'com.google.android.wearable.permission.BIND_TILE_PROVIDER',
+      ],
+      [
+        'ChallengeComplicationService',
+        'com.google.android.wearable.permission.BIND_COMPLICATION_PROVIDER',
+      ],
+    ]) {
+      const service = services.find((s) => s.$['android:name'].endsWith(name));
+      assert.ok(service, `Missing ${name}`);
+      assert.equal(service.$['android:permission'], permission);
+    }
+    for (const file of [
+      'ChallengeTileService.kt',
+      'ChallengeComplicationService.kt',
+      'ChallengeSurfaces.kt',
+    ])
+      assert.equal(
+        read(`android/wear/src/main/kotlin/com/sparkyrivals/wear/${file}`),
+        read(`targets/wear/src/main/kotlin/com/sparkyrivals/wear/${file}`)
+      );
     const files = {};
     const visit = (dir) => {
       for (const entry of readdirSync(join(root, dir), {
