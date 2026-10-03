@@ -248,7 +248,8 @@ For each variant you intend to install/distribute:
 
 The inherited manual `ios-build.yml` now selects a profile and discovers generated
 workspace/launch IDs. It compiles unsigned simulators, not device provisioning.
-EAS/Xcode native or device builds were not started here.
+See [release acceptance](RELEASE_VALIDATION.md) for the current EAS build result
+and remaining device checks. No local Xcode compilation occurs on Linux.
 
 ## Deep links and authentication
 
