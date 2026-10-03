@@ -60,6 +60,28 @@ key recovery, versioning, scheme/server setup and safe workflow enablement steps
 [BUILD_VALIDATION.md](BUILD_VALIDATION.md) distinguishes prebuild/config evidence
 from unrun native compilation and hardware behavior.
 
+## Wear OS identity and signing — milestone 5
+
+`resolveAppIdentity()` now exposes Wear opt-in, the phone-identical
+`wearApplicationId`, and validated Wear build number metadata. The three owned
+profiles opt in; upstream mode rejects Wear generation. Wear's internal Kotlin
+namespace is `com.sparkyrivals.wear`, while applicationIds are exactly the Android
+phone column of the identity matrix above. **Never append `.wear` to applicationId.**
+
+Debug and Release use the phone's corresponding selected signing configuration;
+there is no independent Wear key/password interface. Release fails without an
+owned final config and explicitly allocated `EXPO_WEAR_BUILD_NUMBER`. Wear version
+codes use 1000000000–2100000000, phone codes stay below that range when enabled.
+Android native guards repeat identity/range/signing checks after EAS injection.
+
+The versioned DataItem path `/sparkyrivals/challenges/v1` and phone capability
+`sparkyrivals_challenge_phone_v1` are protocol constants, not branding inputs.
+Changing them requires a paired protocol migration. The manifest is watch-only
+and non-standalone; no health collection permissions or server credentials exist.
+Generated metadata checks pass. Actual APK signer equality, native compilation,
+pairing and owned production key custody remain acceptance/setup tasks; see
+[WEAR_OS_CHALLENGES.md](WEAR_OS_CHALLENGES.md).
+
 ## Historical bootstrap inventory
 
 Baseline: `f8df11ac3b019d022d3fa4a1b39c1b2f8576d361`, inspected 2026-10-02.

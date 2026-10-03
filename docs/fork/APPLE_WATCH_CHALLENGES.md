@@ -14,6 +14,16 @@ That main was 31 commits ahead and zero behind the frozen upstream snapshot.
 Work continues on `milestone/apple-watch-challenges`. All GitHub writes target the
 fork; upstream's push URL remains disabled.
 
+## Milestone 5 shared-code update
+
+PR #5 is merged into fork main. Its Xcode/device/visual acceptance remains open.
+Milestone 5 extracts platform-neutral projection/types/session state into
+`companionChallenges`, `companionChallengeSession` and `useCompanionChallenges`.
+The original Apple names below remain compatibility facades; Swift models,
+protocol and the one composed context writer are unchanged. Wear uses the shared
+projection through a separate Android Data Layer publisher, documented in
+[WEAR_OS_CHALLENGES.md](WEAR_OS_CHALLENGES.md).
+
 ## Data flow and source map
 
 ```mermaid

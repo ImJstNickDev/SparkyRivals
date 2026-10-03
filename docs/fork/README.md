@@ -39,9 +39,12 @@ The controlled upstream [sync PR #3](https://github.com/ImJstNickDev/SparkyRival
 merged at `747280650d58fcfde1617a12eab04b829eb3bff2`. Milestone 3
 [web and mobile Challenges](CHALLENGE_UI.md) merged as PR #4 at
 `b333a116724e8c0899a8a036ae1a1ad29e4d2d42`. Milestone 4 implements the
-[read-only Apple Watch Challenge page](APPLE_WATCH_CHALLENGES.md); its PR remains
-unmerged. Native compile/device/visual acceptance is still pending. Wear OS has
-not started.
+[read-only Apple Watch Challenge page](APPLE_WATCH_CHALLENGES.md), merged as PR #5
+at `e52c89b1314927309d42a351da8f509f44970ec5`. Native Apple compile/device/visual
+acceptance is still pending. Milestone 5 implements the
+[Wear OS/Galaxy Watch companion](WEAR_OS_CHALLENGES.md), with durable Data Layer
+state and prebuild-safe native sources. Its PR remains unmerged; Android/Compose
+compilation and paired hardware acceptance remain outstanding.
 
 GitHub Actions remain **disabled**. Inherited publishing/mutation jobs are now
 guarded off in forks; validation enablement is documented, not performed. No store
@@ -77,6 +80,7 @@ product direction. See [ARCHITECTURE.md](ARCHITECTURE.md#future-client-experienc
 - [Milestone 2 validation](CHALLENGE_VALIDATION.md)
 - [Challenge UI architecture](CHALLENGE_UI.md)
 - [Apple Watch Challenge architecture and validation](APPLE_WATCH_CHALLENGES.md)
+- [Wear OS/Galaxy Watch architecture and validation](WEAR_OS_CHALLENGES.md)
 - [Milestone 3 validation](CHALLENGE_UI_VALIDATION.md)
 - [Controlled upstream synchronization](UPSTREAM_SYNC_2026-10-03.md)
 - [Upstream integration workflow](UPSTREAM.md)

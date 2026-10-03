@@ -110,7 +110,26 @@ npx expo prebuild --clean
   `src/hooks/queryKeys.ts` and `src/services/api/challengesApi.ts` consume shared
   server results. No local ranking, second health sync or offline membership queue.
 - Details, consent, refresh and device-verification boundaries live in
-  `../docs/fork/CHALLENGE_UI.md`. No Watch payload/page was added in this milestone.
+  `../docs/fork/CHALLENGE_UI.md`. Watch companions are documented in the dedicated sections below.
+
+## Wear OS companion (SparkyRivals)
+
+- `targets/wear/` is durable Kotlin/Wear Material 3 source. `withWearOsCompanion`
+  generates `:wear` only for custom opt-in; generated `android/` is disposable.
+- `modules/wear-connectivity/` and `withWearConnectivity` supply the narrow
+  Android phone bridge. Same applicationId and selected signing config as phone
+  are Data Layer invariants. Never create a `.wear` applicationId or second key.
+- `useCompanionChallenges`, `companionChallenges` types/projection and
+  `companionChallengeSession` share existing server queries/privacy rules with
+  Apple. Existing Apple names remain facades; preserve its single context writer.
+- `useWearChallenges` / `wearChallengePublisher` own Android publication. Native
+  WorkManager sends the latest persisted revision; Wear keeps a receipt watermark.
+  Tombstones on logout/switch outrank old data. No Watch auth, sensors or scoring.
+- Read `../docs/fork/WEAR_OS_CHALLENGES.md` before protocol/build changes. It covers
+  publisher reset, account isolation, bounded payloads, version allocations and
+  native acceptance. Run mobile validate/full CI, clean prebuild/native checks and
+  `python3 scripts/test-wear-models.py` (initial cache: `--download`). JVM protocol
+  success does not establish Compose/Android APK compilation or paired delivery.
 
 ## React Query And Local State
 

@@ -1,7 +1,7 @@
 # Architecture audit and future Challenges design
 
 Verified against upstream `f8df11ac3b019d022d3fa4a1b39c1b2f8576d361` on
-2026-10-02. Challenge and Watch sections were updated through milestone 4 on 2026-10-03.
+2026-10-02. Challenge and Watch sections were updated through milestone 5 on 2026-10-03.
 Other sections describing future work remain proposals.
 Paths below are relative to the repository root.
 
@@ -250,7 +250,7 @@ are mounted headlessly in `App.tsx`. There is no Watch server login/client today
 `updateApplicationContext` holds **one latest dictionary for the entire app**.
 The existing context includes nutrition, water, check-in/history, acknowledgments,
 page preferences, startable presets, and the optional versioned `challengeSnapshot`.
-Do not create a competing context writer. `useWatchChallenges` observes the same
+Do not create a competing context writer. `useWatchChallenges` wraps the shared `useCompanionChallenges` observer of the same
 actor-scoped list/results cache as mobile screens and projects at most eight
 Challenges, each with top-three-plus-self rows. Swift consumes server ranks,
 totals and presence without HealthKit scoring or Watch credentials. Auth revision
@@ -341,27 +341,26 @@ buckets keep their dates; absence is distinct from explicit zero. Existing theme
 locale, header and network systems are reused. Full design, source maps and native
 verification boundaries: [CHALLENGE_UI.md](CHALLENGE_UI.md).
 
-## Future Wear OS direction
+## Wear OS companion — milestone 5
 
-No Wear OS module, wearable manifest, Compose-for-Wear dependency, or Android
-WatchConnectivity equivalent exists in the tracked baseline. The current Kotlin
-targets are phone widgets, notifications, exact alarms, and language support.
+The read-only native companion is maintained under `SparkyFitnessMobile/targets/wear/`.
+`withWearOsCompanion` copies it into generated `android/wear` during clean prebuild;
+custom profiles opt in, upstream builds omit it. Wear Material 3 renders compact
+server-authoritative Challenge results and has no direct server authentication or
+health collection. The applicationId and selected signing configuration match the
+Android phone; version codes occupy separate form-factor ranges.
 
-Proposed durable location: `SparkyFitnessMobile/targets/wear/` for a Kotlin +
-Jetpack Compose for Wear OS Gradle application module. A narrow Expo plugin would
-include that external project in the generated Android settings; phone transport
-would live in a local Expo module such as `modules/wear-connectivity/`. Keep source
-outside generated `android/`, and test clean/repeated prebuild reproducibility.
+`useCompanionChallenges` and the shared companion projection serve both watch
+platforms through the existing mobile query cache. Apple retains its sole composed
+WatchConnectivity context. Android's narrow `modules/wear-connectivity` bridge
+persists a bounded JSON snapshot and durable revision, then WorkManager publishes
+the latest DataItem. Wear persists its receipt/high-water sequence, handles account
+clears and reports staleness without computing scores or lifecycle. Samsung Health
+continues flowing through phone Health Connect and existing canonical storage.
 
-The first companion can display cached, versioned server challenge projections
-relayed by the phone, with account/server identity, freshness, and explicit clearing
-on logout/switch. It does not read sensors or upload health records. Consider
-Data Layer for pairing, capability discovery, refresh messages, and cached display;
-evaluate direct authenticated server reads before expanding beyond this constrained
-phone companion. Google's guidance prefers existing backend endpoints for general
-content/state sync, and requires matching phone/watch application IDs **and signing
-certificates** for Data Layer communication. These requirements must inform Own
-the Build now. See the [Android Data Layer overview](https://developer.android.com/training/wearables/data/overview).
+[WEAR_OS_CHALLENGES.md](WEAR_OS_CHALLENGES.md) documents the protocol, reinstall
+reset boundary, identity/signing, tests and remaining native/device acceptance.
+There is no Wear mutation channel, workout feature, Tile or complication.
 
 ## Future client experience
 

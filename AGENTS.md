@@ -180,7 +180,9 @@ Keep the upstream license, attribution, history, functionality, and package guid
 - Challenge web/mobile source maps, consent-aware cache rules and native test
   boundaries: `docs/fork/CHALLENGE_UI.md`. Apple Watch source maps and the single
   composed-context/account-clearing contract: `docs/fork/APPLE_WATCH_CHALLENGES.md`.
-  Keep future Watch mutations, complications and Wear OS work separate.
+  Wear source/build/Data Layer privacy rules: `docs/fork/WEAR_OS_CHALLENGES.md`.
+  Keep Wear applicationId/signing identical to the phone; maintain source outside
+  generated `android/`. Keep Watch mutations, complications and workouts separate.
 - Challenge scoring, reconciliation, and winners belong on the server. Mobile
   and watch clients consume server state; locally displayed progress is not an
   authoritative result.

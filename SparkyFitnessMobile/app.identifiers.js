@@ -174,6 +174,32 @@ function resolveAppIdentity(env = process.env) {
     buildNumber = Number(env.EXPO_BUILD_NUMBER);
   }
 
+  if (env.EXPO_WEAR_ENABLED && !['0', '1'].includes(env.EXPO_WEAR_ENABLED)) {
+    throw new Error('EXPO_WEAR_ENABLED must be 0 or 1');
+  }
+  const wearEnabled = env.EXPO_WEAR_ENABLED === '1';
+  if (wearEnabled && !custom) {
+    throw new Error('Wear companion requires an owned custom identity');
+  }
+  // Disjoint form-factor ranges prevent collisions even across release trains.
+  // Validate EAS's final phone version again in Gradle after its version injection.
+  if (wearEnabled && buildNumber >= 1000000000) {
+    throw new Error(
+      'Wear-enabled phone EXPO_BUILD_NUMBER must be below 1000000000'
+    );
+  }
+  const wearBuildNumberExplicit = env.EXPO_WEAR_BUILD_NUMBER !== undefined;
+  if (
+    wearBuildNumberExplicit &&
+    (!/^[1-9][0-9]*$/.test(env.EXPO_WEAR_BUILD_NUMBER) ||
+      Number(env.EXPO_WEAR_BUILD_NUMBER) < 1000000000 ||
+      Number(env.EXPO_WEAR_BUILD_NUMBER) > 2100000000)
+  ) {
+    throw new Error(
+      'EXPO_WEAR_BUILD_NUMBER must be an integer from 1000000000 to 2100000000'
+    );
+  }
+  const wearBuildNumber = Number(env.EXPO_WEAR_BUILD_NUMBER || '1000000001');
   const watchBundleIdentifier = `${iosBundleIdentifier}.watchkitapp`;
   return {
     mode,
@@ -186,6 +212,10 @@ function resolveAppIdentity(env = process.env) {
     scheme,
     watchScheme,
     androidPackage,
+    wearEnabled,
+    wearApplicationId: androidPackage,
+    wearBuildNumber,
+    wearBuildNumberExplicit,
     iosBundleIdentifier,
     appleTeamId,
     appGroup,

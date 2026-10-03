@@ -1,0 +1,42 @@
+<resources>
+    <string name="challenges">Challenges</string>
+    <string name="steps_rule">Steps · highest total</string>
+    <string name="you">You</string>
+    <string name="steps">%1$s steps</string>
+    <string name="rank">Rank %1$s</string>
+    <string name="tied">Tied</string>
+    <string name="leader">Leading</string>
+    <string name="current_winner">Current winner</string>
+    <string name="current_tied_winner">Current tied winner</string>
+    <string name="lead">You lead by %1$s</string>
+    <string name="behind">%1$s behind the lead</string>
+    <string name="tied_lead">Tied for the lead</string>
+    <string name="today">Today</string>
+    <string name="no_steps">No step data</string>
+    <string name="not_started">Not started</string>
+    <string name="results_pending">Results not synced yet</string>
+    <string name="active">Active</string>
+    <string name="upcoming">Upcoming</string>
+    <string name="completed">Completed</string>
+    <string name="invitation">Invitation</string>
+    <string name="accept_phone">Accept on phone</string>
+    <string name="review_phone">Review on phone</string>
+    <string name="start_date">Starts %1$s</string>
+    <string name="date_range">%1$s – %2$s</string>
+    <string name="empty_title">A little friendly competition</string>
+    <string name="empty_hint">No active challenges. Create one on your phone and invite someone.</string>
+    <string name="not_synced">Challenges not synced yet</string>
+    <string name="open_phone">Open the app on your Android phone to sync Challenges.</string>
+    <string name="phone_unavailable">Phone companion unavailable</string>
+    <string name="phone_hint">Check your paired phone and open the app. Cached results remain available.</string>
+    <string name="reset_required">Reconnect your companion</string>
+    <string name="reset_hint">The phone installation or data format changed. Update both apps. Clear this watch app\'s storage, then open the phone app to sync again.</string>
+    <string name="more_phone">More Challenges on phone</string>
+    <string name="stale">May be out of date</string>
+    <string name="updated">Updated %1$s</string>
+    <string name="coverage">Some days have no step data yet. Totals may change.</string>
+    <string name="reconciled">Late or corrected data can change these results.</string>
+    <string name="unavailable_detail">This Challenge is no longer available. Return to Challenges.</string>
+    <plurals name="days_left"><item quantity="one">%1$d day left</item><item quantity="other">%1$d days left</item></plurals>
+    <plurals name="participants"><item quantity="one">%1$d participant</item><item quantity="other">%1$d participants</item></plurals>
+</resources>
