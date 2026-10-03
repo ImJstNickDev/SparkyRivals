@@ -411,3 +411,14 @@ WHERE tablename = 'table_name';
 - **ANALYZE**: Update table statistics
 - **Index maintenance**: Rebuild indexes if needed
 - **Log rotation**: Rotate and archive database logs
+
+### SparkyRivals Challenges
+
+| Table | Purpose |
+|-------|---------|
+| `challenges` | Creator, immutable steps/sum rules, inclusive calendar dates, IANA zone, cancellation and audit timestamps |
+| `challenge_participants` | Unique `(challenge_id, user_id)` consent rows for up to 100 participants; invitation/acceptance/decline/departure timestamps |
+
+These tables do not store health history or scores. The existing check-in
+`(user_id, entry_date)` key serves canonical step queries. Membership uses its own
+RLS domain, without family permission inheritance. See the security-tier guide.

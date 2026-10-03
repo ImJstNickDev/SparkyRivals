@@ -1029,3 +1029,43 @@ CREATE POLICY deny_all_policy ON public.openfoodfacts_product_read_rate_limit FO
 -- own owner pool, which bypasses RLS; the rows hold client addresses, so the
 -- app role is denied entirely.
 CREATE POLICY deny_all_policy ON public.rate_limit FOR ALL TO PUBLIC USING (false) WITH CHECK (false);
+
+-- SparkyRivals Challenges: independent consent, never inherited caregiver access.
+-- Definer helpers avoid recursive policies on the two membership-linked tables.
+-- They expose only the caller's own membership/ownership, not arbitrary user lookup.
+CREATE OR REPLACE FUNCTION public.challenge_actor() RETURNS uuid
+LANGUAGE sql STABLE SET search_path = pg_catalog, public AS $$
+  SELECT CASE WHEN public.current_user_id() = public.authenticated_user_id()
+    THEN public.authenticated_user_id() END;
+$$;
+CREATE OR REPLACE FUNCTION public.challenge_membership(p_challenge_id uuid) RETURNS text
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = pg_catalog, public AS $$
+  SELECT status FROM public.challenge_participants
+  WHERE challenge_id = p_challenge_id AND user_id = public.challenge_actor();
+$$;
+CREATE OR REPLACE FUNCTION public.owns_challenge(p_challenge_id uuid) RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = pg_catalog, public AS $$
+  SELECT EXISTS (SELECT 1 FROM public.challenges
+    WHERE id = p_challenge_id AND creator_user_id = public.challenge_actor());
+$$;
+ALTER TABLE public.challenges ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.challenge_participants ENABLE ROW LEVEL SECURITY;
+CREATE POLICY challenge_read ON public.challenges FOR SELECT
+USING (creator_user_id = public.challenge_actor() OR public.challenge_membership(id) IN ('pending', 'accepted'));
+CREATE POLICY challenge_create ON public.challenges FOR INSERT
+WITH CHECK (creator_user_id = public.challenge_actor());
+CREATE POLICY challenge_update ON public.challenges FOR UPDATE
+USING (creator_user_id = public.challenge_actor())
+WITH CHECK (creator_user_id = public.challenge_actor());
+CREATE POLICY challenge_participant_read ON public.challenge_participants FOR SELECT
+USING (
+  public.owns_challenge(challenge_id)
+  OR (user_id = public.challenge_actor())
+  OR (status = 'accepted' AND public.challenge_membership(challenge_id) = 'accepted')
+);
+CREATE POLICY challenge_participant_invite ON public.challenge_participants FOR INSERT
+WITH CHECK (public.owns_challenge(challenge_id) AND invited_by_user_id = public.challenge_actor());
+CREATE POLICY challenge_participant_respond ON public.challenge_participants FOR UPDATE
+USING (user_id = public.challenge_actor())
+WITH CHECK (user_id = public.challenge_actor());
+-- No DELETE policies: departure is an audited transition; user deletion cascades.

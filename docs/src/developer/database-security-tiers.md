@@ -182,3 +182,18 @@ These tables store global configuration settings, lookup values, and reference m
 | `medication_types` | Medication categories lookup (GLP-1, Insulin, ADHD, etc.) | Admin-Only | Authenticated Users |
 | `medication_route_types` | Medication administration route lookup (Subcutaneous, Oral) | Admin-Only | Authenticated Users |
 | `medication_schedule_types`| Medication scheduling frequencies lookup (Daily, Weekly) | Admin-Only | Authenticated Users |
+
+## SparkyRivals Challenge consent (Tier 1 exception for explicit membership)
+
+| Table | Write | Read |
+|-------|-------|------|
+| `challenges` | Self-context creator creates, renames upcoming competitions or cancels upcoming/active competitions; immutable dates/rules | Creator, pending invitee or accepted participant; no caregiver inheritance |
+| `challenge_participants` | Creator invites an existing active family relationship; invited user alone accepts/declines; participant alone leaves | Creator sees roster; accepted participants see accepted peers and their own row; others see only their own membership |
+
+This domain is classified Tier 1 because generic delegation never grants access.
+Explicit Challenge consent is the sole exception for narrowly scoped competition
+projections. Definer helpers with fixed search paths avoid recursive RLS. Database
+triggers enforce immutable rules/identities, timestamps, transitions and capacity,
+serializing membership writes on the parent. There are no application DELETE
+policies; account deletion cascades. A switched context is rejected even if the
+actor otherwise belongs to the Challenge. No check-in/diary policy is broadened.
