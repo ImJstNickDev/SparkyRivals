@@ -13,6 +13,8 @@ export function invalidateExerciseCache(
   queryClient: QueryClient,
   entryDate: string
 ) {
+  // Canonical workout edits also reconcile active and historical competitions.
+  void queryClient.invalidateQueries({ queryKey: ['challenges'] });
   void queryClient.invalidateQueries({
     queryKey: [...workoutLocationsQueryKey],
   });

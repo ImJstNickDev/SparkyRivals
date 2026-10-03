@@ -14,6 +14,7 @@ import {
 import { usePreferences } from '../hooks/usePreferences';
 import { useScreenHeader } from '../hooks/useScreenHeader';
 import Button from '../components/ui/Button';
+import SegmentedControl from '../components/SegmentedControl';
 import FormInput from '../components/FormInput';
 import CalendarSheet, {
   type CalendarSheetRef,
@@ -64,7 +65,8 @@ function CreateForm({
   timezoneDefault: string;
   navigation: Props['navigation'];
 }) {
-  const { t, day } = useChallengeFormat();
+  const [metric, setMetric] = useState<'steps' | 'workout_time'>('steps');
+  const { t, day, rules } = useChallengeFormat(metric);
   const mutation = useChallengeMutation();
   const busy = useRef(false);
   const [timezone, setTimezone] = useState(timezoneDefault);
@@ -87,6 +89,7 @@ function CreateForm({
     if (busy.current) return;
     const parsed = createChallengeRequestSchema.safeParse({
       name,
+      metric,
       start_date: start,
       end_date: end,
       timezone,
@@ -130,17 +133,34 @@ function CreateForm({
             'Choose your days, invite your people, and keep moving together.',
         })}
       </Text>
+      <SegmentedControl
+        segments={[
+          {
+            key: 'steps',
+            label: t('challenges.stepsMetric', { defaultValue: 'Steps' }),
+          },
+          {
+            key: 'workout_time',
+            label: t('challenges.workoutTime', {
+              defaultValue: 'Workout time',
+            }),
+          },
+        ]}
+        activeKey={metric}
+        onSelect={setMetric}
+      />
       <View className="rounded-2xl bg-surface p-5 gap-2">
-        <Text className="text-text-primary font-semibold text-lg">
-          {t('challenges.rules', {
-            defaultValue: 'Steps · Highest total wins',
-          })}
-        </Text>
+        <Text className="text-text-primary font-semibold text-lg">{rules}</Text>
         <Text className="text-text-secondary">
-          {t('challenges.canonicalHint', {
-            defaultValue:
-              'Your existing daily step totals count. There is nothing extra to track.',
-          })}
+          {metric === 'workout_time'
+            ? t('challenges.workoutHint', {
+                defaultValue:
+                  'Recorded qualifying workout duration counts. Calories and workout count do not decide the winner.',
+              })
+            : t('challenges.canonicalHint', {
+                defaultValue:
+                  'Your existing daily step totals count. There is nothing extra to track.',
+              })}
         </Text>
       </View>
       <View className="gap-2">
@@ -232,10 +252,15 @@ function CreateForm({
             autoCorrect={false}
           />
           <Text className="text-text-secondary">
-            {t('challenges.timezoneHint', {
-              defaultValue:
-                'This sets when the Challenge starts and ends. Steps keep their existing daily date buckets.',
-            })}
+            {metric === 'workout_time'
+              ? t('challenges.workoutTimezoneHint', {
+                  defaultValue:
+                    'This sets when the Challenge starts and ends. Workouts keep their existing daily date buckets.',
+                })
+              : t('challenges.timezoneHint', {
+                  defaultValue:
+                    'This sets when the Challenge starts and ends. Steps keep their existing daily date buckets.',
+                })}
           </Text>
         </View>
       )}

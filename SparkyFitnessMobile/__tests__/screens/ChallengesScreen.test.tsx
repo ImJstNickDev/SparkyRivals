@@ -29,6 +29,7 @@ import {
   challenge,
   detail,
   results,
+  workoutResults,
   connection,
 } from '../helpers/challenges';
 
@@ -592,4 +593,71 @@ it.each([false, true])('labels completed current winners (tie=%s)', (tied) => {
       tied ? 'Current tied winners: Nico, Marta' : 'Current winner: Nico'
     )
   ).toBeTruthy();
+});
+
+describe('Workout time', () => {
+  it('selects the workout metric on creation', async () => {
+    const view = screen('CreateChallenge');
+    fireEvent.press(view.getByText('Workout time'));
+    fireEvent.changeText(
+      view.getByLabelText('Challenge name'),
+      'Time together'
+    );
+    fireEvent.press(view.getByText('Create Challenge'));
+    await waitFor(() =>
+      expect(mutateAsync).toHaveBeenCalledWith({
+        action: 'create',
+        body: expect.objectContaining({ metric: 'workout_time' }),
+      })
+    );
+  });
+  it.each(['active', 'completed'] as const)(
+    'renders %s workout duration and secondary counts',
+    (lifecycle) => {
+      const view = display(
+        <ChallengeScores
+          actor={actor}
+          result={{
+            ...workoutResults,
+            challenge: { ...workoutResults.challenge, lifecycle },
+          }}
+        />
+      );
+      expect(view.getAllByText('3h 42m').length).toBeGreaterThan(0);
+      expect(view.getAllByText(/4 workouts/).length).toBeGreaterThan(0);
+      expect(view.getAllByText(/24m/).length).toBeGreaterThan(0);
+    }
+  );
+  it('renders original group ranks and workout counts', () => {
+    const entries = [
+      ...workoutResults.entries,
+      {
+        ...workoutResults.entries[0]!,
+        user_id: third,
+        display_name: 'Luca',
+        rank: 1,
+        is_tied: true,
+        total_workout_count: 1,
+      },
+    ];
+    const view = display(
+      <ChallengeScores actor={actor} result={{ ...workoutResults, entries }} />
+    );
+    expect(view.getByText('Luca')).toBeTruthy();
+    expect(view.getByText('1 workout')).toBeTruthy();
+  });
+  it('distinguishes missing workout data and present zero in history', () => {
+    const view = display(
+      <ChallengeDailyHistory actor={actor} result={workoutResults} />
+    );
+    expect(view.getAllByText('0m').length).toBeGreaterThan(0);
+    expect(view.getAllByText('No workout recorded').length).toBeGreaterThan(0);
+    expect(view.queryByText('No step data')).toBeNull();
+  });
+  it('shows a workout invitation without totals', () => {
+    setList([{ ...workoutResults.challenge, my_membership: 'pending' }]);
+    const view = screen('Challenges');
+    expect(view.getAllByText(/Workout time/).length).toBeGreaterThan(0);
+    expect(view.queryByText('3h 42m')).toBeNull();
+  });
 });

@@ -77,9 +77,13 @@ export default function ChallengeDetailScreen({
               {challenge.timezone}
             </Text>
             <Text className="text-text-primary font-semibold">
-              {t('challenges.rules', {
-                defaultValue: 'Steps · Highest total wins',
-              })}
+              {challenge.metric === 'workout_time'
+                ? t('challenges.workoutRules', {
+                    defaultValue: 'Workout time · Highest total wins',
+                  })
+                : t('challenges.rules', {
+                    defaultValue: 'Steps · Highest total wins',
+                  })}
             </Text>
             {challenge.lifecycle === 'active' && (
               <>
@@ -135,10 +139,15 @@ export default function ChallengeDetailScreen({
                 </Text>
               )}
               <Text className="text-text-secondary">
-                {t('challenges.acceptPrivacy', {
-                  defaultValue:
-                    'Accept to share your daily step totals for the whole Challenge date range, including earlier days. Other health data stays private.',
-                })}
+                {challenge.metric === 'workout_time'
+                  ? t('challenges.workoutAcceptHint', {
+                      defaultValue:
+                        'Accept to share daily aggregate workout time and session counts for the whole Challenge date range, including earlier days. Workout details and other health data stay private.',
+                    })
+                  : t('challenges.acceptPrivacy', {
+                      defaultValue:
+                        'Accept to share your daily step totals for the whole Challenge date range, including earlier days. Other health data stays private.',
+                    })}
               </Text>
               <Text className="text-text-secondary">
                 {challenge.lifecycle === 'completed' ||
@@ -155,9 +164,14 @@ export default function ChallengeDetailScreen({
           )}
           {challenge.lifecycle === 'cancelled' ? (
             <Text className="rounded-2xl bg-surface p-5 text-text-secondary">
-              {t('challenges.cancelledHint', {
-                defaultValue: 'Cancelled. Step sharing has stopped.',
-              })}
+              {challenge.metric === 'workout_time'
+                ? t('challenges.workoutCancelledHint', {
+                    defaultValue:
+                      'Cancelled. Workout time sharing has stopped.',
+                  })
+                : t('challenges.cancelledHint', {
+                    defaultValue: 'Cancelled. Step sharing has stopped.',
+                  })}
             </Text>
           ) : (
             !pending && (
@@ -173,10 +187,15 @@ export default function ChallengeDetailScreen({
                       })}
                     </Text>
                     <Text className="text-text-secondary">
-                      {t('challenges.reconciles', {
-                        defaultValue:
-                          'Results can change when step data arrives late or is corrected.',
-                      })}
+                      {challenge.metric === 'workout_time'
+                        ? t('challenges.workoutReconciles', {
+                            defaultValue:
+                              'Results can change when workouts arrive late, are edited or deleted.',
+                          })
+                        : t('challenges.reconciles', {
+                            defaultValue:
+                              'Results can change when step data arrives late or is corrected.',
+                          })}
                     </Text>
                   </View>
                 )}

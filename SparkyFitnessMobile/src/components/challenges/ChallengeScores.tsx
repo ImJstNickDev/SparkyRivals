@@ -17,7 +17,19 @@ export function ChallengeScores({
   actor: string;
   compact?: boolean;
 }) {
-  const { t, number } = useChallengeFormat();
+  const {
+    t,
+    number,
+    score,
+    noData,
+    totalLabel,
+    coverageHint,
+    workoutCount,
+    leading,
+    behind,
+    coverage,
+    solo,
+  } = useChallengeFormat(result.challenge.metric);
   const [limit, setLimit] = useState(20);
   const entries = result.entries.slice(0, compact ? 3 : limit);
   const ownEntry = result.entries.find((e) => e.user_id === actor);
@@ -52,15 +64,8 @@ export function ChallengeScores({
                   names,
                 })
               : result.lead_margin !== null
-                ? t('challenges.leading', {
-                    defaultValue: '{{name}} leads by {{steps}} steps',
-                    name: names,
-                    count: result.lead_margin,
-                    steps: number(result.lead_margin),
-                  })
-                : t('challenges.oneCompetitor', {
-                    defaultValue: 'Your next step starts here',
-                  })}
+                ? leading(names, result.lead_margin)
+                : solo}
         </Text>
       )}
       {entries.map((entry) => (
@@ -92,11 +97,16 @@ export function ChallengeScores({
               className={`text-text-primary font-bold ${versus ? 'text-4xl' : 'text-3xl'}`}
               style={{ fontVariant: ['tabular-nums'] }}
             >
-              {number(entry.total_score)}
+              {score(entry.total_score)}
             </Text>
             <Text className="text-text-secondary text-sm mt-1">
-              {t('challenges.totalSteps', { defaultValue: 'total steps' })}
+              {totalLabel}
             </Text>
+            {entry.total_workout_count !== undefined && (
+              <Text className="text-text-secondary text-sm">
+                {workoutCount(entry.total_workout_count)}
+              </Text>
+            )}
           </View>
           <View
             accessible={false}
@@ -113,30 +123,23 @@ export function ChallengeScores({
             <Text className="text-text-primary text-sm">
               {t('challenges.todayValue', {
                 defaultValue: 'Today: {{value}}',
-                value: entry.today.present
-                  ? number(entry.today.value)
-                  : t('challenges.noData', { defaultValue: 'No step data' }),
+                value: entry.today.present ? score(entry.today.value) : noData,
               })}
             </Text>
           )}
           {!compact && (
             <>
               <Text className="text-text-secondary text-sm">
-                {t('challenges.coverage', {
-                  defaultValue:
-                    '{{present}} of {{eligible}} elapsed days have step data',
-                  count: entry.coverage.eligible_days,
-                  present: number(entry.coverage.days_with_steps),
-                  eligible: number(entry.coverage.eligible_days),
-                })}
+                {coverage(
+                  entry.coverage.days_with_data ??
+                    entry.coverage.days_with_steps ??
+                    0,
+                  entry.coverage.eligible_days
+                )}
               </Text>
               {entry.gap_to_leader !== null && entry.gap_to_leader > 0 && (
                 <Text className="text-text-primary text-sm">
-                  {t('challenges.behind', {
-                    defaultValue: '{{steps}} steps behind the lead',
-                    count: entry.gap_to_leader,
-                    steps: number(entry.gap_to_leader),
-                  })}
+                  {behind(entry.gap_to_leader)}
                 </Text>
               )}
             </>
@@ -165,12 +168,7 @@ export function ChallengeScores({
         </Text>
       )}
       {!compact && (
-        <Text className="text-text-secondary text-sm">
-          {t('challenges.coverageHint', {
-            defaultValue:
-              'Missing data counts as zero in the score, but does not mean no steps were taken. Available data may still change.',
-          })}
-        </Text>
+        <Text className="text-text-secondary text-sm">{coverageHint}</Text>
       )}
     </View>
   );
@@ -183,7 +181,8 @@ export function ChallengeDailyHistory({
   result: ChallengeLeaderboardResponse;
   actor: string;
 }) {
-  const { t, number, day } = useChallengeFormat();
+  const { t, number, day, noData, scoreWithUnit, workoutCount } =
+    useChallengeFormat(result.challenge.metric);
   const [selected, setSelected] = useState(
     result.entries.find((e) => e.user_id === actor)?.user_id ??
       result.entries[0]?.user_id ??
@@ -204,12 +203,8 @@ export function ChallengeDailyHistory({
     !p?.eligible
       ? t('challenges.notStarted', { defaultValue: 'Not started' })
       : p.present
-        ? t('challenges.stepsValue', {
-            defaultValue: '{{steps}} steps',
-            count: p.value,
-            steps: number(p.value),
-          })
-        : t('challenges.noData', { defaultValue: 'No step data' });
+        ? scoreWithUnit(p.value)
+        : noData;
   return (
     <View className="rounded-3xl bg-surface border border-border-subtle p-5 gap-4">
       <Text
@@ -257,7 +252,14 @@ export function ChallengeDailyHistory({
                     <Text className="text-text-primary flex-shrink">
                       {entry.display_name}
                     </Text>
-                    <Text className="text-text-secondary">{value(p)}</Text>
+                    <View>
+                      <Text className="text-text-secondary">{value(p)}</Text>
+                      {p?.present && p.workout_count !== undefined && (
+                        <Text className="text-text-secondary text-sm">
+                          {workoutCount(p.workout_count)}
+                        </Text>
+                      )}
+                    </View>
                   </View>
                   <View
                     accessible={false}
