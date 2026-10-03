@@ -98,6 +98,15 @@ be compiled with signing disabled.
 
 ## Expo / EAS ownership setup
 
+EAS archives this monorepo from its Git root. Root `.easignore` mirrors the root
+and package Git exclusions, including `/dockerdata`, generated mobile native
+projects and local signing credentials. EAS replaces **all** `.gitignore` rules
+when that file exists, so keep the exclusions synchronized. It also avoids EAS
+scanning protected PostgreSQL data for nested ignore files. Never loosen database
+permissions to prepare a mobile archive. Verify locally with `eas build:inspect
+--platform ios --profile sparkyrivals-production-internal --stage archive
+--output <private-temporary-directory>` through `pnpm build:profile`.
+
 Verified during Milestone 8A with EAS CLI 24.10.0:
 
 - Authenticated account: `imjstnick`, with owner access to organization `imjstnickdev`.
