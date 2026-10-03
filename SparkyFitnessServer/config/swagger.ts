@@ -1,3 +1,4 @@
+import { challengeOpenApiSchemas } from '../schemas/challengeSchemas.js';
 // @ts-expect-error TS(7016): Could not find a declaration file for module 'swag... Remove this comment to see the full error message
 import swaggerJsdoc from 'swagger-jsdoc';
 import path from 'path';
@@ -53,6 +54,7 @@ const options = {
         },
       },
       schemas: {
+        ...challengeOpenApiSchemas,
         Exercise: {
           type: 'object',
           properties: {

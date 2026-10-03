@@ -55,3 +55,38 @@ and display names. Ordinary profile, check-in and diary RLS remain unchanged.
 
 See [database security tiers](../src/developer/database-security-tiers.md) and
 [sharing behavior](../src/features/family-friends-sharing.md).
+
+## API
+
+All endpoints are under `/api/v2/challenges`, use existing session/API-key auth,
+require self context and return `Cache-Control: no-store`.
+
+| Method / suffix         | Contract                                                                                                         |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `POST /`                | Name, start/end dates, timezone, optional `metric=steps`, `scoring_mode=sum`, `participant_ids`; 201 detail      |
+| `GET /`                 | `limit` (1–50, default 20), `offset` (0–10000); caller's pending/accepted competitions, newest first; `has_more` |
+| `GET /:id`              | Challenge rules, derived lifecycle/progress, authorized roster                                                   |
+| `PATCH /:id`            | Strict `{name}` only; upcoming creator rename                                                                    |
+| `POST /:id/invitations` | Strict `{user_id}`; creator invites existing active relationship; 201 detail                                     |
+| `POST /:id/accept`      | Empty body; invitee accepts; 204                                                                                 |
+| `POST /:id/decline`     | Empty body; invitee declines; 204                                                                                |
+| `POST /:id/leave`       | Empty body; accepted noncreator leaves; 204                                                                      |
+| `POST /:id/cancel`      | Empty body; creator cancels; detail                                                                              |
+
+Unknown body/query fields are rejected where bodies/queries are defined. UUID
+validation precedes database access. Absent and inaccessible competitions both
+return 404; an unknown account and an unrelated invitation target both return the
+same generic 403. Duplicate invitations/invalid transitions are 409. Invalid
+contracts are 400. No directory, global search or email-lookup endpoint is added.
+
+`shared/src/schemas/api/Challenges.api.zod.ts` defines requests and responses.
+OpenAPI component shapes derive from these schemas; route JSDoc documents the
+operations. Timestamps serialize as ISO instants; DATEs remain `YYYY-MM-DD` strings.
+Detail/list include `my_membership` and server progress: today in the Challenge
+zone, total calendar days, elapsed whole days, inclusive days remaining, and
+1-based current day while active. On cancellation, current day is null and days
+remaining is zero; dates stay visible. Read transactions use a consistent snapshot.
+
+Future clients can obtain eligible account IDs from their existing Family &
+Friends relationship list, then send the selected ID. The API revalidates the
+relationship. Never add arbitrary account discovery merely to populate this flow.
