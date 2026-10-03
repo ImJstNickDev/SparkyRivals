@@ -132,6 +132,26 @@ were reset. Raw logs
 remain private under `/tmp/sparkyrivals-8a/`. Physical Watch installation and launch
 remain outstanding; corrected profile membership alone is not a device-test result.
 
+The maintainer also successfully installed Flightradar on the same Watch. This
+rules out a blanket inability to install apps, but is not a controlled comparison
+with this ad-hoc package: App Store and ad-hoc distribution differ. The forum
+report also describes other apps installing successfully. The captured timeout is
+confirmed; attributing its root cause to an OS regression remains a hypothesis,
+and a SparkyRivals-specific problem has not been conclusively excluded.
+
+An additional offline audit of the re-signed IPA checked both arm64_32/arm64 slices
+of the Watch app and complication: **four slices, 179 code-page hashes**, signed
+Info.plist/resource-directory/requirements/XML and DER entitlement slot hashes,
+resource seal entries, and the CMS signatures over their code directories all
+passed. Each executable signer belongs to its embedded profile's allowed
+certificates, every signed entitlement is permitted by that profile, and the
+Watch UDID is present. No mismatch was found in these checks. OpenSSL CMS checks
+used `-noverify`: they verify cryptographic signatures, not Apple's certificate
+trust/revocation policy or watchOS installation acceptance. This is a targeted
+Linux artifact inspection, not a replacement for macOS `codesign --verify` or a
+successful physical installation. The private report is
+`ios-1005-watch-resigned/watch-signature-audit.json` alongside the IPA above.
+
 ## Android compilation
 
 Actual toolchain: JDK 17.0.20.1 explicitly selected, SDK 36, Build Tools 36.0.0,
