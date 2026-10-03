@@ -102,14 +102,31 @@ EAS re-signed the existing build 1005 successfully:
 Direct inspection of the new IPA confirms **both physical device IDs in all five
 profiles**, the same Distribution Certificate, team and App Groups, unchanged
 Info.plists and build 1005 throughout. This was a re-sign, not a new compilation.
-No certificate rotation, OS update or deployment-target change was needed.
+Correcting profile membership required no certificate rotation, OS update or
+deployment-target change.
 
 The artifact and non-secret verification JSON are private under
 `~/.local/share/sparkyrivals/artifacts/milestone-8a/ios-1005-watch-resigned/`.
 IPA SHA-256: `2feac1d5a5a956b61f8ac96940f7962613277628baa0524ac8399d859900b6e3`.
-The maintainer has been asked to install this updated IPA over the existing iPhone
-app, then retry Watch installation. Physical Watch launch remains unverified until
-that check; corrected profile membership alone is not a device-test result.
+The maintainer retried installation: the earlier error dialog disappeared, but
+the Watch install spinner eventually stopped without installing the app. A fresh
+USB log capture reproduced the failure on iPhone iOS **26.5 (23F77)**. At 00:27:44
+Europe/Rome the phone prepared the embedded Watch app and requested its transfer
+socket; at 00:28:48 that connection timed out. `appconduitd` reports
+`ACXErrorDomain Code=8` / `Failed to create socket`, with underlying
+`com.apple.identityservices.error Code=20` / `Socket open timed out`.
+This attempt fails in the phone-to-Watch transport before transferring the app;
+it does not establish a Watch-side signature rejection. Installed iPhone metadata
+confirms build 1005 and a validated profile.
+
+The error matches an [Apple Developer Forums report](https://developer.apple.com/forums/thread/827053)
+in which Apple DTS identifies a likely known regression. Participants report
+recovery after OS updates and mixed results from toggling Bluetooth on both
+devices. That is supporting evidence, not proof of a fix on this device pair.
+A single Bluetooth reconnection/retry has been requested; its result is pending.
+No app data, pairing, certificate or provisioning resources were reset. Raw logs
+remain private under `/tmp/sparkyrivals-8a/`. Physical Watch installation and launch
+remain outstanding; corrected profile membership alone is not a device-test result.
 
 ## Android compilation
 

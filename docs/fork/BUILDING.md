@@ -287,6 +287,16 @@ Inspect the exported profiles before installation, then install the re-signed IP
 over the existing iPhone app before retrying its embedded Watch app. A successful
 cloud re-sign does not itself prove Watch installation or launch.
 
+If the Watch install spinner stops without installing, capture the paired iPhone's
+`appconduitd`/`installd` logs during one retry before changing credentials again.
+`ACXErrorDomain Code=8` with underlying `Socket open timed out` identifies a failed
+transfer connection; it does not identify a signing failure. See the current
+[device evidence](RELEASE_VALIDATION.md#apple-watch-installation-diagnosis-and-profile-recovery-2026-10-04)
+and [related Apple report](https://developer.apple.com/forums/thread/827053).
+Keep raw logs private. Request user interaction for Bluetooth reconnection or OS
+updates, and record the actual result; do not reset pairing/data or rotate keys
+as speculative fixes.
+
 The inherited manual `ios-build.yml` now selects a profile and discovers generated
 workspace/launch IDs. It compiles unsigned simulators, not device provisioning.
 See [release acceptance](RELEASE_VALIDATION.md) for the current EAS build result
