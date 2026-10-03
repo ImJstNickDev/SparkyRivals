@@ -115,11 +115,16 @@ merged through fork PR #9; milestone base is
 `5891bf15d134744117d90505bbe3029fb104d08c`.
 
 Owned EAS identity and Apple team are integrated, including production-identity
-internal distribution. Real Android phone/Wear release compilation, permanent
-certificate verification, EAS iOS provisioning/build, physical native acceptance
-and local final Compose validation are tracked during this milestone. It is not
-complete until the acceptance evidence supports that claim. See [BUILDING.md](BUILDING.md)
-and [DEPLOYMENT.md](DEPLOYMENT.md). Existing device debt is not waived by source tests.
+internal distribution. Android phone/Wear releases compiled and passed permanent
+certificate verification; both installed and launched on physical Samsung devices.
+An initial paired Data Layer transfer was observed. EAS compiled/exported the
+five-target internal iOS build 1005 with matching versions. Local final Compose
+startup, isolated routing, migration and backup/restore checks passed.
+
+iPhone installation and fuller native surface/account acceptance remain in
+progress; this milestone is not marked complete prematurely. See
+[release evidence](RELEASE_VALIDATION.md), [BUILDING.md](BUILDING.md) and
+[DEPLOYMENT.md](DEPLOYMENT.md). Source tests do not waive device acceptance.
 
 ## 8B. Real production deployment — deferred
 

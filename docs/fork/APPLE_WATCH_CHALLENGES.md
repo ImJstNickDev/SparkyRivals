@@ -1,5 +1,13 @@
 # Apple Watch Challenges — Milestone 4
 
+## Release acceptance update — Milestone 8A
+
+EAS/Xcode compiled and exported production-identity internal build 1005, including
+the Watch app and Watch widget. All five Apple bundle versions, owned team and
+App Groups were verified in the IPA. Physical iPhone/paired Apple Watch acceptance
+is separate. [RELEASE_VALIDATION.md](RELEASE_VALIDATION.md) is the current evidence;
+the native limitations below describe the earlier milestones.
+
 ## Challenge polish extension — Milestone 7
 
 [CHALLENGE_POLISH.md](CHALLENGE_POLISH.md) documents the implemented Rematch,

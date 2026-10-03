@@ -27,7 +27,8 @@ Apple bundles/groups and four EAS extension declarations are coherent.
 Repeated clean prebuild produced identical Android metadata and all five Apple
 targets; upstream/default clean prebuild and native metadata checks also passed
 without a Wear target. Owned production output was restored afterward.
-Phone build number 1001 and Wear code 1000001001 are the local acceptance allocation;
+Local Android acceptance advanced from phone/Wear codes 1001 / 1000001001 to
+1002 / 1000001002. EAS allocated iOS build 1005 for the corrected internal build;
 future distributions must advance/reconcile their respective counters.
 
 No Xcode compilation occurred locally on Linux. The maintainer completed Apple
@@ -54,9 +55,24 @@ shared App Group, ad-hoc provisioning and shared Distribution Certificate. No
 installation or store submission occurred. Inspection caught a version mismatch:
 phone `1004`, four children `1`. The resolver now consumes EAS's allocated iOS
 build number before prebuild; config tests and simulated EAS prebuild confirm
-all five match. Replacement build **1005** is compiling with the existing credentials:
+all five match. Replacement build **1005** completed successfully using the existing credentials:
 [aea3b147-8244-4e6c-8030-b92b11e337e7](https://expo.dev/accounts/imjstnickdev/projects/sparkyrivals/builds/aea3b147-8244-4e6c-8030-b92b11e337e7).
-Inspect its five embedded versions before requesting iPhone installation.
+Its exported IPA was inspected: all five `CFBundleVersion` values are **1005**,
+all bundle IDs, team, App Groups and phone/Watch schemes match the owned identity,
+and all five embedded ad-hoc profiles use the same Distribution Certificate.
+The Watch points to the production phone bundle. Phone/Watch profiles include
+HealthKit and background delivery, their Info.plists retain health purpose
+strings, and the Watch retains `workout-processing`. The phone profile uses
+the production APNs entitlement; no remote notification service was introduced.
+Profile inspection is not an
+independent executable-signature trust-chain check. EAS/Xcode performed the
+successful compilation, signing and ad-hoc export; no store submission occurred.
+
+The IPA and a non-secret verification report are privately archived under
+`~/.local/share/sparkyrivals/artifacts/milestone-8a/ios-1005/`.
+IPA SHA-256: `1556b050b548be57196e0443906fa9ce0d044a9d3f6904b255dd253976c14749`.
+Physical iPhone installation has been requested and remains a separate acceptance
+step; no iPhone/Apple Watch device result is inferred from the cloud build.
 
 ## Android compilation
 
@@ -85,7 +101,8 @@ Both signer SHA-256 digests exactly equal
 The phone's bundled Expo config also passed owned project/package/scheme checks.
 Private archived artifacts and verification JSON are at
 `~/.local/share/sparkyrivals/artifacts/milestone-8a/1001-1000001001/`.
-Neither APK was installed or published. Wear declares no health/sensor permission.
+Neither APK was published. Subsequent physical acceptance is recorded below.
+Wear declares no health/sensor permission.
 A negative bare-Gradle release dry-run fails with the expected identity guard.
 
 Mobile validate passed; full Jest CI: **506 suites / 7,782 tests passed**.
@@ -121,8 +138,23 @@ completed in **1.237 seconds**; the app remained foreground on localized onboard
 and its new process log contained no crash or notification-channel initialization
 failure. Screenshots/logs remain private. Authentication, actual notification
 delivery, health synchronization, widget interaction and Challenge server flows
-are not established by this launch check. No emulator or Galaxy Watch acceptance
-has been performed.
+are not established by this launch check. No emulator was used.
+
+Physical Samsung Galaxy Watch6 (SM-R930, Android 13 / API 33): release
+**1000001002** installed successfully over user-paired wireless ADB. The production
+package was previously absent; no existing watch app data was deleted. Native
+launch completed successfully (3.081-second ADB wait), the process remained alive,
+and its log had no fatal exception. Android registers the Data Layer listener,
+Challenge Tile and Challenge complication services with their expected binding
+permissions. Registration does not prove those surfaces render correctly.
+
+Google Play Services diagnostics on the paired phone and watch show one
+SparkyRivals DataItem transfer: **371 bytes written by the phone and read by the
+watch**. This establishes real paired transport under the matching package and
+certificate. The phone remains unauthenticated; these transfer counters do not
+establish payload contents, authenticated Challenge results or account-switch acceptance.
+Watch UI/Tile interaction has been requested from the maintainer; full scores,
+offline state, account transitions and complication visuals still need acceptance.
 
 ## Local production stack — passed
 
@@ -162,9 +194,10 @@ and unrelated containers were untouched.
   by the maintainer locally. Never paste Apple passwords/2FA into chat.
 - Install and launch the internal iPhone build; check auth, HealthKit, widgets,
   notifications, Watch app/complications, paired transport and VoiceOver.
-- Release APK fingerprints are verified; user-assisted Android/Galaxy Watch install,
-  matching-package Data Layer, account-clear/offline states, Tile/complication,
-  Health Connect continuity, notifications and TalkBack.
+- Release APK fingerprints, physical phone/Watch installation and initial paired
+  Data Layer transfer are verified. Authenticated Challenge results, account-change
+  clearing/offline states, Tile/complication visuals, Health Connect continuity,
+  notifications and TalkBack remain separate checks.
 - Confirm the real production hostname and runtime integration secrets during 8B;
   provision no real server or NPM resources during 8A.
 - Follow [deployment handoff](DEPLOYMENT.md) for separate server bootstrap,
