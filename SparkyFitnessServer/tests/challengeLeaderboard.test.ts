@@ -2,7 +2,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { challengeLeaderboardResponseSchema } from '@workspace/shared';
 import repository, {
   type ChallengeWithMembership,
-  type ChallengeStepPoint,
+  type ChallengeMetricPoint,
 } from '../models/challengeRepository.js';
 import {
   calculateChallengeLeaderboard as score,
@@ -33,12 +33,12 @@ function point(
   index: number,
   date: string | null,
   steps: number | null
-): ChallengeStepPoint {
+): ChallengeMetricPoint {
   return {
     user_id: ids[index]!,
     display_name: `Member ${index}`,
     entry_date: date,
-    steps,
+    value: steps,
     data_updated_at: steps === null ? null : at,
   };
 }
@@ -193,5 +193,62 @@ describe('canonical step scoring', () => {
     await expect(
       getChallengeLeaderboard(ids[1]!, challenge.id)
     ).rejects.toMatchObject({ status: 404 });
+  });
+});
+
+describe('workout metric uses the common ranking engine', () => {
+  const workout = { ...challenge, metric: 'workout_time' as const };
+  const points = [
+    { ...point(0, '2026-03-29', 1200), workout_count: 2 },
+    { ...point(1, '2026-03-29', 1200), workout_count: 1 },
+    { ...point(2, '2026-03-30', 600), workout_count: 1 },
+  ];
+  it('uses seconds and generic coverage; count never breaks ties', () => {
+    const r = score(workout, points, at);
+    expect(r).toMatchObject({
+      contract_version: 2,
+      score_unit: 'seconds',
+      lead_margin: 0,
+    });
+    expect(r.entries.map((e) => e.rank)).toEqual([1, 1, 3]);
+    expect(r.entries[2]?.gap_to_leader).toBe(600);
+    expect(r.entries[0]?.coverage).toMatchObject({ days_with_data: 1 });
+    expect(r.entries[0]?.coverage).not.toHaveProperty('days_with_steps');
+    expect(challengeLeaderboardResponseSchema.safeParse(r).success).toBe(true);
+    expect(
+      challengeLeaderboardResponseSchema.safeParse({
+        ...r,
+        score_unit: 'steps',
+      }).success
+    ).toBe(false);
+    expect(
+      challengeLeaderboardResponseSchema.safeParse({
+        ...r,
+        contract_version: 1,
+      }).success
+    ).toBe(false);
+  });
+  it.each([
+    '2026-03-28T12:00:00Z',
+    '2026-03-29T00:00:00Z',
+    '2026-04-01T12:00:00Z',
+  ])('uses calendar lifecycle and inclusive dates at %s', (timestamp) => {
+    const r = score(workout, points, new Date(timestamp));
+    expect(challengeLeaderboardResponseSchema.safeParse(r).success).toBe(true);
+    if (r.challenge.lifecycle === 'upcoming')
+      expect(
+        r.entries.every((e) => e.total_score === 0 && e.rank === null)
+      ).toBe(true);
+    else expect(r.entries[0]?.total_score).toBe(1200);
+  });
+  it('cancelled workout results reveal no rows', () =>
+    expect(score({ ...workout, cancelled_at: at }, points, at).entries).toEqual(
+      []
+    ));
+  it('accepts legacy steps responses without new additive fields', () => {
+    const r = score(challenge, points, at);
+    delete r.score_unit;
+    for (const e of r.entries) delete e.coverage.days_with_data;
+    expect(challengeLeaderboardResponseSchema.safeParse(r).success).toBe(true);
   });
 });

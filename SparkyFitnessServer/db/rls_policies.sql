@@ -1107,7 +1107,80 @@ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = pg_catalog, public AS $$
   LEFT JOIN public.check_in_measurements cm ON cm.user_id = cp.user_id
     AND cm.entry_date BETWEEN c.start_date AND LEAST(c.end_date, (CURRENT_TIMESTAMP AT TIME ZONE c.timezone)::date)
     AND cm.steps IS NOT NULL
-  WHERE c.id = p_challenge_id AND c.cancelled_at IS NULL
+  WHERE c.id = p_challenge_id AND c.metric = 'steps' AND c.cancelled_at IS NULL
     AND public.challenge_membership(c.id) = 'accepted'
   ORDER BY cp.user_id, cm.entry_date;
+$$;
+
+-- Workout-time consent exposes daily aggregates only, never a diary/session row.
+-- The session boundary and duration mirror exerciseEntryHistoryService:
+-- a preset parent is one session, duration is SUM(child.duration_minutes).
+-- Local set-bearing records need every stored set completed; imported completed
+-- providers do not all preserve set completion timestamps. Ambiguous scaffolds
+-- fail closed. No telemetry/calorie precedence or Challenge-specific health copy.
+CREATE OR REPLACE FUNCTION public.challenge_workout_points(p_challenge_id uuid)
+RETURNS TABLE (
+  user_id uuid, display_name text, entry_date date,
+  workout_seconds double precision, workout_count integer, data_updated_at timestamptz
+)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = pg_catalog, public AS $$
+  WITH consent AS MATERIALIZED (
+    SELECT c.* FROM public.challenges c
+    WHERE c.id = p_challenge_id AND c.metric = 'workout_time'
+      AND c.cancelled_at IS NULL AND public.challenge_membership(c.id) = 'accepted'
+  ), members AS MATERIALIZED (
+    SELECT cp.user_id, c.start_date,
+      LEAST(c.end_date, (CURRENT_TIMESTAMP AT TIME ZONE c.timezone)::date) AS through_date
+    FROM consent c JOIN public.challenge_participants cp
+      ON cp.challenge_id = c.id AND cp.status = 'accepted'
+  ), candidates AS (
+    SELECT e.id, e.user_id, e.entry_date, e.duration_minutes, e.source_id,
+      e.workout_plan_assignment_id, e.updated_at,
+      p.id AS parent_id, p.entry_date AS parent_date,
+      p.updated_at AS parent_updated_at,
+      lower(COALESCE(p.source, e.source, 'manual')) AS session_source,
+      COALESCE(s.set_count, 0) AS set_count,
+      COALESCE(s.all_completed, false) AS all_completed,
+      s.last_completed,
+      (e.exercise_name = 'Active Calories' OR x.name = 'Active Calories') IS TRUE AS synthetic
+    FROM members m JOIN public.exercise_entries e ON e.user_id = m.user_id
+    LEFT JOIN public.exercise_preset_entries p ON p.id = e.exercise_preset_entry_id AND p.user_id = e.user_id
+    LEFT JOIN public.exercises x ON x.id = e.exercise_id
+    LEFT JOIN LATERAL (
+      SELECT count(*) AS set_count,
+        bool_and(completed_at IS NOT NULL AND completed_at <= CURRENT_TIMESTAMP) AS all_completed,
+        max(completed_at) AS last_completed
+      FROM public.exercise_entry_sets WHERE exercise_entry_id = e.id
+    ) s ON true
+    WHERE COALESCE(p.entry_date, e.entry_date) BETWEEN m.start_date AND m.through_date
+      AND (e.exercise_preset_entry_id IS NULL OR p.id IS NOT NULL)
+  ), sessions AS (
+    SELECT user_id, COALESCE(parent_id, id) AS session_id,
+      COALESCE(parent_date, entry_date) AS day,
+      SUM(duration_minutes) AS minutes,
+      max(GREATEST(updated_at, parent_updated_at, last_completed)) AS changed_at,
+      bool_and(NOT synthetic AND duration_minutes >= 0 AND duration_minutes <= 10080) AS valid,
+      bool_and(
+        -- Template/plan sources never qualify from their assigned duration.
+        CASE WHEN workout_plan_assignment_id IS NOT NULL OR session_source IN ('workout plan', 'workout preset')
+          THEN set_count > 0 AND all_completed
+          WHEN session_source IN ('healthkit', 'health connect', 'garmin', 'garmin_fit', 'hevy', 'liftosaur', 'coros_mcp')
+          THEN NULLIF(btrim(source_id), '') IS NOT NULL
+          ELSE (set_count > 0 AND all_completed) OR (set_count = 0 AND duration_minutes > 0)
+        END
+      ) AS performed
+    FROM candidates
+    GROUP BY user_id, COALESCE(parent_id, id), COALESCE(parent_date, entry_date)
+  ), daily AS (
+    -- Round once per participant/day after numeric summation, preserving fractions.
+    SELECT user_id, day, round(SUM(minutes) * 60)::double precision AS seconds,
+      count(*)::integer AS sessions, max(changed_at) AS changed_at
+    FROM sessions WHERE valid AND performed AND minutes BETWEEN 0 AND 10080
+    GROUP BY user_id, day
+  )
+  SELECT m.user_id, COALESCE(NULLIF(btrim(p.full_name), ''), 'Participant'),
+    d.day, d.seconds, COALESCE(d.sessions, 0), d.changed_at
+  FROM members m LEFT JOIN public.profiles p ON p.id = m.user_id
+  LEFT JOIN daily d ON d.user_id = m.user_id
+  ORDER BY m.user_id, d.day;
 $$;

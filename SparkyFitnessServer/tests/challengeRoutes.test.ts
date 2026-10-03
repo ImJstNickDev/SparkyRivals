@@ -283,3 +283,31 @@ describe('Challenge typed routes and authentication', () => {
     );
   });
 });
+
+it.each(['steps', 'workout_time'] as const)(
+  'uses the existing create/detail contract for %s',
+  async (metric) => {
+    const expected = {
+      ...detailFixture,
+      challenge: { ...detailFixture.challenge, metric },
+    };
+    vi.mocked(service.create).mockResolvedValue(expected);
+    vi.mocked(service.detail).mockResolvedValue(expected);
+    const response = await request(app).post(url).send({
+      name: 'Together',
+      metric,
+      start_date: '2026-10-03',
+      end_date: '2026-10-03',
+      timezone: 'UTC',
+    });
+    expect(response.status).toBe(201);
+    expect(response.body.challenge.metric).toBe(metric);
+    expect(service.create).toHaveBeenCalledWith(
+      actor,
+      expect.objectContaining({ metric, scoring_mode: 'sum' })
+    );
+    expect((await request(app).get(`${url}/${id}`)).body.challenge.metric).toBe(
+      metric
+    );
+  }
+);
