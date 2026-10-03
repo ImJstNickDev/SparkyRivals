@@ -38,7 +38,20 @@ router.post('/', async (req, res) => {
 });
 router.get('/', async (req, res) => {
   res.json(
-    await service.list(req.userId, challengeListQuerySchema.parse(req.query))
+    await service.list(
+      req.userId,
+      challengeListQuerySchema
+        // React Native's existing no-store transport adds a timestamp. It is
+        // transport metadata only; never forward it as a domain selector.
+        .extend({
+          _: z
+            .string()
+            .regex(/^\d{1,20}$/)
+            .optional(),
+        })
+        .transform(({ limit, offset }) => ({ limit, offset }))
+        .parse(req.query)
+    )
   );
 });
 router.get('/:id/leaderboard', async (req, res) => {

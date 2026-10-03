@@ -100,6 +100,17 @@ beforeEach(() => {
 });
 
 describe('Challenge typed routes and authentication', () => {
+  it('accepts the native transport cache-buster without forwarding it', async () => {
+    expect((await request(app).get(`${url}?_=1790985600000`)).status).toBe(200);
+    expect(service.list).toHaveBeenCalledWith(actor, { limit: 20, offset: 0 });
+  });
+  it.each(['not-a-timestamp', '1&_=2', '1&user_id=someone'])(
+    'rejects malformed cache metadata or selectors: %s',
+    async (query) => {
+      expect((await request(app).get(`${url}?_=${query}`)).status).toBe(400);
+      expect(service.list).not.toHaveBeenCalled();
+    }
+  );
   it.each(['cookie', 'x-api-key'])(
     'uses existing %s authentication',
     async (header) => {
