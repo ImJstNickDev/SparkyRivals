@@ -263,7 +263,7 @@ function AppContent() {
 
   const syncMutation = useSyncHealthData();
   const { shouldYieldObserverSync } = useAutoSyncOnOpen({ initialRoute, syncMutation });
-  useAppStartup({ shouldYieldObserverSync });
+  useAppStartup({ shouldYieldObserverSync, ready: initialRoute !== null });
 
   const {
     rememberActiveTab,

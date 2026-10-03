@@ -26,6 +26,8 @@ import { initWorkoutLiveActivity } from '../services/workoutLiveActivity';
 import { ensureTimezoneBootstrapped } from '../services/api/preferencesApi';
 
 interface AppStartupArgs {
+  /** Wait for language and initial-route bootstrap before native side effects. */
+  ready?: boolean;
   /**
    * When true, an observer-triggered HealthKit sync should not run because a
    * deliberate foreground auto-sync window is open. See useAutoSyncOnOpen.
@@ -38,8 +40,12 @@ interface AppStartupArgs {
  * workout Live Activity, the log service, and the sync services (timezone
  * bootstrap, background sync, iOS HealthKit observers).
  */
-export function useAppStartup({ shouldYieldObserverSync }: AppStartupArgs) {
+export function useAppStartup({
+  shouldYieldObserverSync,
+  ready = true,
+}: AppStartupArgs) {
   useEffect(() => {
+    if (!ready) return;
     let cancelled = false;
     const onLanguageChanged = () => {
       void registerLocalizedNotificationPresentation().catch((error) => {
@@ -167,5 +173,5 @@ export function useAppStartup({ shouldYieldObserverSync }: AppStartupArgs) {
         stopObservers();
       }
     };
-  }, [shouldYieldObserverSync]);
+  }, [ready, shouldYieldObserverSync]);
 }
