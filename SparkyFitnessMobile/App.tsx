@@ -1,3 +1,4 @@
+import { useWearChallenges } from './src/hooks/useWearChallenges';
 import './global.css'
 import { getAppUrl } from './src/utils/appLinks';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -170,6 +171,7 @@ const androidModalAnimation =
 function WatchCheckInGate() {
   const { isConnected: isServerConnected } = useServerConnection();
   useWatchCheckInBridge(isServerConnected);
+  useWearChallenges(isServerConnected);
   return null;
 }
 

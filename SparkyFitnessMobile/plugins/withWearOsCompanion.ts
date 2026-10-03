@@ -4,6 +4,7 @@ import {
   withSettingsGradle,
 } from 'expo/config-plugins';
 import fs from 'fs';
+import withWearConnectivity from './withWearConnectivity';
 import path from 'path';
 import { resolveAppIdentity } from '../app.identifiers';
 
@@ -46,6 +47,7 @@ export function configureWearSettings(source: string) {
 const withWearOsCompanion: ConfigPlugin = (config) => {
   const identity = resolveAppIdentity();
   if (!identity.wearEnabled) return config;
+  config = withWearConnectivity(config);
   config = withSettingsGradle(config, (mod) => {
     mod.modResults.contents = configureWearSettings(mod.modResults.contents);
     return mod;
@@ -66,6 +68,16 @@ const withWearOsCompanion: ConfigPlugin = (config) => {
         renderWearGradle(template, identity, config.version || '1.0.0')
       );
       await fs.promises.rm(path.join(dest, 'build.gradle.template'));
+      await fs.promises.mkdir(path.join(dest, 'src/test/resources'), {
+        recursive: true,
+      });
+      await fs.promises.copyFile(
+        path.join(
+          mod.modRequest.projectRoot,
+          '__tests__/fixtures/watch-challenges.json'
+        ),
+        path.join(dest, 'src/test/resources/watch-challenges.json')
+      );
       await fs.promises.writeFile(
         path.join(dest, 'src/main/res/values/identity.xml'),
         `<resources><string name="app_name">${xml(identity.name)}</string></resources>\n`
