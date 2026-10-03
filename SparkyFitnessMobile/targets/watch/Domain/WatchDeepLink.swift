@@ -3,15 +3,8 @@ import Foundation
 /// Destinations this app can be opened straight to from outside itself — today
 /// that means tapping one of its complications on the watch face.
 ///
-/// URLs look like `sparkyfitness-watch://goals`: the scheme identifies us, the
-/// host names the destination. The scheme is registered in this target's
-/// Info.plist, which `expo-target.config.js` writes.
-///
-/// There are two other copies of that scheme string, because a JS config and
-/// two separately-compiled Swift targets have no way to share a constant:
-///   - `WATCH_URL_SCHEME` in targets/watch/expo-target.config.js
-///   - `ComplicationLink` in targets/watch-widget/ComplicationLinks.swift
-/// Change one, change all three.
+/// The application identity resolver writes WATCH_URL_SCHEME into both targets'
+/// Info.plist files. Keep destination cases aligned with the companion target.
 enum WatchDeepLink: String {
     /// Daily Energy Goal complication → the Goals summary page.
     case goals
@@ -19,7 +12,7 @@ enum WatchDeepLink: String {
     /// to `.water`; `WaterGoalComplication` produces it.
     case water
 
-    static let scheme = "sparkyfitness-watch"
+    static let scheme = Bundle.main.object(forInfoDictionaryKey: "WATCH_URL_SCHEME") as? String ?? ""
 
     /// Nil for anything that isn't one of our links — a scheme we don't own, or
     /// a destination this build doesn't know. Both are ignored rather than

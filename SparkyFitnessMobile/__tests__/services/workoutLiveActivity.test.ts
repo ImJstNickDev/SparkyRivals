@@ -17,6 +17,12 @@ import {
 import WorkoutLiveActivityFactory from '../../src/services/WorkoutLiveActivityLayout';
 import { addLog } from '../../src/services/LogService';
 
+// Exercise the Live Activity flow under a custom, isolated build scheme.
+jest.mock('expo-constants', () => ({
+  __esModule: true,
+  default: { expoConfig: { scheme: 'sparkyrivals-preview' } },
+}));
+
 jest.mock('../../src/services/notifications', () => ({
   scheduleRestNotification: jest.fn(async () => 'notif-abc'),
   cancelScheduledNotification: jest.fn(async () => undefined),
@@ -86,7 +92,7 @@ const mockAddUserInteractionListener =
   >;
 
 const FIXED_NOW = 1_700_000_000_000;
-const ACTIVE_WORKOUT_URL = 'sparkyfitnessmobile://active-workout';
+const ACTIVE_WORKOUT_URL = 'sparkyrivals-preview://active-workout';
 
 const createdInstances: MockInstance[] = [];
 

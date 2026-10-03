@@ -9,6 +9,7 @@ permissions:
 
 jobs:
   sync:
+    if: github.repository == 'CodeWithCJ/SparkyFitness'
     runs-on: ubuntu-latest
     steps:
       # 1. Checkout the main repository (SparkyFitness)

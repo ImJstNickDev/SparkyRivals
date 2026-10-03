@@ -15,7 +15,7 @@
     "ios": "expo run:ios",
     "ios:device": "expo run:ios --device",
     "watch": "node scripts/run-watch.mjs",
-    "watch:device": "xcodebuild -workspace ios/SparkyFitness.xcworkspace -scheme 'SparkyFitnessWatch' -destination 'generic/platform=watchOS' build",
+    "watch:device": "node scripts/run-watch.mjs --device",
     "knip": "knip",
     "i18n:audit": "node scripts/audit-mobile-i18n.mjs",
     "prebuild": "expo prebuild --clean",
@@ -35,7 +35,9 @@
     "i18n:generate:check": "node scripts/generate-locale-resources.mjs --check",
     "muscle-figure:generate": "node scripts/generate-muscle-figure.mjs",
     "muscle-figure:generate:check": "node scripts/generate-muscle-figure.mjs --check",
-    "native-locales:check": "node scripts/validate-native-widget-locales.mjs"
+    "native-locales:check": "node scripts/validate-native-widget-locales.mjs",
+    "build:profile": "node scripts/with-build-profile.mjs",
+    "validate:native": "node scripts/validate-native-identity.mjs"
   },
   "dependencies": {
     "@assistant-ui/react-ai-sdk": "^1.4.10",

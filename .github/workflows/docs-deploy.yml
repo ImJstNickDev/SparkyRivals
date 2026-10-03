@@ -6,6 +6,7 @@ on:
   workflow_dispatch:
 jobs:
   build:
+    if: github.repository == 'CodeWithCJ/SparkyFitness'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,6 +28,7 @@ jobs:
           path: ./docs/.vitepress/dist
   # Deployment job
   deploy:
+    if: github.repository == 'CodeWithCJ/SparkyFitness'
     # Add a dependency to the build job
     needs: build
     # Grant GITHUB_TOKEN the permissions required to make a Pages deployment

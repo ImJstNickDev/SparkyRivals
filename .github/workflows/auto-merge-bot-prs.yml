@@ -19,6 +19,7 @@ concurrency:
 
 jobs:
   auto-merge:
+    if: github.repository == 'CodeWithCJ/SparkyFitness'
     name: Auto-Merge Translations and Nix PRs
     runs-on: ubuntu-latest
 

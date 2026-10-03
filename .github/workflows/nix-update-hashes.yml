@@ -21,6 +21,7 @@ permissions:
 
 jobs:
   update-hashes:
+    if: github.repository == 'CodeWithCJ/SparkyFitness'
     name: Recompute pnpm deps hashes
     runs-on: ubuntu-latest
 

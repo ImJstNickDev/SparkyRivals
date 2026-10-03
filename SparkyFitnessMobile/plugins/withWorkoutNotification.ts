@@ -4,6 +4,7 @@ import {
   withDangerousMod,
   withMainApplication,
 } from 'expo/config-plugins';
+import { resolveAppIdentity } from '../app.identifiers';
 import fs from 'fs';
 import path from 'path';
 
@@ -22,6 +23,20 @@ const withWorkoutNotification: ConfigPlugin = (config) => {
         path.join(project, SOURCE, 'kotlin'),
         path.join(platform, 'app/src/main/java'),
         { recursive: true }
+      );
+      const modulePath = path.join(
+        platform,
+        'app/src/main/java',
+        PACKAGE.replaceAll('.', '/'),
+        'WorkoutNotificationModule.kt'
+      );
+      const moduleSource = await fs.promises.readFile(modulePath, 'utf8');
+      await fs.promises.writeFile(
+        modulePath,
+        moduleSource.replaceAll(
+          '{{APP_URL_SCHEME}}',
+          resolveAppIdentity().scheme
+        )
       );
       return config;
     },

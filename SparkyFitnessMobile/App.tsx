@@ -1,4 +1,5 @@
 import './global.css'
+import { getAppUrl } from './src/utils/appLinks';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { StatusBar, Platform } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -354,7 +355,7 @@ function AppContent() {
   }, [isDarkMode, primary, bgPrimary, textPrimary, chromeBorder]);
 
   const linking = useMemo<LinkingOptions<RootStackParamList>>(() => ({
-    prefixes: ['sparkyfitnessmobile://'],
+    prefixes: [getAppUrl()],
     config: {
       initialRouteName: 'Tabs',
       screens: {

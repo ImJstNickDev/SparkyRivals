@@ -18,7 +18,7 @@ jobs:
   update-chart-version:
     name: Sync Chart.yaml with the release
     # Pre-releases never move the chart.
-    if: ${{ !github.event.release.prerelease }}
+    if: ${{ github.repository == 'CodeWithCJ/SparkyFitness' && (!github.event.release.prerelease) }}
     runs-on: ubuntu-latest
 
     steps:

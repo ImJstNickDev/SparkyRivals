@@ -83,6 +83,16 @@ Always written by the generator. These have working defaults, but the timezone i
 - **`SPARKY_FITNESS_SERVER_PORT`**: Port the backend listens on inside its container. Defaults to `3010`. Docker Compose passes the same value to the frontend, whose nginx proxies to it, so the two always move together.
 - **`SPARKY_FITNESS_SERVER_HOST`**: Hostname or IP the frontend's nginx proxies to. Defaults to the `sparkyfitness-server` service name. It is resolved dynamically from inside the frontend container via DNS. If pointing to a host defined in `/etc/hosts` (such as `host.docker.internal` on Linux, `localhost`, or `--link` aliases), the frontend entrypoint automatically detects it and resolves it to its IP address directly. nginx queries DNS directly and does not expand the `search` domains in `/etc/resolv.conf`, so a bare hostname that only resolves through a search path would not be reachable. The frontend entrypoint compensates: when the hostname contains no dot and does not resolve on its own, it is completed against each search domain in turn and the first that resolves is used (on Kubernetes, `sparkyfitness-server` becomes `sparkyfitness-server.<namespace>.svc.cluster.local`). Supplying the full in-cluster service FQDN yourself remains the most explicit option and skips that lookup entirely.
 - **`SPARKY_FITNESS_EXTRA_TRUSTED_ORIGINS`**: Comma-separated additional origins Better Auth should trust. Leave blank unless you reach the app on more than one URL.
+- **`SPARKY_FITNESS_MOBILE_AUTH_SCHEMES`**: Optional comma-separated native schemes
+  owned by your mobile applications, for example
+  `sparkyrivals,sparkyrivals-dev,sparkyrivals-preview`. The upstream
+  `sparkyfitnessmobile` scheme always remains supported. Supply scheme names only,
+  without `://`, paths, wildcards, query strings, or fragments. Malformed/reserved
+  schemes fail startup. The server constructs `<scheme>://oauth-callback` itself;
+  browser bridge requests may select only one configured scheme using `app_scheme`.
+  Session tokens remain in URL fragments; passkey registration tickets remain
+  single-use and fragment-carried. This is server runtime configuration and is
+  forwarded by Compose/Helm (`config.mobileAuthSchemes`). Restart after changes.
 - **`BETTER_AUTH_URL`**: Overrides the base URL Better Auth builds callback links from. Only needed when it cannot be derived from `SPARKY_FITNESS_FRONTEND_URL`.
 - **`SPARKY_FITNESS_DISABLE_SCHEDULED_JOBS`**: Set to `true` on every instance except one when [running multiple instances](./multiple-instances.md#run-scheduled-jobs-on-one-instance), so a single instance runs the scheduled jobs. Set it on each instance's own environment, not in a shared `.env` file, or no instance will run them. Leave it unset on a single-container install.
 
@@ -209,13 +219,45 @@ The developer mock-data switches (formerly `SPARKY_FITNESS_SAVE_MOCK_DATA` and t
 Configures code signing, bundle identifiers, and shared App Groups when building [`SparkyFitnessMobile`](/developer/getting-started):
 
 - **`EXPO_DEV_APPLE_TEAM_ID`** / **`EXPO_PROD_APPLE_TEAM_ID`**: 10-character Apple Developer Team ID.
-- **`EXPO_DEV_BUNDLE_IDENTIFIER`**: Development bundle ID (`org.SparkyApps.SparkyFitnessMobile.dev`).
-- **`WIDGET_BUNDLE_IDENTIFIER`**: iOS Widget extension bundle ID (`org.SparkyApps.SparkyFitnessMobile.dev.ExpoWidgetsTarget`).
+- **`EXPO_DEV_BUNDLE_IDENTIFIER`**: Development bundle ID (`org.SparkyApps.SparkyFitnessMobile1.dev`).
+- **`WIDGET_BUNDLE_IDENTIFIER`**: iOS Widget extension bundle ID (`org.SparkyApps.SparkyFitnessMobile1.dev.ExpoWidgetsTarget`).
 - **`IOS_APP_GROUP_DEV`** / **`IOS_APP_GROUP_PROD`**: App Group identifiers for widget shared memory.
 
 ### Module 14: 🤖 Android Mobile App Build `[Mobile Build]`
 
 - **`GOOGLE_MAPS_ANDROID_API_KEY`** (optional): Google Maps key used to draw cardio routes over a map on Android. Without it, Android shows the route as a plain line; iOS always uses Apple Maps and needs no key. The app only makes plain Maps SDK for Android loads (no map ID), which Google does not charge for, but the key's Google Cloud project still needs billing enabled. Restrict the key to the app's package name and signing certificates, and pass it to the build (for example as an EAS secret) rather than committing it.
+
+### Custom mobile identity `[Mobile Build]`
+
+`SparkyFitnessMobile/app.identifiers.js` is the shared resolver for the phone and
+Apple targets. `APP_IDENTITY` defaults to `upstream`; set it to `custom` for an
+owned derivative. `APP_VARIANT` accepts `development`/`dev`, `preview`, or
+`production`; unknown values fail.
+
+Custom mode requires production-root values in `EXPO_APP_NAME`, `EXPO_APP_SLUG`,
+`EXPO_ANDROID_PACKAGE`, `EXPO_IOS_BUNDLE_IDENTIFIER`, and `EXPO_APP_SCHEME`.
+Development/preview automatically append `.dev`/`.preview` to package/bundle,
+`-dev`/`-preview` to the scheme, and ` Dev`/` Preview` to the name. The slug stays
+stable across variants. Do not pre-suffix these inputs.
+
+The Watch scheme defaults to `<resolved-phone-scheme>-watch`. Optional
+`EXPO_WATCH_SCHEME` supplies a base Watch scheme; variant suffixes are inserted
+before its `-watch` ending. App Groups default to `group.<resolved-bundle>.shared`;
+`IOS_APP_GROUP_DEV`, `IOS_APP_GROUP_PREVIEW`, and `IOS_APP_GROUP_PROD` may override
+their own variant but must retain that variant's bundle prefix in custom mode.
+Existing Apple team variables still apply; preview uses the production team.
+Custom widget/Watch bundle IDs derive from the host. The legacy
+`WIDGET_BUNDLE_IDENTIFIER` override remains available for upstream builds.
+
+`EXPO_OWNER` and `EXPO_EAS_PROJECT_ID` must identify an actual owned Expo account
+and project. Custom builds reject the upstream project UUID. For local unsigned
+configuration inspection only, `APP_CONFIG_ONLY=1` permits missing EAS linkage
+without substituting a project. It is rejected on an EAS builder.
+
+These variables belong to the mobile build environment. They are optional for
+the server, excluded from the deployment EnvGenerator, and are not forwarded by
+Compose or Helm. Mobile signing credentials likewise never belong in running
+server containers; `docker/.env.simple.example` needs no mobile-only settings.
 
 ---
 
@@ -236,3 +278,26 @@ Any backend environment variable `VAR` can be supplied via a corresponding `VAR_
 | `SPARKY_FITNESS_OIDC_CLIENT_ID`     | `SPARKY_FITNESS_OIDC_CLIENT_ID_FILE`     | OIDC Client ID                          |
 | `SPARKY_FITNESS_OIDC_CLIENT_SECRET` | `SPARKY_FITNESS_OIDC_CLIENT_SECRET_FILE` | OIDC Client Secret                      |
 | `SPARKY_FITNESS_DEMO_PASSWORD`      | `SPARKY_FITNESS_DEMO_PASSWORD_FILE`      | Demo user account password              |
+
+### Android release signing (build only)
+
+`MYAPP_RELEASE_STORE_FILE`, `MYAPP_RELEASE_STORE_PASSWORD`,
+`MYAPP_RELEASE_KEY_ALIAS`, and `MYAPP_RELEASE_KEY_PASSWORD` are read **only by
+Gradle**, from Gradle properties or the build environment. Use an absolute keystore
+path and keep passwords in a private credential store. They never belong in Expo
+public runtime configuration, Compose, Helm, server env templates or EnvGenerator.
+EAS can instead inject the owned project's signing credentials. Release tasks
+validate the final signing config and reject absent credentials or debug signing;
+local debug builds retain their normal debug certificate. `APP_CONFIG_ONLY=1`
+projects cannot run release tasks: regenerate with complete owned configuration.
+
+
+### Build numbers (build only)
+
+`EXPO_BUILD_NUMBER` sets Android `versionCode` and iOS `buildNumber` together.
+It must be an integer from 1 to 2100000000. Allocate a new monotonically increasing
+number for every locally distributed build; owned local/CI Android releases reject
+the default `versionCode` of 1. EAS profiles use remote version management and
+`autoIncrement: true`; seed/reconcile that counter before switching between local
+and EAS distribution. Configuration-only prebuilds may omit the number. This is
+build metadata and is not forwarded to any server container.

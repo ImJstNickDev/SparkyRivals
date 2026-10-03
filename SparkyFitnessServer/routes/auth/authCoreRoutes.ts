@@ -1,4 +1,6 @@
 import express from 'express';
+import type { Request, Response } from 'express';
+import { readFile } from 'node:fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { log } from '../../config/logging.js';
@@ -16,6 +18,7 @@ import {
 import { isDemoMode } from '../../middleware/demoGuardMiddleware.js';
 import { getClientIp } from '../../utils/clientIp.js';
 import { isPasskeyLoginDisabled } from '../../utils/passkeyLogin.js';
+import { resolveMobileAuthCallback } from '../../utils/mobileAuthCallbacks.js';
 import {
   getDemoCredentials,
   seedDemoUser,
@@ -289,12 +292,36 @@ router.get('/web-login/simplewebauthn-browser.umd.min.js', (req, res) => {
   );
 });
 
-router.get('/web-login/passkey', (req, res) => {
-  res.sendFile(path.join(__dirname, 'templates', 'passkey-login.html'));
+async function sendMobileAuthPage(
+  req: Request,
+  res: Response,
+  template: string
+) {
+  const callback = resolveMobileAuthCallback(req.query.app_scheme);
+  if (!callback)
+    return res.status(400).send('Untrusted mobile callback scheme.');
+  const html = await readFile(
+    path.join(__dirname, 'templates', template),
+    'utf8'
+  );
+  // Values come only from the validated server allowlist, never arbitrary URLs
+  // or HTML. The fixed scheme grammar excludes quotes and markup characters.
+  return res
+    .set('Cache-Control', 'no-store')
+    .type('html')
+    .send(
+      html
+        .replaceAll('__MOBILE_CALLBACK_URL__', callback.url)
+        .replaceAll('__MOBILE_LOGIN_CALLBACK__', callback.bridgePath)
+    );
+}
+
+router.get('/web-login/passkey', async (req, res) => {
+  await sendMobileAuthPage(req, res, 'passkey-login.html');
 });
 
-router.get('/web-login/register-passkey', (req, res) => {
-  res.sendFile(path.join(__dirname, 'templates', 'passkey-register.html'));
+router.get('/web-login/register-passkey', async (req, res) => {
+  await sendMobileAuthPage(req, res, 'passkey-register.html');
 });
 
 // Per-IP rate limiter factory (sliding fixed window), mirroring mfaFactorsRateLimit.
@@ -445,6 +472,10 @@ router.post(
 
 router.get('/web-login/callback', async (req, res) => {
   const { auth } = authModule;
+  const callback = resolveMobileAuthCallback(req.query.app_scheme);
+  if (!callback)
+    return res.status(400).send('Untrusted mobile callback scheme.');
+  res.set('Cache-Control', 'no-store');
 
   try {
     const session = await auth.api.getSession({
@@ -457,13 +488,16 @@ router.get('/web-login/callback', async (req, res) => {
 
     const token = session.session.token;
     const email = session.user.email;
-    const role = (session.user as any).role || '';
+    const role =
+      'role' in session.user && typeof session.user.role === 'string'
+        ? session.user.role
+        : '';
 
     // Redirect to the mobile app scheme with session details in the URL
     // FRAGMENT (after #), not the query string. Fragments are never sent to a
     // server, so the raw session token can't leak into access / proxy logs.
     res.redirect(
-      `sparkyfitnessmobile://oauth-callback#token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}&role=${encodeURIComponent(role)}`
+      `${callback.url}#token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}&role=${encodeURIComponent(role)}`
     );
   } catch (err) {
     log('error', `[WEB LOGIN] Callback error: ${err}`);

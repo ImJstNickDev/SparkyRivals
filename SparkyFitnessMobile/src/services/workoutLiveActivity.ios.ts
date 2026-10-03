@@ -1,3 +1,4 @@
+import { getAppUrl } from '../utils/appLinks';
 import { Asset } from 'expo-asset';
 import { File, Paths } from 'expo-file-system';
 import {
@@ -38,7 +39,7 @@ import WorkoutLiveActivityFactory, {
  * flow — every operation is caught and logged.
  */
 
-const ACTIVE_WORKOUT_URL = 'sparkyfitnessmobile://active-workout';
+const ACTIVE_WORKOUT_URL = getAppUrl('active-workout');
 
 let initialized = false;
 let reconciled = false;

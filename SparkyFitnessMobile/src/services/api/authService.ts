@@ -7,6 +7,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { ServerConfig } from '../storage';
 import { addLog } from '../LogService';
 import { normalizeUrl } from '../../utils/serverUrl';
+import { getAppScheme, getAppUrl } from '../../utils/appLinks';
 import { getErrorMessage } from '../../utils/errors';
 import { LoginError } from './authErrors';
 import {
@@ -586,7 +587,20 @@ export const fetchAuthSettings = async (
 };
 
 const SSO_STORAGE_PREFIX = 'sparky_sso';
-const SSO_CALLBACK_URL = 'sparkyfitnessmobile://oauth-callback';
+const SSO_CALLBACK_URL = getAppUrl('oauth-callback');
+
+function authBridgeUrl(
+  baseUrl: string,
+  page: 'passkey' | 'register-passkey'
+): string {
+  const scheme = getAppScheme();
+  // Preserve URLs understood by older upstream servers for the default build.
+  const selection =
+    scheme === 'sparkyfitnessmobile'
+      ? ''
+      : `?app_scheme=${encodeURIComponent(scheme)}`;
+  return `${baseUrl}/api/auth/web-login/${page}${selection}`;
+}
 
 /**
  * Transient Better Auth client used ONLY for the SSO browser dance; the rest
@@ -602,7 +616,7 @@ const createSsoAuthClient = (
     plugins: [
       ssoClient(),
       expoClient({
-        scheme: 'sparkyfitnessmobile',
+        scheme: getAppScheme(),
         storagePrefix: SSO_STORAGE_PREFIX,
         // Must match the server's advanced.cookiePrefix so the client
         // recognizes and stores the session cookie. Also include standard
@@ -777,7 +791,7 @@ export const loginWithPasskey = async (
 
   addLog('[AuthService] Initiating browser-based passkey login flow', 'INFO');
 
-  const authUrl = `${baseUrl}/api/auth/web-login/passkey`;
+  const authUrl = authBridgeUrl(baseUrl, 'passkey');
   const result = await WebBrowser.openAuthSessionAsync(
     authUrl,
     SSO_CALLBACK_URL,
@@ -804,6 +818,10 @@ export const loginWithPasskey = async (
     throw new LoginError(
       'Passkey authentication cancelled or did not complete.'
     );
+  }
+
+  if (!result.url.startsWith(`${SSO_CALLBACK_URL}#`)) {
+    throw new LoginError('Invalid passkey callback destination.');
   }
 
   let sessionToken: string | null = null;
@@ -942,7 +960,7 @@ export const addPasskey = async (
   );
   // Ticket rides in the fragment (never sent to the server) and is single-use,
   // so it can't be replayed even if the URL leaks.
-  const registerUrl = `${baseUrl}/api/auth/web-login/register-passkey#ticket=${encodeURIComponent(
+  const registerUrl = `${authBridgeUrl(baseUrl, 'register-passkey')}#ticket=${encodeURIComponent(
     ticket
   )}&name=${encodeURIComponent(name)}`;
 
@@ -962,10 +980,14 @@ export const addPasskey = async (
     throw new Error('Passkey registration cancelled or did not complete.');
   }
 
-  if (result.url.includes('status=expired')) {
+  if (!result.url.startsWith(`${SSO_CALLBACK_URL}?`)) {
+    throw new Error('Invalid passkey callback destination.');
+  }
+  const callbackStatus = new URL(result.url).searchParams.get('status');
+  if (callbackStatus === 'expired') {
     throw new Error('This registration link expired. Please try again.');
   }
-  if (!result.url.includes('status=success')) {
+  if (callbackStatus !== 'success') {
     throw new Error('Passkey registration did not succeed.');
   }
 
@@ -1002,7 +1024,7 @@ export const deletePasskey = async (
         // Better Auth rejects state-changing requests with a missing/null Origin.
         // The app scheme is a trusted origin (see auth.ts trustedOrigins), so send
         // it explicitly — native fetch (unlike a browser) allows setting Origin.
-        Origin: 'sparkyfitnessmobile://',
+        Origin: getAppUrl(),
       },
       body: JSON.stringify({ id }),
     },

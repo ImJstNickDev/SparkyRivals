@@ -1,6 +1,6 @@
 # AGENTS.md
 
-_Last updated: 2026-09-30_
+_Last updated: 2026-10-03_
 
 SparkyFitness Mobile is a React Native 0.86 + Expo SDK 57 app for syncing Apple Health / Health Connect data with the SparkyFitness backend, tracking nutrition, hydration, fasting, measurements, exercise, saved foods, meal templates, custom exercises, workout presets, iOS / Android widgets, the active workout HUD, and the Sparky AI chat.
 
@@ -237,6 +237,7 @@ npx expo prebuild --clean
 - `OnboardingScreen` handles first-run setup, session sign-in, API keys, MFA, theme, external food source defaults, and finish-without-connection.
 - `ServerSettingsScreen` handles server list management, active server switching, connection tests, web dashboard launch, and `ServerConfigModal`.
 - `useAuth`, `ReauthModal`, `ServerConfigModal`, `authService.ts`, and `MfaForm` coordinate auth recovery, MFA, session expiry, and API-key fallback.
+- `utils/appLinks.ts` reads the configured native scheme. Custom browser auth selects that scheme through `app_scheme`; the server must explicitly allow it via `SPARKY_FITNESS_MOBILE_AUTH_SCHEMES`. Keep session tokens and registration tickets in URL fragments.
 - Production rejects HTTP server URLs. Preserve HTTPS guards in onboarding, settings, raw fetch paths, and health sync.
 - Proxy headers support reverse-proxy auth. They must be injected before auth headers in `apiClient.ts` and raw fetch clients.
 - During login before a config is saved, `authService` manages pending proxy headers via `setPendingProxyHeaders()` / `clearPendingProxyHeaders()`.
@@ -275,9 +276,10 @@ npx expo prebuild --clean
 - Widget snapshot shape is owned by `useWidgetSync.ts`; keep it aligned with Swift views and Kotlin composables.
 - The workout Live Activity (Lock Screen + Dynamic Island elapsed/rest timers) uses `expo-widgets`, whose generated `ExpoWidgetsTarget` extension coexists with the `@bacons/apple-targets` `targets/widget/` target. `src/services/WorkoutLiveActivityLayout.tsx` is the `'widget'`-directive layout (self-contained; only `@expo/ui/swift-ui` imports; epoch-ms props, never `Date`s) and must only be imported from `src/services/workoutLiveActivity.ios.ts` — `createLiveActivity` runs at module scope and would drag iOS native modules into the Android bundle. The `.ios.ts` service subscribes to `activeWorkoutStore` (ops held until persist hydration + instance reconcile) and serializes all start/update/end calls; the OS ticks the timers from absolute timestamps, no polling — the app pushes an update only on a real state change. The rest "+15s"/"Skip" and active-phase "Complete" buttons (iOS 17+; inert below 17) fire a `LiveActivityIntent` that runs in the app process and lands in the service via `addUserInteractionListener`, which dispatches to store actions; the button `target` strings are duplicated by hand between layout and service because the `'widget'` body cannot import them. A press after a force-quit is lost (the event fires before JS boots). The rest progress bar is an OS-ticked `ProgressView timerInterval`; the `bannerSmall` slot targets the watchOS Smart Stack/CarPlay and stays button-free. Live Activities get NO `widgets[]` entry in `app.config.ts` (that array is only for home/Lock Screen widgets).
 - Android uses `src/services/workoutLiveActivity.android.ts` to mirror the active workout as an ongoing notification. `plugins/withWorkoutNotification.ts` copies the Kotlin module from `targets/android-workout-notification/` at prebuild. On Android 16+, the system ProgressStyle shows exercise segments and requests a Live Update status chip with the next set position (for example, `3/16`); older Android versions use a standard ongoing notification with overall set progress. Native notifications are reconciled after workout-store hydration; rest-complete alerts remain separate.
-- `app.config.ts` controls bundle identifiers, Apple team IDs, iOS app group, Android permissions, navigation bar contrast, widget plugins, and production-only network security config.
+- `app.identifiers.js` is the CommonJS build identity resolver for `app.config.ts` and Apple target configs. Preserve its upstream defaults and legacy exports. Custom inputs are production roots; dev/preview suffixes are derived. See `../docs/fork/OWN_THE_BUILD.md` and the environment-variable reference for build-only settings.
+- `app.config.ts` consumes resolved identity and controls Android permissions, navigation bar contrast, widget plugins, and production-only network security config.
 - iOS entitlements in `app.config.ts` are the app group plus `com.apple.developer.usernotifications.time-sensitive`. The latter is what lets the `timeSensitive` rest-complete alert break through Focus modes and the Scheduled Summary; it is an App ID capability, so credentials have to be re-synced (profile regenerated) on the first build that carries it.
-- `APP_VARIANT` selects dev vs production behavior; dev builds request extra Android Health Connect write permissions for local testing/seeding.
+- `APP_VARIANT` accepts `dev`/`development`, `preview`, or `production`; unknown values fail. Only development requests extra Android Health Connect write permissions for local testing/seeding. Custom preview has its own identity and App Group.
 - After editing `targets/`, native config plugins, app groups, permissions, or native bridge shape, run `npx expo prebuild --clean`.
 
 ## Apple Watch
@@ -326,6 +328,13 @@ When reviewing an API issue, trace screen/hook -> API client -> server route -> 
 - A key used with `count` is a plural family: EN requires `_one` and `_other`; PL requires `_one`, `_few`, `_many`, and `_other`. Use grammatically correct forms rather than duplicating suffixes blindly.
 - Run `pnpm run i18n:audit` after localization work. `pnpm run validate` includes typecheck, lint with zero warnings, and this audit.
 - Keep canonical storage/API values and user-generated content literal; localize only application-owned presentation labels.
+
+## Owned build validation
+
+- `eas.json` has `sparkyrivals-development`, `sparkyrivals-preview`, and `sparkyrivals-production` profiles; `pnpm build:profile <profile> <command> [args...]` applies their inherited environment to local commands.
+- Use `APP_CONFIG_ONLY=1` only for local unsigned config/prebuild checks without accounts. It cannot be used on EAS or for Android release tasks. Real custom builds require an owned Expo owner/project UUID.
+- After a clean prebuild, run `pnpm validate:native` with the same profile/environment. `--snapshot <file>` and `--compare <file>` verify repeated native identity metadata, excluding Xcode's random object UUIDs. Never commit generated native projects.
+- `withReleaseSigning` consumes existing `MYAPP_RELEASE_*` Gradle properties/environment or EAS-injected signing. Keep credentials out of Expo runtime config. Local owned releases need an allocated `EXPO_BUILD_NUMBER > 1`; EAS uses remote auto-incrementing versions.
 
 ## Testing Guidance
 

@@ -20,6 +20,7 @@ concurrency:
 
 jobs:
   validate:
+    if: github.repository == 'CodeWithCJ/SparkyFitness'
     name: Validate & Label
     runs-on: ubuntu-latest
 

@@ -192,7 +192,7 @@ struct widgetEntryView: View {
     var entry: Provider.Entry
 
     private var dashboardURL: URL? {
-        URL(string: "sparkyfitnessmobile://")
+        hostAppURL("")
     }
 
     var body: some View {
@@ -253,12 +253,12 @@ struct widgetEntryView: View {
                 VStack(spacing: 16) {
                     ActionButton(
                         icon: "magnifyingglass",
-                        destination: URL(string: "sparkyfitnessmobile://search")!,
+                        destination: hostAppURL("search")!,
                         accessibilityLabel: localizedWidgetString("widget.search_food")
                     )
                     ActionButton(
                         icon: "barcode.viewfinder",
-                        destination: URL(string: "sparkyfitnessmobile://scan")!,
+                        destination: hostAppURL("scan")!,
                         accessibilityLabel: localizedWidgetString("widget.scan_barcode")
                     )
                 }

@@ -13,6 +13,7 @@ concurrency:
 
 jobs:
   label:
+    if: github.repository == 'CodeWithCJ/SparkyFitness'
     name: Auto-label Issue
     runs-on: ubuntu-latest
     steps:

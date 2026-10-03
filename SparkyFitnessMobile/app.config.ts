@@ -1,27 +1,13 @@
 import 'tsx/cjs';
 import { ExpoConfig, ConfigContext } from 'expo/config';
 import { nativeLanguageTags } from './src/localization/localeRegistry';
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const {
-  getIosAppGroup,
-  DEV_BUNDLE_IDENTIFIER,
-} = require('./app.identifiers.js');
-
-const APP_NAME = 'SparkyFitness';
-const APP_SLUG = 'sparkyfitnessmobile';
-const ANDROID_PROD_BUNDLE_IDENTIFIER = 'com.SparkyApps.SparkyFitnessMobile';
-const IOS_PROD_BUNDLE_IDENTIFIER = 'com.SparkyApps.SparkyFitnessMobile';
-const DEV_APPLE_TEAM_ID = process.env.EXPO_DEV_APPLE_TEAM_ID || '';
-const PROD_APPLE_TEAM_ID = process.env.EXPO_PROD_APPLE_TEAM_ID || '';
+import { resolveAppIdentity } from './app.identifiers';
 // Optional. With it, Android draws cardio routes over Google Maps; without
 // it, Android keeps the plain route line and nothing else changes. iOS uses
 // Apple Maps and needs no key. Supply it from the build environment (an EAS
 // secret, for instance), never from the repo.
 const GOOGLE_MAPS_ANDROID_API_KEY =
   process.env.GOOGLE_MAPS_ANDROID_API_KEY || '';
-
-const DEV_PACKAGE = DEV_BUNDLE_IDENTIFIER;
-const PROD_PACKAGE = ANDROID_PROD_BUNDLE_IDENTIFIER;
 
 const androidPermissions = [
   'android.permission.INTERNET',
@@ -122,13 +108,8 @@ const devAndroidPermissions = [
 const packageJson = require('./package.json');
 
 export default ({ config }: ConfigContext): Partial<ExpoConfig> => {
-  const environment = process.env.APP_VARIANT || 'dev';
-
-  const isDev = environment === 'dev' || environment === 'development';
-
-  if (isDev) {
-    androidPermissions.push(...devAndroidPermissions);
-  }
+  const identity = resolveAppIdentity();
+  const { isDev } = identity;
 
   // Plugins only included in production builds
   const prodPlugins = ['./plugins/withNetworkSecurityConfig'];
@@ -152,8 +133,10 @@ export default ({ config }: ConfigContext): Partial<ExpoConfig> => {
 
   return {
     ...config,
-    name: APP_NAME,
-    slug: APP_SLUG,
+    name: identity.name,
+    slug: identity.slug,
+    scheme: identity.scheme,
+    owner: identity.owner,
     version: packageJson.version,
     locales: Object.fromEntries(
       nativeLanguageTags().map((language) => [
@@ -162,10 +145,9 @@ export default ({ config }: ConfigContext): Partial<ExpoConfig> => {
       ])
     ),
     ios: {
-      bundleIdentifier: isDev
-        ? DEV_BUNDLE_IDENTIFIER
-        : IOS_PROD_BUNDLE_IDENTIFIER,
-      appleTeamId: isDev ? DEV_APPLE_TEAM_ID : PROD_APPLE_TEAM_ID,
+      bundleIdentifier: identity.iosBundleIdentifier,
+      appleTeamId: identity.appleTeamId,
+      buildNumber: identity.buildNumber?.toString() ?? config.ios?.buildNumber,
       supportsTablet: false,
       infoPlist: {
         NSLocalNetworkUsageDescription:
@@ -195,7 +177,7 @@ export default ({ config }: ConfigContext): Partial<ExpoConfig> => {
         UIBackgroundModes: ['audio'],
       },
       entitlements: {
-        'com.apple.security.application-groups': [getIosAppGroup()],
+        'com.apple.security.application-groups': [identity.appGroup],
         // Lets iOS honour the `timeSensitive` rest alert (see
         // `scheduleRestNotification`); without it a Focus mode silences it.
         'com.apple.developer.usernotifications.time-sensitive': true,
@@ -203,8 +185,12 @@ export default ({ config }: ConfigContext): Partial<ExpoConfig> => {
       icon: './assets/icons/appicon.icon',
     },
     android: {
-      package: isDev ? DEV_PACKAGE : PROD_PACKAGE,
-      permissions: androidPermissions,
+      package: identity.androidPackage,
+      versionCode: identity.buildNumber ?? config.android?.versionCode,
+      permissions: [
+        ...androidPermissions,
+        ...(isDev ? devAndroidPermissions : []),
+      ],
       adaptiveIcon: {
         foregroundImage: './assets/icons/adaptiveicon.png',
         backgroundColor: '#FFFFFF',
@@ -214,6 +200,14 @@ export default ({ config }: ConfigContext): Partial<ExpoConfig> => {
       // Must be first — see the comment on `devPlugins` above for why.
       ...(isDev ? devPlugins : []),
       ...(config.plugins ?? []),
+      ...(identity.mode === 'custom'
+        ? [
+            ['expo-dev-client', { addGeneratedScheme: isDev }] as [
+              string,
+              { addGeneratedScheme: boolean },
+            ],
+          ]
+        : []),
       'expo-image',
       [
         // No mic permission and no Android record/foreground-service perms.
@@ -228,6 +222,7 @@ export default ({ config }: ConfigContext): Partial<ExpoConfig> => {
         },
       ],
       './plugins/withGlanceAndroidSupport',
+      './plugins/withReleaseSigning',
       './plugins/withAppLanguage',
       './plugins/withCalorieWidget',
       './plugins/withExactAlarmModule',
@@ -254,12 +249,8 @@ export default ({ config }: ConfigContext): Partial<ExpoConfig> => {
       [
         'expo-widgets',
         {
-          groupIdentifier: getIosAppGroup(),
-          bundleIdentifier:
-            process.env.WIDGET_BUNDLE_IDENTIFIER ||
-            (isDev
-              ? `${DEV_BUNDLE_IDENTIFIER}.ExpoWidgetsTarget`
-              : 'com.SparkyApps.SparkyFitnessMobile.ExpoWidgetsTarget'),
+          groupIdentifier: identity.appGroup,
+          bundleIdentifier: identity.expoWidgetBundleIdentifier,
           // Live Activities register at runtime via createLiveActivity and must
           // NOT be listed here — widgets[] is only for home/Lock Screen widgets
           // (an entry without supportedFamilies breaks the generated target).
@@ -270,14 +261,15 @@ export default ({ config }: ConfigContext): Partial<ExpoConfig> => {
     ],
     extra: {
       ...config.extra,
-      APP_VARIANT: environment,
-      iosAppGroup: getIosAppGroup(),
+      APP_VARIANT: identity.variant,
+      iosAppGroup: identity.appGroup,
       // Whether the Android build has a Maps key. The key itself stays out
       // of the JS bundle; the route screen only needs to know it is there.
       androidGoogleMapsEnabled: GOOGLE_MAPS_ANDROID_API_KEY !== '',
-      eas: {
-        projectId: '498a86c5-344f-4d2c-9033-dfd720e4a383',
-      },
+      // Explicitly replace app.json's upstream destination, even when unlinked.
+      eas: identity.easProjectId
+        ? { projectId: identity.easProjectId }
+        : undefined,
     },
   };
 };

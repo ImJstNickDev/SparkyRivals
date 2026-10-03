@@ -17,6 +17,14 @@ func isToday(_ dateString: String?) -> Bool {
     return dateString == todayDateString()
 }
 
+/// Scheme comes from the same resolver as the host application's URL types.
+func hostAppURL(_ destination: String = "") -> URL? {
+    guard let scheme = Bundle.main.object(forInfoDictionaryKey: "APP_URL_SCHEME") as? String else {
+        return nil
+    }
+    return URL(string: "\(scheme)://\(destination)")
+}
+
 func appGroupIdentifier() -> String? {
     if let appGroup = Bundle.main.object(forInfoDictionaryKey: "APP_GROUP_IDENTIFIER") as? String {
         return appGroup

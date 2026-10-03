@@ -22,6 +22,10 @@ import { expoSsoCookieRelay } from './utils/expoSsoCookieRelay.js';
 import { passkey } from '@better-auth/passkey';
 import { isDemoMode } from './middleware/demoGuardMiddleware.js';
 import { isEmailLoginDisabled } from './utils/emailLogin.js';
+import { getMobileAuthOrigins } from './utils/mobileAuthCallbacks.js';
+
+// Validate operator configuration at startup, before accepting any auth requests.
+const mobileAuthOrigins = getMobileAuthOrigins();
 
 const { Pool } = pg;
 /**
@@ -524,7 +528,7 @@ const auth = betterAuth({
   trustedOrigins: async (request) => {
     const cleanOrigins = [
       ...getBaseTrustedOrigins(),
-      'sparkyfitnessmobile://',
+      ...mobileAuthOrigins,
       // IdP origins -- required since 1.7 validates OIDC discovery URLs against
       // this list before fetching them.
       ...(await getTrustedSsoOrigins(request)),

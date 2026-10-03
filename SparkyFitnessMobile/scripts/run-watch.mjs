@@ -1,56 +1,56 @@
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync } from 'node:fs';
-import { homedir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 
-const bundleId = process.env.EXPO_DEV_BUNDLE_IDENTIFIER
-  ? `${process.env.EXPO_DEV_BUNDLE_IDENTIFIER}.watchkitapp`
-  : 'org.SparkyApps.SparkyFitnessMobile1.dev.watchkitapp';
-
-// Scheme and product name both come from `name` in
-// targets/watch/expo-target.config.js. They are one word — an earlier
-// "SparkyFitness Watch" (with a space) here matched no scheme at all, so this
-// script and `pnpm run watch:device` both failed with "the workspace does not
-// contain a scheme named ...".
+// Native target names stay stable; workspace and bundle follow generated config.
 const SCHEME = 'SparkyFitnessWatch';
-
+const workspaces = readdirSync('ios').filter((name) =>
+  name.endsWith('.xcworkspace')
+);
+if (workspaces.length !== 1) throw new Error('Run a clean iOS prebuild first.');
+const device = process.argv.includes('--device');
+const derivedDataPath = resolve('.expo/watch-build');
 console.log(`› Building ${SCHEME} scheme...`);
-execSync(
-  `xcodebuild -workspace ios/SparkyFitness.xcworkspace -scheme '${SCHEME}' -destination 'generic/platform=watchOS Simulator' build -quiet`,
+execFileSync(
+  'xcodebuild',
+  [
+    '-workspace',
+    join('ios', workspaces[0]),
+    '-scheme',
+    SCHEME,
+    '-configuration',
+    'Debug',
+    '-derivedDataPath',
+    derivedDataPath,
+    '-destination',
+    device ? 'generic/platform=watchOS' : 'generic/platform=watchOS Simulator',
+    'build',
+    '-quiet',
+  ],
   { stdio: 'inherit' }
 );
-
-// Find built app in DerivedData
-const derivedDataPath = join(homedir(), 'Library/Developer/Xcode/DerivedData');
-let builtAppPath = null;
-
-if (existsSync(derivedDataPath)) {
-  const folders = readdirSync(derivedDataPath).filter((f) =>
-    f.startsWith('SparkyFitness-')
-  );
-  for (const folder of folders) {
-    const candidate = join(
-      derivedDataPath,
-      folder,
-      `Build/Products/Debug-watchsimulator/${SCHEME}.app`
-    );
-    if (existsSync(candidate)) {
-      builtAppPath = candidate;
-      break;
-    }
-  }
-}
-
-if (!builtAppPath) {
-  console.error(`❌ Could not find built ${SCHEME}.app in DerivedData`);
-  process.exit(1);
-}
+if (device) process.exit(0);
+const builtAppPath = join(
+  derivedDataPath,
+  `Build/Products/Debug-watchsimulator/${SCHEME}.app`
+);
+if (!existsSync(builtAppPath))
+  throw new Error(`Built app not found: ${builtAppPath}`);
+const bundleId = execFileSync(
+  '/usr/libexec/PlistBuddy',
+  ['-c', 'Print CFBundleIdentifier', join(builtAppPath, 'Info.plist')],
+  { encoding: 'utf8' }
+).trim();
 
 // Find an available watchOS simulator
 console.log('› Finding available Apple Watch simulator...');
-const deviceListJson = execSync('xcrun simctl list devices available -j', {
-  encoding: 'utf-8',
-});
+const deviceListJson = execFileSync(
+  'xcrun',
+  ['simctl', 'list', 'devices', 'available', '-j'],
+  {
+    encoding: 'utf-8',
+  }
+);
 const { devices } = JSON.parse(deviceListJson);
 
 let watchDevice = null;
@@ -71,20 +71,22 @@ if (!watchDevice) {
 console.log(
   `› Booting Apple Watch Simulator: ${watchDevice.name} (${watchDevice.udid})...`
 );
-execSync('open -a Simulator', { stdio: 'ignore' });
+execFileSync('open', ['-a', 'Simulator'], { stdio: 'ignore' });
 try {
-  execSync(`xcrun simctl boot "${watchDevice.udid}"`, { stdio: 'ignore' });
+  execFileSync('xcrun', ['simctl', 'boot', watchDevice.udid], {
+    stdio: 'ignore',
+  });
 } catch {
   // Already booted
 }
 
 console.log('› Installing app on simulator...');
-execSync(`xcrun simctl install "${watchDevice.udid}" "${builtAppPath}"`, {
+execFileSync('xcrun', ['simctl', 'install', watchDevice.udid, builtAppPath], {
   stdio: 'inherit',
 });
 
 console.log(`› Launching ${bundleId}...`);
-execSync(`xcrun simctl launch "${watchDevice.udid}" "${bundleId}"`, {
+execFileSync('xcrun', ['simctl', 'launch', watchDevice.udid, bundleId], {
   stdio: 'inherit',
 });
 
