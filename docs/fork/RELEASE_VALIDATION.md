@@ -123,8 +123,12 @@ The error matches an [Apple Developer Forums report](https://developer.apple.com
 in which Apple DTS identifies a likely known regression. Participants report
 recovery after OS updates and mixed results from toggling Bluetooth on both
 devices. That is supporting evidence, not proof of a fix on this device pair.
-A single Bluetooth reconnection/retry has been requested; its result is pending.
-No app data, pairing, certificate or provisioning resources were reset. Raw logs
+After requesting Bluetooth reconnection on both devices, the capture shows a
+connection reunion and a second install attempt from 00:30:48 to 00:31:52. It fails
+with the same two error codes and timeout before transfer. Available OS updates
+have been requested from the maintainer for the next diagnostic step; no update
+has been performed. No app data, pairing, certificate or provisioning resources
+were reset. Raw logs
 remain private under `/tmp/sparkyrivals-8a/`. Physical Watch installation and launch
 remain outstanding; corrected profile membership alone is not a device-test result.
 
