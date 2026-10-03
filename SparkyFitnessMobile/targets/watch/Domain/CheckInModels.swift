@@ -335,6 +335,9 @@ struct WatchContext: Codable, Equatable {
     /// back with a start request. Nil on a context from before this field.
     var workoutServerId: String? = nil
 
+    /// Optional so contexts persisted by older builds remain decodable.
+    var challengeSnapshot: ChallengeSnapshot? = nil
+
     static let empty = WatchContext(
         today: nil,
         todayWeightKg: nil,

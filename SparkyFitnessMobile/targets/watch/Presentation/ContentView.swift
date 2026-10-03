@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Router for the watch app. First run is a one-time gate; after that, Goals,
-/// Water, Entry, Trend and Workout are pages the wearer swipes between —
+/// Water, Entry, Trend, Workout and Challenge are pages the wearer swipes between —
 /// swiping is the only way to move between them, there is no button. Which of
 /// them show, and in what order, is the phone's Settings → Apple Watch choice
 /// (`WatchContext.visiblePages`).
@@ -145,6 +145,8 @@ struct ContentView: View {
             TrendView()
         case .workout:
             WorkoutView()
+        case .challenge:
+            ChallengeView()
         }
     }
 

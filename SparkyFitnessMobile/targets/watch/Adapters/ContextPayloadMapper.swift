@@ -73,7 +73,10 @@ enum ContextPayloadMapper {
             startableWorkouts: startableWorkouts(from: payload) ?? previous.startableWorkouts,
             workoutServerId: payload.keys.contains("workoutServerId")
                 ? payload["workoutServerId"] as? String
-                : previous.workoutServerId
+                : previous.workoutServerId,
+            // Unlike preferences, private Challenge state is never carried
+            // forward across an absent/invalid/explicitly cleared field.
+            challengeSnapshot: ChallengePayloadMapper.snapshot(from: payload["challengeSnapshot"])
         )
     }
 
