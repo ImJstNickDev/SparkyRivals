@@ -36,9 +36,12 @@ Accounts, permanent signing credentials and signed/device build acceptance remai
 manual setup. Milestone 1 merged as PR #1 (`14ff6ea3096138fd9f6ef12daf0188007dd09e3c`).
 Milestone 2 merged as PR #2 (`eff06b7b6e522145e037f4ce08a7e5d732a4fbb1`).
 The controlled upstream [sync PR #3](https://github.com/ImJstNickDev/SparkyRivals/pull/3)
-merged at `747280650d58fcfde1617a12eab04b829eb3bff2`. Milestone 3 implements
-[web and mobile Challenges](CHALLENGE_UI.md); its feature PR remains unmerged.
-Native device acceptance is still pending. No Watch Challenge UI or Wear OS work.
+merged at `747280650d58fcfde1617a12eab04b829eb3bff2`. Milestone 3
+[web and mobile Challenges](CHALLENGE_UI.md) merged as PR #4 at
+`b333a116724e8c0899a8a036ae1a1ad29e4d2d42`. Milestone 4 implements the
+[read-only Apple Watch Challenge page](APPLE_WATCH_CHALLENGES.md); its PR remains
+unmerged. Native compile/device/visual acceptance is still pending. Wear OS has
+not started.
 
 GitHub Actions remain **disabled**. Inherited publishing/mutation jobs are now
 guarded off in forks; validation enablement is documented, not performed. No store
@@ -73,6 +76,7 @@ product direction. See [ARCHITECTURE.md](ARCHITECTURE.md#future-client-experienc
 - [Challenge backend contracts and semantics](CHALLENGES.md)
 - [Milestone 2 validation](CHALLENGE_VALIDATION.md)
 - [Challenge UI architecture](CHALLENGE_UI.md)
+- [Apple Watch Challenge architecture and validation](APPLE_WATCH_CHALLENGES.md)
 - [Milestone 3 validation](CHALLENGE_UI_VALIDATION.md)
 - [Controlled upstream synchronization](UPSTREAM_SYNC_2026-10-03.md)
 - [Upstream integration workflow](UPSTREAM.md)
