@@ -21,7 +21,7 @@ object WearPublicationStore {
     @Synchronized fun save(context: Context, snapshot: ChallengeSnapshot) {
         val previous = read(context)
         if (previous?.snapshot == snapshot) return
-        val next = ChallengeEnvelope(previous?.publisherId ?: UUID.randomUUID().toString(), Math.addExact(previous?.sequence ?: 0L, 1L), snapshot)
+        val next = ChallengeProtocol.nextPublication(previous, snapshot, UUID.randomUUID().toString())
         val bytes = next.encode().toByteArray(Charsets.UTF_8)
         require(bytes.size <= ChallengeProtocol.MAX_BYTES)
         val file = file(context)

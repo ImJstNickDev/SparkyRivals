@@ -1,6 +1,7 @@
 package com.sparkyrivals.wearbridge
 
 import android.content.Context
+import android.net.Uri
 import androidx.work.BackoffPolicy
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
@@ -24,7 +25,12 @@ class WearPublishWorker(context: Context, params: WorkerParameters) : Worker(con
             val bytes = latest.encode().toByteArray(Charsets.UTF_8)
             val request = PutDataRequest.create(ChallengeProtocol.PATH).setData(bytes)
             if (latest.snapshot.state == "unavailable") request.setUrgent()
-            Tasks.await(data.putDataItem(request))
+            val localNode = Tasks.await(Wearable.getNodeClient(applicationContext).localNode)
+            val uri = Uri.Builder().scheme("wear").authority(localNode.id).path(ChallengeProtocol.PATH).build()
+            val current = Tasks.await(data.getDataItem(uri))
+            // Several cache observers may enqueue while an earlier worker runs.
+            // Skip the same durable envelope, including after a process restart.
+            if (current?.data?.contentEquals(bytes) != true) Tasks.await(data.putDataItem(request))
         }
         Result.success()
     } catch (_: Exception) { Result.retry() }

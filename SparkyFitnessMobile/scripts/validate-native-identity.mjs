@@ -174,6 +174,45 @@ if (platform !== 'ios') {
       wearGradle.includes('phone.defaultConfig.versionCode >= 1000000000')
     );
     assert.ok(wearGradle.includes('play-services-wearable:20.0.1'));
+    assert.ok(gradle.includes('play-services-wearable:20.0.1'));
+    assert.ok(gradle.includes('androidx.work:work-runtime:2.10.1'));
+    assert.equal((settings.match(/include ':wear'/g) || []).length, 1);
+    const phoneModuleRoot =
+      'android/app/src/main/java/com/sparkyrivals/wearbridge';
+    for (const source of readdirSync(
+      join(
+        root,
+        'modules/wear-connectivity/android/com/sparkyrivals/wearbridge'
+      )
+    )) {
+      assert.equal(
+        read(`${phoneModuleRoot}/${source}`),
+        read(
+          `modules/wear-connectivity/android/com/sparkyrivals/wearbridge/${source}`
+        )
+      );
+    }
+    const protocol = 'com/sparkyrivals/companion/ChallengeProtocol.kt';
+    assert.equal(
+      read(`android/wear/protocol/${protocol}`),
+      read(`targets/wear/protocol/${protocol}`)
+    );
+    assert.equal(
+      read(`android/app/src/main/java/${protocol}`),
+      read(`targets/wear/protocol/${protocol}`)
+    );
+    assert.ok(
+      read('android/app/src/main/res/values/wear.xml').includes(
+        'sparkyrivals_challenge_phone_v1'
+      )
+    );
+    const application = read(
+      `android/app/src/main/java/${id.androidPackage.replaceAll('.', '/')}/MainApplication.kt`
+    );
+    assert.equal(
+      (application.match(/add\(WearConnectivityPackage\(\)\)/g) || []).length,
+      1
+    );
     assert.ok(!wearGradle.includes('com.facebook.react'));
     assert.ok(!wearGradle.includes('{{'));
     const wearManifest = await parseStringPromise(
@@ -208,6 +247,12 @@ if (platform !== 'ios') {
   } else {
     assert.ok(!settings.includes("include ':wear'"));
     assert.ok(!existsSync(join(root, 'android/wear')));
+    assert.ok(!gradle.includes('play-services-wearable'));
+    assert.ok(
+      !existsSync(
+        join(root, 'android/app/src/main/java/com/sparkyrivals/wearbridge')
+      )
+    );
   }
   snapshot.platforms.android = { gradle, manifest, sources, wear };
 }

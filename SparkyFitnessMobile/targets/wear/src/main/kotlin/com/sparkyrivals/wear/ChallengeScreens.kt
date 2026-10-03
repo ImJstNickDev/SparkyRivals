@@ -57,6 +57,7 @@ fun ChallengeApp(state: CompanionState, now: Long) {
                             snapshot.items.isEmpty() -> WearList {
                                 item { Heading(stringResource(R.string.empty_title)) }
                                 item { Hint(stringResource(R.string.empty_hint)) }
+                                if (snapshot.hasMore) item { Hint(stringResource(R.string.more_phone)) }
                                 item { Freshness(snapshot, now) }
                             }
                             snapshot.items.size == 1 && !snapshot.hasMore -> ChallengeDetail(snapshot.items[0], snapshot, now)

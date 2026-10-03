@@ -33,13 +33,16 @@ it('uses one fixed versioned DataItem, never a message RPC or Watch HTTP client'
 it('keeps durable ordering and clear deliveries independent of JS lifetime', () => {
   expect(bridge('WearPublicationStore')).toContain('context.noBackupFilesDir');
   expect(bridge('WearPublicationStore')).toContain(
-    'Math.addExact(previous?.sequence'
+    'ChallengeProtocol.nextPublication'
   );
   expect(bridge('WearPublicationStore')).toContain('file.finishWrite');
   expect(bridge('WearPublishWorker')).toContain(
     'ExistingWorkPolicy.APPEND_OR_REPLACE'
   );
   expect(bridge('WearPublishWorker')).toContain('Result.retry()');
+  expect(bridge('WearPublishWorker')).toContain(
+    'current?.data?.contentEquals(bytes) != true'
+  );
   expect(bridge('WearPublishWorker')).toContain('request.setUrgent()');
   expect(bridge('WearPublishWorker')).not.toContain('NetworkType.CONNECTED');
 });

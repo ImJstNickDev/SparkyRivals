@@ -106,4 +106,23 @@ class ChallengeProtocolTest {
         val receipt = ChallengeReceipt().receive("phone", envelope()).invalidate()
         assertTrue(receipt.snapshot.items.isEmpty()); assertTrue(receipt.resetRequired)
     }
+    @Test fun journalSequenceSurvivesRestartAndSkipsIdenticalSnapshots() {
+        val first = ChallengeProtocol.nextPublication(null, snapshot(), publisher)
+        val restored = ChallengeProtocol.decode(first.encode())
+        assertEquals(first, ChallengeProtocol.nextPublication(restored, snapshot(), "unused"))
+        val clear = ChallengeProtocol.nextPublication(restored, ChallengeSnapshot(), "unused")
+        assertEquals(2L, clear.sequence)
+        assertEquals(publisher, clear.publisherId)
+        assertEquals("unavailable", clear.snapshot.state)
+    }
+    @Test fun futureSourceClockDoesNotPretendToBeFresh() {
+        assertTrue(ChallengeProtocol.stale(snapshot().copy(generatedAt = 1_000_000), 1000))
+    }
+    @Test fun rejectsProgressAndParticipantBounds() {
+        for ((key, value) in listOf("totalDays" to 0, "totalDays" to 367, "daysRemaining" to 8, "participantCount" to 101)) {
+            val json = fixture(); json.getJSONArray("items").getJSONObject(0).put(key, value)
+            invalid { ChallengeProtocol.snapshot(json.toString()) }
+        }
+    }
+
 }

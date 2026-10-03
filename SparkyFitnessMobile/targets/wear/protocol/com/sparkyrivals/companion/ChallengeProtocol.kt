@@ -12,7 +12,9 @@ object ChallengeProtocol {
     const val PHONE_CAPABILITY = "sparkyrivals_challenge_phone_v1"
     const val MAX_BYTES = 40 * 1024
     const val STALE_MS = 15 * 60_000L
-    fun stale(snapshot: ChallengeSnapshot, now: Long) = now - snapshot.generatedAt >= STALE_MS
+    fun stale(snapshot: ChallengeSnapshot, now: Long) = now - snapshot.generatedAt >= STALE_MS || snapshot.generatedAt > now + 5 * 60_000
+    fun nextPublication(previous: ChallengeEnvelope?, snapshot: ChallengeSnapshot, newPublisher: String): ChallengeEnvelope =
+        if (previous?.snapshot == snapshot) previous else ChallengeEnvelope(previous?.publisherId ?: newPublisher, Math.addExact(previous?.sequence ?: 0L, 1L), snapshot)
     fun snapshot(text: String): ChallengeSnapshot = decodeSnapshot(JSONObject(text))
     fun decode(text: String): ChallengeEnvelope {
         require(text.toByteArray(Charsets.UTF_8).size <= MAX_BYTES)
@@ -35,18 +37,22 @@ object ChallengeProtocol {
             val start = item.day("startDate")
             val end = item.day("endDate").also { require(it >= start) }
             val zone = item.text("timezone", 100).also { ZoneId.of(it) }
+            val totalDays = item.number("totalDays").also { require(it in 1..366) }
+            val daysRemaining = item.number("daysRemaining").also { require(it <= totalDays) }
+            val currentDay = item.optionalNumber("currentDay")?.also { require(it in 1..totalDays) }
+            val participantCount = item.optionalNumber("participantCount")?.also { require(it in 1..100) }
             val rows = if (membership == "pending" || lifecycle == "upcoming") emptyList() else item.getJSONArray("rows").objects(4).map { row ->
                 ChallengeRow(
                     row.text("id", 100), row.text("name", 200), row.bool("isSelf"), row.number("total"),
-                    row.optionalNumber("rank"), row.bool("tied"), row.bool("leader"), row.optionalNumber("gapToLeader"),
+                    row.optionalNumber("rank")?.also { require(it in 1..100) }, row.bool("tied"), row.bool("leader"), row.optionalNumber("gapToLeader"),
                     row.optJSONObject("today")?.let { point ->
                         ChallengePoint(point.day("date"), point.number("value"), point.bool("present"), point.bool("eligible"))
                     }, row.number("daysWithSteps"), row.number("eligibleDays")
                 )
             }.also { require(it.map { row -> row.id }.distinct().size == it.size); require(it.count { row -> row.isSelf } <= 1) }
             ChallengeItem(item.text("id", 100), item.text("name", 200), lifecycle, membership, start, end, zone,
-                item.number("totalDays"), item.number("daysRemaining"), item.optionalNumber("currentDay"),
-                item.optionalNumber("participantCount"), item.optionalNumber("leadMargin"), rows)
+                totalDays, daysRemaining, currentDay,
+                participantCount, item.optionalNumber("leadMargin"), rows)
         }.also { require(it.map { item -> item.id }.distinct().size == it.size) }
         return ChallengeSnapshot(account, state, time, items, json.bool("hasMore"))
     }
