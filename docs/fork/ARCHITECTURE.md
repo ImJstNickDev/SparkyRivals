@@ -280,7 +280,7 @@ across the phone, Watch app, and Watch widget extension.
 Implemented in isolated `challengeRoutes`, `challengeService`,
 `challengeLeaderboardService` and `challengeRepository` modules, shared contracts,
 and two PostgreSQL tables (`challenges`, `challenge_participants`). The API is
-`/api/v2/challenges`; no Challenge clients are implemented yet. Full contracts,
+`/api/v2/challenges`; web and mobile clients consume its shared schemas. Full contracts,
 security boundaries and lifecycle are in [CHALLENGES.md](CHALLENGES.md).
 
 The creator participates automatically; up to 100 participants explicitly consent.
@@ -316,6 +316,22 @@ Metrics/scoring modes are explicit constrained enums to extend deliberately. Oth
 metrics need canonical adapters, units and timezone/overlap rules; workout scoring,
 recurrence, goals and social extras remain later milestones. Web/mobile/watch will
 consume server projections and must not calculate independent winners.
+
+## Challenge clients — milestone 3
+
+Web adds `pages/Challenges`, matching API/hooks/keys and three lazy routes.
+Mobile adds three safe root-stack screens, `components/challenges`, API/query
+modules and one prominent Dashboard entry. Native tabs and the detached Add action
+stay intact. Both clients parse shared contracts and use actor-scoped caches,
+consent-gated leaderboard reads and all-domain mutation invalidation. The shared
+relationship projection strips unrelated Family & Friends data and only selects
+active, started, unexpired connected accounts; the server rechecks invitations.
+
+There is no client scoring engine, offline membership queue or score snapshot
+store. Focus/reconnect/manual refresh obtains reconciled server results. Calendar
+buckets keep their dates; absence is distinct from explicit zero. Existing theme,
+locale, header and network systems are reused. Full design, source maps and native
+verification boundaries: [CHALLENGE_UI.md](CHALLENGE_UI.md).
 
 ## Future Wear OS direction
 

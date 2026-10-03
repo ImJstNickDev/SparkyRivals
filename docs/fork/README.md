@@ -34,8 +34,11 @@ native generation. See [BUILDING.md](BUILDING.md) for actual configuration and
 [BUILD_VALIDATION.md](BUILD_VALIDATION.md) for evidence and untested boundaries.
 Accounts, permanent signing credentials and signed/device build acceptance remain
 manual setup. Milestone 1 merged as PR #1 (`14ff6ea3096138fd9f6ef12daf0188007dd09e3c`).
-Milestone 2 now implements the [Challenge backend](CHALLENGES.md), with no Challenge
-UI, Wear OS app or broad rebrand. Its branch is for review and is not merged.
+Milestone 2 merged as PR #2 (`eff06b7b6e522145e037f4ce08a7e5d732a4fbb1`).
+The controlled upstream [sync PR #3](https://github.com/ImJstNickDev/SparkyRivals/pull/3)
+merged at `747280650d58fcfde1617a12eab04b829eb3bff2`. Milestone 3 implements
+[web and mobile Challenges](CHALLENGE_UI.md); its feature PR remains unmerged.
+Native device acceptance is still pending. No Watch Challenge UI or Wear OS work.
 
 GitHub Actions remain **disabled**. Inherited publishing/mutation jobs are now
 guarded off in forks; validation enablement is documented, not performed. No store
@@ -69,6 +72,9 @@ product direction. See [ARCHITECTURE.md](ARCHITECTURE.md#future-client-experienc
 - [Architecture and canonical health data](ARCHITECTURE.md)
 - [Challenge backend contracts and semantics](CHALLENGES.md)
 - [Milestone 2 validation](CHALLENGE_VALIDATION.md)
+- [Challenge UI architecture](CHALLENGE_UI.md)
+- [Milestone 3 validation](CHALLENGE_UI_VALIDATION.md)
+- [Controlled upstream synchronization](UPSTREAM_SYNC_2026-10-03.md)
 - [Upstream integration workflow](UPSTREAM.md)
 - [Identifier and signing inventory](IDENTIFIERS.md)
 - [Baseline validation and limitations](BASELINE.md)

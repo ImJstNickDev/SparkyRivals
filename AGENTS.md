@@ -177,6 +177,8 @@ Keep the upstream license, attribution, history, functionality, and package guid
   a second ingestion pipeline or copy health records into a competing store.
 - Challenge backend: see `docs/fork/CHALLENGES.md` for `/api/v2/challenges`,
   consent/RLS, live canonical steps and the shared response contract.
+- Challenge web/mobile source maps, consent-aware cache rules and native test
+  boundaries: `docs/fork/CHALLENGE_UI.md`. Keep future Watch/Wear work separate.
 - Challenge scoring, reconciliation, and winners belong on the server. Mobile
   and watch clients consume server state; locally displayed progress is not an
   authoritative result.

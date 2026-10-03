@@ -186,3 +186,12 @@ a compact Watch snapshot using the existing WatchConnectivity architecture. Wear
 OS remains future work. No client should duplicate ranking logic or declare an
 irreversible winner. There is no anti-cheat guarantee: canonical values can be
 manually edited, and coverage cannot prove a complete provider sync.
+
+## Client implementation
+
+Milestone 3 consumes this API on web, iOS and Android. See
+[CHALLENGE_UI.md](CHALLENGE_UI.md) for routes/screens, consent-aware caches,
+relationship selection, missing-data display and refresh. Only list transport
+metadata changed: numeric `_` cache-busters are validated and stripped before the
+domain query for the existing mobile transport. Scoring, RLS and response authority
+remain unchanged. Watch and Wear clients remain future work.

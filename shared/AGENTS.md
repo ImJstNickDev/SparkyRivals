@@ -17,6 +17,9 @@
 - `src/schemas/api/Challenges.api.zod.ts` — server-authoritative SparkyRivals
   competition contracts; `Challenges.zod.ts` and `ChallengeParticipants.zod.ts`
   mirror the database. Clients must consume server scores, never decide winners.
+- `src/challenges/client.ts` - narrow existing Family & Friends relationship
+  projection and invite-picker eligibility, shared by web/mobile. The server
+  remains the invitation authority; this is not a user directory or scoring engine.
 - `src/constants/` - shared constants and enums (exercises, nutrients, meal types, fasting protocols, medication schedules, cycle phases, etc.).
 - `src/utils/` - timezone helpers (`todayInZone`, `instantToDay`, `dayToUtcRange`, `compareDays`, `addDays`, `isDayString`), cycle/menstruation helpers, and unit/calculation utilities.
 - `src/ai/`, `src/cycle/`, `src/medications/`, `src/mood/` - domain-specific helpers.
