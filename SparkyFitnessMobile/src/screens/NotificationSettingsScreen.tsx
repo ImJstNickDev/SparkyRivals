@@ -1,3 +1,4 @@
+import { ChallengeNotificationSettings } from '../components/challenges/ChallengeNotificationSettings';
 import React, { useCallback, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View, ScrollView, Text } from 'react-native';
@@ -473,6 +474,7 @@ const NotificationSettingsScreen: React.FC<
             )}
           </SettingsRowGroup>
         )}
+        {notificationsEnabled && <ChallengeNotificationSettings />}
       </ScrollView>
 
       <TimeSheet

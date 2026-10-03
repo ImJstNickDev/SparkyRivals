@@ -5906,6 +5906,20 @@
     "workoutAcceptHint": "Accept to share daily aggregate workout time and session counts for the whole Challenge date range, including earlier days. Workout details and other health data stay private.",
     "rematch": "Rematch",
     "rematchReview": "Review your rematch. Everyone you invite will choose whether to join again.",
-    "rematchOmitted": "Some previous participants are no longer eligible and have not been selected."
+    "rematchOmitted": "Some previous participants are no longer eligible and have not been selected.",
+    "notifications": {
+      "invitationBody": "You have a new invitation. Open to review and choose whether to join.",
+      "startBody": "Your Challenge starts today. Keep moving together.",
+      "endingSoonBody": "One day left. Open to see the latest progress.",
+      "endedBody": "Challenge finished — open to see the latest result.",
+      "leadBody": "Your position at the lead changed. Open to see the refreshed result.",
+      "enabled": "Challenge notifications",
+      "invitations": "New invitations",
+      "start": "Challenge starts",
+      "endingSoon": "Ending soon",
+      "ended": "Challenge ends",
+      "leadChanges": "Lead changes",
+      "hint": "Alerts use results refreshed on this phone. Lead changes are checked when the app refreshes."
+    }
   }
 }

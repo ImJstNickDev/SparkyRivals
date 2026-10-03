@@ -1,3 +1,7 @@
+import {
+  CHALLENGE_NOTIFICATION_DEFAULTS,
+  type ChallengeNotificationPreferences,
+} from '../services/challengeNotificationPlan';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   DEFAULT_GUIDED_COUNTDOWN_SEC,
@@ -58,6 +62,7 @@ export type WaterReminderIntervalHours =
 export const DEFAULT_REST_SEC = 90;
 
 export const PREFERENCE_DEFAULTS = {
+  challengeNotifications: CHALLENGE_NOTIFICATION_DEFAULTS,
   hapticsEnabled: true,
   soundsEnabled: true,
   notificationsEnabled: true,
@@ -115,6 +120,7 @@ export const PREFERENCE_DEFAULTS = {
 } as const;
 
 export type AppPreferencesData = {
+  challengeNotifications: ChallengeNotificationPreferences;
   hapticsEnabled: boolean;
   soundsEnabled: boolean;
   notificationsEnabled: boolean;
@@ -191,6 +197,7 @@ export type AppPreferencesData = {
 };
 
 export interface AppPreferencesState extends AppPreferencesData {
+  setChallengeNotifications: (value: ChallengeNotificationPreferences) => void;
   setHapticsEnabled: (value: boolean) => void;
   setSoundsEnabled: (value: boolean) => void;
   setNotificationsEnabled: (value: boolean) => void;
@@ -299,6 +306,8 @@ export const useAppPreferencesStore = create<AppPreferencesState>()(
   persist(
     (set) => ({
       ...PREFERENCE_DEFAULTS,
+      setChallengeNotifications: (value) =>
+        set({ challengeNotifications: value }),
 
       setHapticsEnabled: (value) => set({ hapticsEnabled: value }),
       setSoundsEnabled: (value) => set({ soundsEnabled: value }),
@@ -406,6 +415,7 @@ export const useAppPreferencesStore = create<AppPreferencesState>()(
       version: STORE_VERSION,
       storage: createJSONStorage(() => legacyAwareStorage),
       partialize: (state) => ({
+        challengeNotifications: state.challengeNotifications,
         hapticsEnabled: state.hapticsEnabled,
         soundsEnabled: state.soundsEnabled,
         notificationsEnabled: state.notificationsEnabled,

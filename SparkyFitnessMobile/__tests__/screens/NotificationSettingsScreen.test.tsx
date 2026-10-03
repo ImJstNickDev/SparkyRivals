@@ -353,3 +353,51 @@ describe('NotificationSettingsScreen', () => {
     expect(switches[3].props.accessibilityLabel).toBe('Medication Reminders');
   });
 });
+
+describe('Challenge notification preferences', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    __resetAppPreferencesStoreForTests();
+    mockRequestPermission.mockResolvedValue('granted');
+  });
+  it('does not ask at render and opt-in reveals local-only categories with lead off', async () => {
+    const screen = renderScreen();
+    expect(mockRequestPermission).not.toHaveBeenCalled();
+    expect(screen.queryByLabelText('Lead changes')).toBeNull();
+    fireEvent(
+      screen.getByLabelText('Challenge notifications'),
+      'valueChange',
+      true
+    );
+    await waitFor(() =>
+      expect(screen.getByLabelText('Lead changes')).toBeTruthy()
+    );
+    const preferences =
+      useAppPreferencesStore.getState().challengeNotifications;
+    expect(preferences).toEqual({
+      enabled: true,
+      invitations: true,
+      start: true,
+      endingSoon: true,
+      ended: true,
+      leadChanges: false,
+    });
+    expect(mockMaybePrompt).not.toHaveBeenCalled();
+    expect(
+      screen.getByText(/Alerts use results refreshed on this phone/)
+    ).toBeTruthy();
+  });
+  it('permission denial leaves Challenge alerts disabled', async () => {
+    mockRequestPermission.mockResolvedValue('denied');
+    const screen = renderScreen();
+    fireEvent(
+      screen.getByLabelText('Challenge notifications'),
+      'valueChange',
+      true
+    );
+    await waitFor(() => expect(mockRequestPermission).toHaveBeenCalledTimes(1));
+    expect(
+      useAppPreferencesStore.getState().challengeNotifications.enabled
+    ).toBe(false);
+  });
+});

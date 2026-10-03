@@ -1,3 +1,4 @@
+import { challengeSurfaceLinking } from './src/services/challengeSurfaceLinking';
 import { useWearChallenges } from './src/hooks/useWearChallenges';
 import './global.css'
 import { getAppUrl } from './src/utils/appLinks';
@@ -361,6 +362,7 @@ function AppContent() {
 
   const linking = useMemo<LinkingOptions<RootStackParamList>>(() => ({
     prefixes: [getAppUrl()],
+    ...challengeSurfaceLinking,
     config: {
       initialRouteName: 'Tabs',
       screens: {
