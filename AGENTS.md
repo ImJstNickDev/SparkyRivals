@@ -175,6 +175,8 @@ Keep the upstream license, attribution, history, functionality, and package guid
   while preserving its fetch URL; push only to `origin`.
 - Existing SparkyFitness systems own canonical health/activity data. Do not add
   a second ingestion pipeline or copy health records into a competing store.
+- Challenge backend: see `docs/fork/CHALLENGES.md` for `/api/v2/challenges`,
+  consent/RLS, live canonical steps and the shared response contract.
 - Challenge scoring, reconciliation, and winners belong on the server. Mobile
   and watch clients consume server state; locally displayed progress is not an
   authoritative result.
