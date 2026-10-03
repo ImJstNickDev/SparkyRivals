@@ -54,6 +54,9 @@ export type TabParamList = {
 export type RootStackParamList = {
   Onboarding: undefined;
   Tabs: NavigatorScreenParams<TabParamList>;
+  Challenges: undefined;
+  ChallengeDetail: { id: string };
+  CreateChallenge: undefined;
   FamilyMembers: undefined;
   FamilyDiary: { familyUser: FamilyDiaryUser };
   FamilyMealDetail: {

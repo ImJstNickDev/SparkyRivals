@@ -99,6 +99,9 @@ import {
   SafeNutrientTrends,
   SafeExerciseStatistics,
   SafeCardioSession,
+  SafeChallenges,
+  SafeChallengeDetail,
+  SafeCreateChallenge,
   SafeFamilyMembers,
   SafeFamilyDiary,
   SafeFamilyMealDetail,
@@ -359,6 +362,9 @@ function AppContent() {
     config: {
       initialRouteName: 'Tabs',
       screens: {
+        Challenges: 'challenges',
+        CreateChallenge: 'challenges/new',
+        ChallengeDetail: 'challenges/:id',
         Tabs: {
           screens: {
             Dashboard: '',
@@ -445,6 +451,27 @@ function AppContent() {
               />
             )}
           </Stack.Screen>
+          <Stack.Screen
+            name="Challenges"
+            component={SafeChallenges}
+            options={createStackScreenOptions(t('challenges.title', { defaultValue: 'Challenges' }), {
+              headerBackButtonDisplayMode: 'minimal',
+            })}
+          />
+          <Stack.Screen
+            name="ChallengeDetail"
+            component={SafeChallengeDetail}
+            options={createStackScreenOptions(t('challenges.title', { defaultValue: 'Challenges' }), {
+              headerBackButtonDisplayMode: 'minimal',
+            })}
+          />
+          <Stack.Screen
+            name="CreateChallenge"
+            component={SafeCreateChallenge}
+            options={createStackScreenOptions(t('challenges.create', { defaultValue: 'Create Challenge' }), {
+              headerBackButtonDisplayMode: 'minimal',
+            })}
+          />
           <Stack.Screen
             name="FamilyMembers"
             component={SafeFamilyMembers}

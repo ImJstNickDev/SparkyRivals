@@ -1,3 +1,4 @@
+import ChallengeDashboardEntry from '../components/challenges/ChallengeDashboardEntry';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { CompositeScreenProps } from '@react-navigation/native';
 import { useFocusEffect } from '@react-navigation/native';
@@ -511,6 +512,9 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) => {
             to `selectedDate`. Visibility is a local app setting toggled from
             Dashboard Settings. */}
         <FastingGoalReconciler />
+        <ChallengeDashboardEntry
+          onPress={() => navigation.navigate('Challenges')}
+        />
         {orderedDashboardCards.map((cardKey) => {
           switch (cardKey) {
             case 'calorieRing':
