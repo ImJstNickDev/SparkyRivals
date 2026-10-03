@@ -46,8 +46,8 @@ acceptance is still pending. Milestone 5 implements the
 state and prebuild-safe native sources. PR #6 merged at
 `a132e3f8ca6fd8a449cf17b8c5b7ee3d9b66713d`; Android/Compose compilation and paired
 hardware acceptance remain outstanding. Milestone 6 adds
-[Workout Time Challenges](WORKOUT_CHALLENGES.md) across server and clients, pending
-feature review. See [validation evidence](WORKOUT_VALIDATION.md).
+[Workout Time Challenges](WORKOUT_CHALLENGES.md) across server and clients, merged
+as PR #7 at `e2fee2726ebae4a751da7c992da694efaeb0713e`. See [validation evidence](WORKOUT_VALIDATION.md).
 
 GitHub Actions remain **disabled**. Inherited publishing/mutation jobs are now
 guarded off in forks; validation enablement is documented, not performed. No store
@@ -106,3 +106,10 @@ Architecture and bootstrap baseline documents describe the pinned audit commit;
 owned build documents describe milestone 1. Recheck source and update the assumptions after meaningful merges.
 They are repository documentation: `docs/.vitepress/config.mts` builds `docs/src`,
 so `docs/fork` is deliberately outside the upstream documentation website.
+
+### Milestone 7
+
+[Challenge polish](CHALLENGE_POLISH.md) adds editable Rematch, local notifications,
+phone widgets and read-only watch surfaces. [Validation](POLISH_VALIDATION.md)
+separates Linux evidence from outstanding native/device acceptance. PR #7 is merged;
+Milestone 7 remains on its review branch until explicitly approved for merge.

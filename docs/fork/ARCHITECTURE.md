@@ -1,5 +1,13 @@
 # Architecture audit and future Challenges design
 
+## Challenge polish extension — Milestone 7
+
+[CHALLENGE_POLISH.md](CHALLENGE_POLISH.md) documents the implemented Rematch,
+local notification and native widget/Tile/complication additions. These reuse
+current score units, account guards and source freshness; watches remain read-only.
+Earlier milestone scope statements below describe their original implementation.
+Native compile/device acceptance remains open in [POLISH_VALIDATION.md](POLISH_VALIDATION.md).
+
 ## Workout Time extension — Milestone 6
 
 [WORKOUT_CHALLENGES.md](WORKOUT_CHALLENGES.md) documents the implemented second
@@ -368,7 +376,8 @@ continues flowing through phone Health Connect and existing canonical storage.
 
 [WEAR_OS_CHALLENGES.md](WEAR_OS_CHALLENGES.md) documents the protocol, reinstall
 reset boundary, identity/signing, tests and remaining native/device acceptance.
-There is no Wear mutation channel, workout feature, Tile or complication.
+There is no Wear mutation channel or workout logging. Milestone 7 adds local-only
+Tile/complication readers of the same persisted Challenge receipt.
 
 ## Future client experience
 

@@ -279,3 +279,18 @@ configured. The watch feature is required and standalone is false.
 source maps, limits, recovery and the physical Galaxy Watch checklist. This Linux
 host ran native protocol JVM tests and metadata checks, but no Gradle APK build,
 Compose instrumentation, emulator or physical-watch acceptance.
+
+## Milestone 7 native surface validation
+
+No extension target, application identity or signing interface changed. The phone
+WidgetKit bundle and watch-widget bundle gain Challenge kinds. Android's existing
+widget plugin adds a third receiver. Wear adds protected Tile/complication services
+and isolated AndroidX dependencies; `validate:native` checks their generated wiring.
+
+Run two clean owned development prebuilds with the same configuration and compare
+native metadata as above. `scripts/test-wear-models.py` now includes surface model
+and guarded destination tests. On macOS, `scripts/test-watch-models.sh` includes
+Challenge complication projection checks. Neither Linux prebuild nor the Kotlin
+protocol harness compiles a Swift/Android application binary. See
+[CHALLENGE_POLISH.md](CHALLENGE_POLISH.md#milestone-8-native-acceptance-checklist-not-executed-here)
+for widget, complication, Tile, actual notification and accessibility acceptance.

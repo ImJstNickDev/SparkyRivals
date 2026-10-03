@@ -121,3 +121,10 @@ When searching, ignore `node_modules/`, `dist/`, and every locale except `public
 - Challenge metric presentation: `pages/Challenges/presentation.ts` uses the
   shared duration formatter; `useInvalidateKeys` refreshes results after exercise
   edits. See `../docs/fork/WORKOUT_CHALLENGES.md` for unit/coverage contracts.
+
+## Challenge Rematch
+
+Completed/cancelled accepted members can open `/challenges/new?rematch=<id>`.
+The existing create form uses `prepareChallengeRematch` from shared for dates and
+eligible former participants; submission remains ordinary create/invite consent.
+See `../docs/fork/CHALLENGE_POLISH.md` and the Challenge screen/helper tests.

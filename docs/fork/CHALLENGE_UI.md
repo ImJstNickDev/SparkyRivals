@@ -1,5 +1,13 @@
 # Challenge clients — Milestone 3
 
+## Challenge polish extension — Milestone 7
+
+[CHALLENGE_POLISH.md](CHALLENGE_POLISH.md) documents the implemented Rematch,
+local notification and native widget/Tile/complication additions. These reuse
+current score units, account guards and source freshness; watches remain read-only.
+Earlier milestone scope statements below describe their original implementation.
+Native compile/device acceptance remains open in [POLISH_VALIDATION.md](POLISH_VALIDATION.md).
+
 ## Workout Time extension — Milestone 6
 
 [WORKOUT_CHALLENGES.md](WORKOUT_CHALLENGES.md) documents the implemented second
@@ -168,6 +176,6 @@ using this mobile query cache and the existing composed application context.
 Phone mutations and canonical health refresh invalidate the shared Challenge
 family, so refreshed results also reach the Watch. Milestone 5 adds a
 [read-only Wear OS companion](WEAR_OS_CHALLENGES.md) through the same compact
-projection and a durable Android Data Layer publisher. Watch mutations and
-complications remain later work. No service deployment or Docker persistence change is involved:
+projection and a durable Android Data Layer publisher. Watch mutations remain deferred. Milestone 7 adds read-only native surfaces
+and Rematch/local notifications; see [CHALLENGE_POLISH.md](CHALLENGE_POLISH.md). No service deployment or Docker persistence change is involved:
 production remains a separate checkout with bind-mounted `dockerdata/` only.
