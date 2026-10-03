@@ -1,6 +1,6 @@
 # Application identity and signing audit
 
-## Current milestone 1 status — 2026-10-03
+## Current owned identity status — 2026-10-03
 
 The implementation now resolves custom build identities centrally. The bootstrap
 inventory below is retained as a **historical** source/risk map; its “current”
@@ -16,11 +16,11 @@ Use this section and [BUILDING.md](BUILDING.md) for current behavior.
 | Expo widgets / Live Activity | `<phone>.ExpoWidgetsTarget`; custom override cannot redirect away from host                                                                               | 1 derived                                                     |
 | Watch / Watch widget         | `<phone>.watchkitapp` / `<phone>.watchkitapp.watch-widget`; companion plist points at phone                                                               | 1 derived                                                     |
 | App Groups                   | All five targets use `group.<phone>.shared`; overrides validated against resolved variant namespace                                                       | 1; 4 for persisted shared storage                             |
-| Apple Team                   | Existing `EXPO_DEV_APPLE_TEAM_ID` and `EXPO_PROD_APPLE_TEAM_ID`; preview uses production team; no default team                                            | 1; account setup pending                                      |
+| Apple Team                   | Existing `EXPO_DEV_APPLE_TEAM_ID` and `EXPO_PROD_APPLE_TEAM_ID`; owned profiles supply `U5K88Y67DL` for every variant                                            | 1; provisioning/device acceptance pending                                      |
 | Primary/Watch schemes        | `EXPO_APP_SCHEME` and optional Watch root; injected into Swift metadata/Kotlin templates; JS reads Expo runtime config                                    | 1                                                             |
 | Expo dev-client scheme       | `exp+sparkyrivals` only in custom development; no generated dev-client scheme in custom preview/production                                                | 1 derived                                                     |
 | Native auth                  | Server `SPARKY_FITNESS_MOBILE_AUTH_SCHEMES` allowlist plus upstream scheme; server constructs fixed callback, validates selectors, preserves fragments    | 1; security contract 4                                        |
-| EAS owner/project            | `EXPO_OWNER`, `EXPO_EAS_PROJECT_ID` required for normal custom builds; upstream UUID rejected. Not authenticated, actual values pending                   | 1; account setup pending                                      |
+| EAS owner/project            | `EXPO_OWNER`, `EXPO_EAS_PROJECT_ID` required for normal custom builds; upstream UUID rejected. Owned profiles: `imjstnickdev` / `63f08cec-3f87-4cee-89be-bebf970b6262`; EAS session verified                   | 1; provisioning/device acceptance pending                                      |
 | Unsigned inspection          | Explicit `APP_CONFIG_ONLY=1`; missing EAS metadata omitted; EAS builders/Android release tasks reject it                                                  | 1; not a distribution mode                                    |
 | App Store Connect            | Upstream `6757314392` submission profile removed; no fork store destination configured                                                                    | Resolved hazard; owned listing/setup pending                  |
 | Android release signing      | Prebuild plugin consumes `MYAPP_RELEASE_*` Gradle props/env or final EAS-injected config; release cannot select debug fallback                            | 1; permanent key and native signed validation pending         |

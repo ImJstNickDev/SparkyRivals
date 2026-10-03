@@ -1,4 +1,4 @@
-import { execFileSync, spawnSync } from 'child_process';
+import { execFileSync } from 'child_process';
 import path from 'path';
 import fs from 'fs';
 import os from 'os';
@@ -36,18 +36,20 @@ it.each(['development', 'preview', 'production'])(
       `com.imjstnick.sparkyrivals${variant === 'production' ? '' : variant === 'development' ? '.dev' : '.preview'}`
     );
     expect(identity.buildNumber).toBe(100);
-    expect(identity.easProjectId).toBeUndefined();
+    expect(identity.easProjectId).toBe('63f08cec-3f87-4cee-89be-bebf970b6262');
+    expect(identity.owner).toBe('imjstnickdev');
+    expect(identity.appleTeamId).toBe('U5K88Y67DL');
   }
 );
-it('requires real ownership for ordinary derivative configuration', () => {
-  const result = spawnSync(
+it('resolves owned production identity for internal distribution without inspection mode', () => {
+  const result = execFileSync(
     process.execPath,
     [
       'scripts/with-build-profile.mjs',
-      'sparkyrivals-production',
+      'sparkyrivals-production-internal',
       process.execPath,
       '-e',
-      'require("./app.identifiers").resolveAppIdentity()',
+      'console.log(JSON.stringify(require("./app.identifiers").resolveAppIdentity()))',
     ],
     {
       cwd: root,
@@ -55,8 +57,35 @@ it('requires real ownership for ordinary derivative configuration', () => {
       encoding: 'utf8',
     }
   );
-  expect(result.status).not.toBe(0);
-  expect(result.stderr).toContain('EXPO_EAS_PROJECT_ID');
+  expect(JSON.parse(result)).toMatchObject({
+    mode: 'custom',
+    variant: 'production',
+    configOnly: false,
+    androidPackage: 'com.imjstnick.sparkyrivals',
+    iosBundleIdentifier: 'com.imjstnick.sparkyrivals',
+    scheme: 'sparkyrivals',
+    watchScheme: 'sparkyrivals-watch',
+    appGroup: 'group.com.imjstnick.sparkyrivals.shared',
+    easProjectId: '63f08cec-3f87-4cee-89be-bebf970b6262',
+    owner: 'imjstnickdev',
+    appleTeamId: 'U5K88Y67DL',
+  });
+  expect(profiles.build['sparkyrivals-production-internal']).toMatchObject({
+    extends: 'sparkyrivals-production',
+    distribution: 'internal',
+    developmentClient: false,
+    ios: { credentialsSource: 'remote' },
+  });
+});
+
+it('keeps owned account configuration out of default upstream profiles', () => {
+  for (const profile of ['development', 'preview', 'production'] as const) {
+    const identity = resolveAppIdentity(profiles.build[profile].env);
+    expect(identity.mode).toBe('upstream');
+    expect(identity.owner).toBeUndefined();
+    expect(identity.appleTeamId).toBe('');
+    expect(identity.easProjectId).toBe('498a86c5-344f-4d2c-9033-dfd720e4a383');
+  }
 });
 it('uses remote incrementing versions without any submission destination', () => {
   expect(profiles.cli.appVersionSource).toBe('remote');

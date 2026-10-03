@@ -1,6 +1,6 @@
 # Building SparkyRivals
 
-Milestone 1 implementation, validated on Linux on 2026-10-03. Start in
+Owned build implementation, updated during Milestone 8A on 2026-10-03. Start in
 `SparkyFitnessMobile/` after a root `pnpm install --frozen-lockfile`. Use the pinned
 pnpm version and Node 24 (validated: 24.20.0). Native projects are generated and
 ignored; never make durable edits inside `ios/` or `android/`.
@@ -23,7 +23,10 @@ production identity. **Custom preview is isolated.**
 | `sparkyrivals-production`  | SparkyRivals         | `com.imjstnick.sparkyrivals`         | `sparkyrivals`         | `sparkyrivals-watch`         |
 
 All three use slug `sparkyrivals`. `sparkyrivals-base` holds common EAS configuration;
-select one of its three child profiles for builds. `pnpm build:profile <profile>
+select a child profile for builds. `sparkyrivals-production-internal` extends
+production with internal distribution, a bundled release client (no development
+client), and EAS-managed iOS credentials. It retains the production package, bundle,
+schemes and App Group; it does not submit to a store. `pnpm build:profile <profile>
 <command> [args...]` applies inherited profile variables to local commands too.
 The ordinary `development`, `preview`, `production` EAS profiles retain upstream
 identity defaults. Never select them to distribute SparkyRivals.
@@ -34,11 +37,13 @@ Custom inputs describe **production roots**, not already-suffixed variant IDs:
   `EXPO_ANDROID_PACKAGE`, `EXPO_IOS_BUNDLE_IDENTIFIER`, `EXPO_APP_SCHEME`.
 - `EXPO_WATCH_SCHEME` optionally supplies a root Watch scheme; the variant is
   inserted before its `-watch` suffix. Otherwise it derives from the phone scheme.
-- The owned EAS account/project require `EXPO_OWNER` and `EXPO_EAS_PROJECT_ID`.
+- The owned profiles supply `EXPO_OWNER=imjstnickdev` and
+  `EXPO_EAS_PROJECT_ID=63f08cec-3f87-4cee-89be-bebf970b6262`.
   The known upstream UUID, upstream bundle roots/schemes, malformed inputs and
   incomplete custom configuration are rejected. No replacement UUID is invented.
 - Apple team: `EXPO_DEV_APPLE_TEAM_ID` for development;
-  `EXPO_PROD_APPLE_TEAM_ID` for preview/production. Empty means unprovisioned,
+  `EXPO_PROD_APPLE_TEAM_ID` for preview/production. Both owned-profile values are
+  `U5K88Y67DL`. In generic custom mode, empty means unprovisioned,
   never a fallback to another developer's team. Supplied IDs must have 10 letters/digits.
 - App Group normally derives as `group.<resolved-phone-bundle>.shared`.
   `IOS_APP_GROUP_DEV`, `IOS_APP_GROUP_PREVIEW`, `IOS_APP_GROUP_PROD` may override it
@@ -92,28 +97,37 @@ be compiled with signing disabled.
 
 ## Expo / EAS ownership setup
 
-Verified state: EAS CLI 24.10.0 reported **Not logged in**. No account owner or owned
-project UUID is known; no project or credentials were created or modified.
-GitHub identity does not determine Expo ownership.
+Verified during Milestone 8A with EAS CLI 24.10.0:
 
-1. Log in deliberately with an owned Expo account; verify `eas whoami`.
-2. Set `EXPO_OWNER` to that actual account/organization. With
-   `APP_CONFIG_ONLY=1`, run `pnpm build:profile sparkyrivals-production eas init`
-   to create/select the **sparkyrivals** project under that owner. Inspect the
-   proposed owner/name before confirming. Never select upstream's project.
-3. Record the **actual** returned UUID as `EXPO_EAS_PROJECT_ID`. Dynamic config
-   may prevent CLI auto-editing: keep owner/UUID in ignored `.env.local` or the
-   build environment, and in the corresponding EAS environment for remote builds.
-   Do not change `app.json`'s upstream defaults to link this derivative.
-4. Unset `APP_CONFIG_ONLY`, resolve `expo config --type public` through the profile,
-   and verify owner, project UUID, all bundle IDs and variant before any build.
-5. Configure owned credentials and version counters separately. No submission
-   profile exists. A future store submission needs an explicitly reviewed owned
-   App Store Connect app ID / Google Play configuration; none is supplied here.
+- Authenticated account: `imjstnick`, with owner access to organization `imjstnickdev`.
+- Project: `@imjstnickdev/sparkyrivals`.
+- Project UUID: `63f08cec-3f87-4cee-89be-bebf970b6262`.
+- Apple team: `U5K88Y67DL` (maintainer-provided active paid membership).
 
-Use an explicit EAS CLI version in reproducible CI. The profile wrapper works with
-an installed `eas` or `pnpm dlx eas-cli@24.10.0`. Local env files are ignored.
-Never put signing secrets in `extra`, `EXPO_PUBLIC_*`, tracked env files or logs.
+The non-secret ownership values live in `eas.json`'s existing `sparkyrivals-base`
+profile environment. The generic resolver remains `app.identifiers.js`; the
+upstream profiles retain upstream defaults. The local profile wrapper uses the
+same inheritance as EAS, so these values need no private local override.
+`extra.eas.projectId` and `ios.appleTeamId` resolve through the existing config.
+
+For an internal iPhone/Watch acceptance build, use:
+
+```sh
+pnpm build:profile sparkyrivals-production-internal pnpm dlx eas-cli@24.10.0 project:info
+pnpm build:profile sparkyrivals-production-internal pnpm dlx eas-cli@24.10.0 build \
+  --platform ios --profile sparkyrivals-production-internal
+```
+
+This requests an EAS native build and can consume account build resources. It
+never submits to App Store Connect. The maintainer has registered an iPhone for
+internal distribution. Let EAS manage certificates/profiles for the generated
+phone, widget, Live Activity, Watch and Watch-widget targets. Do not pre-create
+portal resources. Stop at interactive Apple login/2FA and have the maintainer
+complete the command locally; never collect passwords or codes in chat.
+
+Build-only ownership/signing settings do not belong in Docker/Helm server runtime
+configuration. Never put signing secrets in `extra`, `EXPO_PUBLIC_*`, tracked env
+files or logs. There is still no store submission profile/destination.
 
 ## Android signing and build numbers
 
@@ -158,16 +172,17 @@ Use SDK 36 and the NDK/Gradle versions selected by the generated project.
 
 ## Apple registration and provisioning
 
-No Apple Developer session/team/membership was verified. Both team environment
-variables were unset. Linux prebuild warnings about the missing team are expected.
+The maintainer confirmed active paid Apple Developer membership and an iPhone
+registered through EAS. The owned profiles supply team `U5K88Y67DL`. Generated
+identity/entitlement validation is distinct from issued provisioning profiles and
+actual native/device acceptance; record those results separately.
 
 For each variant you intend to install/distribute:
 
-1. Obtain/verify an owned Apple Developer team with the required capability and
-   distribution access. Set the appropriate team variable. Do not copy a team ID
-   from an upstream contributor's Xcode configuration.
-2. Register **all five explicit App IDs** listed above and the variant App Group;
-   assign the group to all five targets. Keep the Watch companion relationship.
+1. Use the owned profile and verify `ios.appleTeamId = U5K88Y67DL`.
+2. Let EAS manage **all five explicit App IDs** listed above and the variant App
+   Group. Inspect its generated extension metadata before provisioning; assign the
+   group to all five targets and keep the Watch companion relationship.
 3. Provision phone HealthKit/background delivery, time-sensitive notifications,
    and the notifications entitlement; provision Watch HealthKit with background
    workout processing. Preserve purpose strings and existing background modes.

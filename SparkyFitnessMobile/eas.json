@@ -37,6 +37,10 @@
         "EXPO_WEAR_ENABLED": "1",
         "EXPO_APP_NAME": "SparkyRivals",
         "EXPO_APP_SLUG": "sparkyrivals",
+        "EXPO_OWNER": "imjstnickdev",
+        "EXPO_EAS_PROJECT_ID": "63f08cec-3f87-4cee-89be-bebf970b6262",
+        "EXPO_DEV_APPLE_TEAM_ID": "U5K88Y67DL",
+        "EXPO_PROD_APPLE_TEAM_ID": "U5K88Y67DL",
         "EXPO_ANDROID_PACKAGE": "com.imjstnick.sparkyrivals",
         "EXPO_IOS_BUNDLE_IDENTIFIER": "com.imjstnick.sparkyrivals",
         "EXPO_APP_SCHEME": "sparkyrivals",
@@ -75,6 +79,17 @@
       "distribution": "store",
       "android": {
         "buildType": "app-bundle"
+      }
+    },
+    "sparkyrivals-production-internal": {
+      "extends": "sparkyrivals-production",
+      "distribution": "internal",
+      "developmentClient": false,
+      "ios": {
+        "credentialsSource": "remote"
+      },
+      "android": {
+        "buildType": "apk"
       }
     }
   }
