@@ -31,4 +31,4 @@ classpath = os.pathsep.join(str(p) for p in sorted(cache.glob('*.jar')))
 sources = sorted((root / 'targets/wear/protocol').rglob('*.kt')) + sorted((root / 'targets/wear/src/test').rglob('*.kt'))
 with tempfile.TemporaryDirectory(prefix='wear-models-') as output:
     subprocess.run([java, '-cp', classpath, 'org.jetbrains.kotlin.cli.jvm.K2JVMCompiler', '-no-stdlib', '-no-reflect', '-jvm-target', '17', '-classpath', classpath, '-d', output, *map(str, sources)], check=True)
-    subprocess.run([java, '-cp', os.pathsep.join([output, str(root / '__tests__/fixtures'), classpath]), 'org.junit.runner.JUnitCore', 'com.sparkyrivals.companion.ChallengeProtocolTest'], check=True)
+    subprocess.run([java, '-cp', os.pathsep.join([output, str(root / '__tests__/fixtures'), classpath]), 'org.junit.runner.JUnitCore', 'com.sparkyrivals.companion.ChallengeProtocolTest', 'com.sparkyrivals.companion.ChallengeSurfaceTest'], check=True)

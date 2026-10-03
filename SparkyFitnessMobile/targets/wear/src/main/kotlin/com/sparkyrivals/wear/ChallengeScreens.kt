@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import com.sparkyrivals.companion.allowedSurfaceDestination
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,11 +45,14 @@ import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
 @Composable
-fun ChallengeApp(state: CompanionState, now: Long) {
+fun ChallengeApp(state: CompanionState, now: Long, surfaceLink: Pair<String?,String?> = null to null) {
     MaterialTheme {
         // New account/clear resets navigation and cannot retain a captured old item.
         key(state.receipt.snapshot.accountKey, state.receipt.resetRequired) {
             val nav = rememberSwipeDismissableNavController()
+            LaunchedEffect(surfaceLink) {
+                allowedSurfaceDestination(state.receipt.snapshot,surfaceLink.first,surfaceLink.second)?.let { nav.navigate("detail/${Uri.encode(it)}") }
+            }
             AppScaffold {
                 SwipeDismissableNavHost(navController = nav, startDestination = "challenges") {
                     composable("challenges") {
