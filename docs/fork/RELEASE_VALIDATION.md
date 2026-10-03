@@ -76,6 +76,27 @@ that it opens to onboarding. This is a user-observed installation/launch result,
 separate from IPA inspection and cloud compilation. Authentication, HealthKit,
 widgets and paired Apple Watch behavior are not established by that confirmation.
 
+### Apple Watch installation blocker (2026-10-04)
+
+The maintainer reported “This app could not be installed at this time” on an
+Apple Watch Series 7 (GPS), watchOS 26.1 (23S37). IPA inspection confirms both
+Watch targets have `MinimumOSVersion=10.0`, WatchOS platform/device-family metadata,
+and arm64_32/arm64 executable slices. The OS minimum is not the blocker found here.
+
+Both embedded Watch provisioning profiles contain exactly one allowed device:
+the registered **iPhone**, not the Watch. A fresh EAS device listing for the owned
+team also contains only that enabled iPhone. Earlier profile checks established
+team, capabilities, certificate and nonempty device lists, but did not establish
+the presence of the physical Watch's UDID. Successful Xcode export does not
+establish install eligibility for that Watch.
+
+Next: obtain the paired Watch UDID privately with the maintainer's physical-device
+assistance, register it through the owned provisioning flow, refresh the Watch
+app/widget profiles and verify its inclusion in the next exported artifact before
+retrying installation. Reusing the existing profiles unchanged cannot fix this
+omission. Device registration/Apple authentication remain human-interaction gates.
+No certificate rotation, OS update or deployment-target change was performed.
+
 ## Android compilation
 
 Actual toolchain: JDK 17.0.20.1 explicitly selected, SDK 36, Build Tools 36.0.0,

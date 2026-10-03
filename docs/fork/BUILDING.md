@@ -254,6 +254,16 @@ For each variant you intend to install/distribute:
    background sync, complications/widget links, Live Activities and browser auth
    on devices. Back up signing recovery material securely or use owned EAS custody.
 
+For ad-hoc Watch installation, verify the **Watch's own UDID** is registered and
+included in both embedded Watch app/widget profiles. Registering only the paired
+iPhone is insufficient. Build 1005 compiled/exported successfully but its Watch
+profiles contained only the iPhone UDID, blocking physical Watch acceptance.
+Inspect profile device membership privately before requesting another install;
+never commit device IDs. A non-interactive build that merely reuses the same
+profiles does not add the missing device. Follow Apple's
+[registered-device distribution guidance](https://developer.apple.com/documentation/xcode/distributing-your-app-to-registered-devices)
+and stop for device registration or Apple authentication before refreshing profiles.
+
 The inherited manual `ios-build.yml` now selects a profile and discovers generated
 workspace/launch IDs. It compiles unsigned simulators, not device provisioning.
 See [release acceptance](RELEASE_VALIDATION.md) for the current EAS build result
