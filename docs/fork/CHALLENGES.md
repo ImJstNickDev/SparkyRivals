@@ -90,3 +90,99 @@ remaining is zero; dates stay visible. Read transactions use a consistent snapsh
 Future clients can obtain eligible account IDs from their existing Family &
 Friends relationship list, then send the selected ID. The API revalidates the
 relationship. Never add arbitrary account discovery merely to populate this flow.
+
+## Authoritative results
+
+`GET /api/v2/challenges/:id/leaderboard` requires accepted membership. It returns
+`ChallengeLeaderboardResponse`: `contract_version=1`, Challenge metadata/progress,
+`calculated_at`, `reconciles=true`, `scored_through`, ranking availability, leader
+IDs, lead margin, and accepted participant entries. Entries contain display name,
+total score, rank/tie/gaps, daily points, today's point when active, and coverage.
+
+The repository uses a repeatable-read, read-only transaction with three SELECTs
+regardless of participant count: visible Challenge, database transaction time,
+and `challenge_step_points(id)`. The latter is a narrow SECURITY DEFINER projection
+with a fixed search path and no caller-supplied user/date selector. It verifies
+accepted self-context membership, selects accepted peers only, and joins canonical
+`check_in_measurements` within the immutable date range. It returns only user ID,
+display name, calendar date, steps and the row update timestamp. It cannot return
+body measurements or arbitrary health records. Cancellation returns no points.
+
+The existing `(user_id, entry_date)` unique index supports these bounded joins.
+No index is added to an existing health table. New indexes support creator history
+and user membership lookup. Bounds limit a response to 100 people × 366 days;
+there are no per-participant queries. Detail uses two SELECTs and list uses one.
+
+### Scoring, missing data and ties
+
+- Score is the sum of current canonical non-null `check_in_measurements.steps`
+  for accepted participants from start through `min(end, today)` inclusive.
+  Future dates are not read/scored early. Acceptance during an active Challenge
+  consents to its entire date range, including earlier days.
+- Missing rows and null steps score zero with `present=false`; an explicit stored
+  zero has `present=true`. Future daily points have `eligible=false`, zero value
+  and no presence claim. This never claims an unsynced day was a measured zero.
+- Coverage reports `days_with_steps`, `eligible_days` and
+  `latest_data_update_at` (max update/creation timestamp of contributing rows).
+  The timestamp belongs to the check-in row, so edits to another column can also
+  advance it. It proves neither provider completeness nor the last device sync.
+- Ranks use competition ranking: 1, 1, 3. Equal totals share rank and `is_tied=true`;
+  UUID order makes response ordering deterministic without creating a winner.
+  `gap_to_leader` is the leader's total minus this score; `gap_to_next_rank` compares
+  with the next strictly lower score, or is null. A tied lead has margin zero;
+  fewer than two entries have a null lead margin.
+- Upcoming entries show zero progress with null ranks, no leaders and
+  `scored_through=null`. Active and completed Challenges rank current totals.
+  Cancelled Challenges return an empty leaderboard and no ranking/step disclosure.
+- Scores are recomputed on every request; no durable winner, max-wins layer,
+  materialized results or cache exists. Lower values, cleared/deleted rows and
+  late arrivals immediately change subsequent results, even after completion.
+  Departure removes that person's values from subsequent results. In-flight
+  snapshots retain normal database transaction consistency; revoke/accept takes
+  effect for later reads. Clients must refresh before presenting current results.
+
+### Calendar and timezone contract
+
+Challenge start/end are inclusive DATE values. Its explicit IANA zone controls
+lifecycle, current day and eligible date cutoff using the shared timezone helpers
+and the database transaction's clock. Stored canonical dates remain unchanged.
+There is no UTC conversion of DATE values, and DST does not add/subtract a calendar
+day. Different participant/account/device timezones and travel retain the existing
+SparkyFitness date buckets. Historical daily aggregates have no intervals from
+which arbitrary timezone rebucketing could be reconstructed. Future sub-day
+metrics must define a separately supported canonical adapter and timezone policy.
+
+### Automated downward corrections: deferred, not hidden
+
+`healthDataHandlers.prepareCheckInMeasurement` reduces a step record to its numeric
+value; the check-in batch carries day and measurement fields, not reliable source
+identity, sample revision, complete-day coverage or aggregation provenance.
+`measurementRepository.upsertStepData` and `bulkUpsertCheckInMeasurements` protect
+automated totals with `GREATEST`. The canonical row has no provider provenance.
+A partial/out-of-order read can therefore be indistinguishable from a legitimate
+provider decrease. `daily_health_metrics` has some provider summaries but does not
+cover all writers or establish precedence over the canonical check-in total.
+
+This milestone leaves ingestion unchanged. An automated lower total can still be
+discarded before Challenges see it. Manual `upsertCheckInMeasurements` overwrites,
+including decreases/null, and the leaderboard immediately follows that canonical
+row. Regression tests exercise both behaviors separately. The safest future
+change is to evolve the existing ingestion contract and canonical storage with
+reliable source/aggregation identity, revision/completeness bounds and explicit
+cross-source precedence, then atomically replace a prior authoritative total only
+when that provenance proves it supersedes it. Do not add a Challenge health store
+or replace all sources with last-write-wins.
+
+## Extension boundary
+
+Metrics and scoring modes are explicit constrained enums (`steps`, `sum`) mirrored
+in SQL and shared schemas. Future metrics add a canonical read adapter, units,
+consent scope, constraints and tests; they do not require changing the N-member
+model. No arbitrary JSON rule engine or scoring DSL exists. Recurrence, goals,
+workout scoring and social extras remain later milestones.
+
+Future web/mobile/watch clients consume these server results. A phone can compose
+a compact Watch snapshot using the existing WatchConnectivity architecture. Wear
+OS remains future work. No client should duplicate ranking logic or declare an
+irreversible winner. There is no anti-cheat guarantee: canonical values can be
+manually edited, and coverage cannot prove a complete provider sync.

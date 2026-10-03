@@ -112,3 +112,50 @@ export const challengeListResponseSchema = z.object({
   has_more: z.boolean(),
 });
 export type ChallengeListResponse = z.infer<typeof challengeListResponseSchema>;
+
+export const challengeDailyScoreSchema = z.object({
+  date: challengeDaySchema,
+  value: z.number().int(),
+  /** True only for a non-null canonical steps value (including an explicit zero). */
+  present: z.boolean(),
+  /** Future days have not become eligible; their canonical rows are not read. */
+  eligible: z.boolean(),
+});
+export type ChallengeDailyScore = z.infer<typeof challengeDailyScoreSchema>;
+export const challengeLeaderboardEntrySchema = z.object({
+  user_id: z.uuid(),
+  display_name: z.string(),
+  membership_status: z.literal("accepted"),
+  total_score: z.number().int(),
+  /** Competition ranking: equal scores share a rank; subsequent ranks skip. */
+  rank: z.number().int().positive().nullable(),
+  is_tied: z.boolean(),
+  gap_to_leader: z.number().int().nonnegative().nullable(),
+  gap_to_next_rank: z.number().int().nonnegative().nullable(),
+  daily: z.array(challengeDailyScoreSchema),
+  today: challengeDailyScoreSchema.nullable(),
+  coverage: z.object({
+    days_with_steps: z.number().int().nonnegative(),
+    eligible_days: z.number().int().nonnegative(),
+    latest_data_update_at: z.iso.datetime().nullable(),
+  }),
+});
+export type ChallengeLeaderboardEntry = z.infer<
+  typeof challengeLeaderboardEntrySchema
+>;
+export const challengeLeaderboardResponseSchema = z.object({
+  contract_version: z.literal(1),
+  challenge: challengeResponseSchema,
+  calculated_at: z.iso.datetime(),
+  /** Completed results still change when canonical data is corrected. */
+  reconciles: z.literal(true),
+  scored_through: challengeDaySchema.nullable(),
+  ranking_available: z.boolean(),
+  leader_user_ids: z.array(z.uuid()),
+  /** Null with fewer than two competitors or unavailable ranking; zero on a tie. */
+  lead_margin: z.number().int().nonnegative().nullable(),
+  entries: z.array(challengeLeaderboardEntrySchema),
+});
+export type ChallengeLeaderboardResponse = z.infer<
+  typeof challengeLeaderboardResponseSchema
+>;

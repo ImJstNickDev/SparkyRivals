@@ -5,6 +5,7 @@ import {
   renameChallengeRequestSchema,
   challengeDetailResponseSchema,
   challengeListResponseSchema,
+  challengeLeaderboardResponseSchema,
 } from '@workspace/shared';
 export {
   createChallengeRequestSchema,
@@ -16,6 +17,9 @@ export {
 
 // Keep OpenAPI shapes generated from the same contract clients consume.
 export const challengeOpenApiSchemas = {
+  ChallengeLeaderboard: z.toJSONSchema(challengeLeaderboardResponseSchema, {
+    target: 'openapi-3.0',
+  }),
   CreateChallenge: z.toJSONSchema(createChallengeRequestSchema, {
     target: 'openapi-3.0',
   }),

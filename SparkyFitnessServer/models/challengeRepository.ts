@@ -157,4 +157,33 @@ async function update(
     return (result.rowCount ?? 0) > 0;
   });
 }
-export default { create, detail, list, invite, respond, update };
+export interface ChallengeStepPoint {
+  user_id: string;
+  display_name: string;
+  entry_date: string | null;
+  steps: number | null;
+  data_updated_at: Date | null;
+}
+async function leaderboard(actor: string, id: string) {
+  return withClient(
+    actor,
+    async (client) => {
+      const challenge = await readChallenge(client, id);
+      if (!challenge) return null;
+      const clock = await client.query<{ evaluated_at: Date }>(
+        'SELECT CURRENT_TIMESTAMP AS evaluated_at'
+      );
+      const points = await client.query<ChallengeStepPoint>(
+        'SELECT * FROM public.challenge_step_points($1)',
+        [id]
+      );
+      return {
+        challenge,
+        points: points.rows,
+        evaluated_at: clock.rows[0]!.evaluated_at,
+      };
+    },
+    true
+  );
+}
+export default { create, detail, list, invite, respond, update, leaderboard };

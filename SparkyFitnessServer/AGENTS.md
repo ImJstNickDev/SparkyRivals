@@ -76,6 +76,8 @@ pnpm exec eslint routes/v2/foodRoutes.ts services/foodCoreService.ts
 - `models/` - PostgreSQL repositories and persistence helpers
 - `services/challengeService.ts` and `models/challengeRepository.ts` — SparkyRivals
   Challenge consent/lifecycle; self context only, independent of family delegation.
+  `services/challengeLeaderboardService.ts` scores canonical steps on request through
+  the narrow SQL `challenge_step_points` projection; no cached winner or health copy.
   Read `../docs/fork/CHALLENGES.md` before changing competition permissions or scoring.
 - `middleware/` - auth, permissions, uploads, and shared Express middleware
 - `utils/uploadsPath.ts` - the uploads root plus the resolver and containment guard for stored `file_path` values; use it instead of re-deriving `SPARKY_FITNESS_CUSTOM_UPLOADS_DIRECTORY`

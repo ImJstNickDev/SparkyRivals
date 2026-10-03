@@ -197,3 +197,10 @@ triggers enforce immutable rules/identities, timestamps, transitions and capacit
 serializing membership writes on the parent. There are no application DELETE
 policies; account deletion cascades. A switched context is rejected even if the
 actor otherwise belongs to the Challenge. No check-in/diary policy is broadened.
+
+`challenge_step_points(challenge_id)` is the sole Challenge health projection:
+accepted self-context caller, accepted peers, immutable date bounds through today,
+noncancelled competitions, and only daily steps/update timestamps plus display
+names. It uses a fixed definer search path and accepts no target user or date
+range. A participant still cannot SELECT the opponent's full check-in row.
+`challenge_roster` similarly projects display names without granting profile reads.

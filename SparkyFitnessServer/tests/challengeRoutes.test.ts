@@ -4,6 +4,7 @@ import express from 'express';
 import cookieParser from 'cookie-parser';
 // @ts-expect-error TS(7016): no type declarations shipped for supertest
 import request from 'supertest';
+import { getChallengeLeaderboard } from '../services/challengeLeaderboardService.js';
 import service from '../services/challengeService.js';
 import router from '../routes/v2/challengeRoutes.js';
 import { authenticate } from '../middleware/authMiddleware.js';
@@ -34,10 +35,38 @@ vi.mock('../services/challengeService.js', () => ({
     update: vi.fn(),
   },
 }));
+vi.mock('../services/challengeLeaderboardService.js', () => ({
+  getChallengeLeaderboard: vi.fn(),
+}));
 const actor = '10000000-0000-4000-8000-000000000001';
 const peer = '10000000-0000-4000-8000-000000000002';
 const id = '20000000-0000-4000-8000-000000000001';
 const url = '/api/v2/challenges';
+const detailFixture: Awaited<ReturnType<typeof service.detail>> = {
+  challenge: {
+    id,
+    creator_user_id: actor,
+    name: 'Steps',
+    metric: 'steps',
+    scoring_mode: 'sum',
+    start_date: '2026-10-03',
+    end_date: '2026-10-03',
+    timezone: 'UTC',
+    cancelled_at: null,
+    created_at: '2026-10-03T00:00:00Z',
+    updated_at: '2026-10-03T00:00:00Z',
+    lifecycle: 'active',
+    my_membership: 'accepted',
+    progress: {
+      today: '2026-10-03',
+      total_days: 1,
+      elapsed_days: 0,
+      days_remaining: 1,
+      current_day: 1,
+    },
+  },
+  participants: [],
+};
 const app = express();
 app.use(express.json(), cookieParser(), authenticate);
 app.use(url, router);
@@ -217,6 +246,29 @@ describe('Challenge typed routes and authentication', () => {
     );
     expect(challengeOpenApiSchemas.ChallengeDetail.properties).toHaveProperty(
       'participants'
+    );
+  });
+  it('routes authoritative leaderboard results with consent errors', async () => {
+    vi.mocked(getChallengeLeaderboard).mockResolvedValue({
+      contract_version: 1,
+      challenge: detailFixture.challenge,
+      calculated_at: '2026-10-03T12:00:00Z',
+      reconciles: true,
+      scored_through: '2026-10-03',
+      ranking_available: true,
+      leader_user_ids: [],
+      lead_margin: null,
+      entries: [],
+    });
+    expect(
+      (await request(app).get(`${url}/${id}/leaderboard`)).body
+    ).toMatchObject({ entries: [], contract_version: 1 });
+    expect(getChallengeLeaderboard).toHaveBeenCalledWith(actor, id);
+    vi.mocked(getChallengeLeaderboard).mockRejectedValue(
+      new ChallengeError(403, 'Accept the invitation to view results')
+    );
+    expect((await request(app).get(`${url}/${id}/leaderboard`)).status).toBe(
+      403
     );
   });
 });

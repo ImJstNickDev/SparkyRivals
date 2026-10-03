@@ -1,5 +1,6 @@
 import express from 'express';
 import { z } from 'zod';
+import { getChallengeLeaderboard } from '../../services/challengeLeaderboardService.js';
 import service from '../../services/challengeService.js';
 import { ChallengeError } from '../../utils/challengeErrors.js';
 import {
@@ -39,6 +40,10 @@ router.get('/', async (req, res) => {
   res.json(
     await service.list(req.userId, challengeListQuerySchema.parse(req.query))
   );
+});
+router.get('/:id/leaderboard', async (req, res) => {
+  const { id } = challengeIdParamsSchema.parse(req.params);
+  res.json(await getChallengeLeaderboard(req.userId, id));
 });
 router.get('/:id', async (req, res) => {
   const { id } = challengeIdParamsSchema.parse(req.params);
@@ -216,4 +221,23 @@ export default router;
  *       '200': { $ref: '#/components/responses/ChallengeDetailResult' }
  *       '403': { description: Creator required }
  *       '409': { description: Already cancelled or completed }
+ */
+
+/**
+ * @swagger
+ * /v2/challenges/{id}/leaderboard:
+ *   parameters:
+ *     - { $ref: '#/components/parameters/ChallengeId' }
+ *   get:
+ *     summary: Authoritative daily and total steps for accepted competitors
+ *     description: Reads canonical date buckets through today in the challenge timezone. Completed results reconcile on every request. Missing data scores zero with present=false. Cancellation stops sharing; upcoming ranks are null. No cache or final winner.
+ *     tags: [Challenges]
+ *     responses:
+ *       '200':
+ *         description: Versioned server result with ranks, ties, gaps and coverage.
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/ChallengeLeaderboard' }
+ *       '403': { description: Invitation acceptance required }
+ *       '404': { $ref: '#/components/responses/ChallengeUnavailable' }
  */

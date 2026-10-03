@@ -1089,3 +1089,25 @@ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = pg_catalog, public AS $$
       OR (cp.status = 'accepted' AND public.challenge_membership(p_challenge_id) = 'accepted'))
   ORDER BY cp.created_at, cp.user_id;
 $$;
+
+-- Narrow, read-only consent projection. Do not broaden check-in RLS: a full
+-- check-in row includes private body measurements. No user/date selector exists.
+-- The caller must be accepted; all returned people must be accepted too. Bounds
+-- come only from immutable challenge rules and the transaction's current day.
+CREATE OR REPLACE FUNCTION public.challenge_step_points(p_challenge_id uuid)
+RETURNS TABLE (
+  user_id uuid, display_name text, entry_date date, steps integer, data_updated_at timestamptz
+)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = pg_catalog, public AS $$
+  SELECT cp.user_id, COALESCE(NULLIF(btrim(p.full_name), ''), 'Participant'),
+    cm.entry_date, cm.steps, COALESCE(cm.updated_at, cm.created_at)
+  FROM public.challenges c
+  JOIN public.challenge_participants cp ON cp.challenge_id = c.id AND cp.status = 'accepted'
+  LEFT JOIN public.profiles p ON p.id = cp.user_id
+  LEFT JOIN public.check_in_measurements cm ON cm.user_id = cp.user_id
+    AND cm.entry_date BETWEEN c.start_date AND LEAST(c.end_date, (CURRENT_TIMESTAMP AT TIME ZONE c.timezone)::date)
+    AND cm.steps IS NOT NULL
+  WHERE c.id = p_challenge_id AND c.cancelled_at IS NULL
+    AND public.challenge_membership(c.id) = 'accepted'
+  ORDER BY cp.user_id, cm.entry_date;
+$$;
