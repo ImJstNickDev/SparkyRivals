@@ -5,7 +5,7 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
-import WatchConnectivity from '../../modules/watch-connectivity';
+import { useWatchConnectivity } from './useWatchConnectivity';
 import {
   challengeListOptions,
   challengeResultsOptions,
@@ -35,8 +35,8 @@ export function useWatchChallenges(connected: boolean) {
     subscribeWatchChallengeSession,
     getWatchChallengeSession
   );
-  const supported =
-    WatchConnectivity?.isSupported() === true && WatchConnectivity.isPaired();
+  const link = useWatchConnectivity();
+  const supported = link.isSupported && link.isPaired;
   const account = useQuery({
     queryKey: ['watchChallengeAccount', session.revision],
     enabled: supported && !session.blocked,
@@ -79,7 +79,12 @@ export function useWatchChallenges(connected: boolean) {
     })),
   });
   const snapshot =
-    !identity || accessDenied(list.error)
+    !identity ||
+    accessDenied(list.error) ||
+    results.some(
+      (result) =>
+        result.error instanceof ApiError && result.error.statusCode === 401
+    )
       ? emptyWatchChallenges()
       : buildWatchChallenges({
           accountKey: identity.key,
@@ -99,18 +104,34 @@ export function useWatchChallenges(connected: boolean) {
           ),
         });
   // Query observers can rerender without a data change. Stable wire bytes avoid
-  // a composed-context push (and its measurement refresh) on each such render.
+  // a composed-context push on each such render.
   const serialized = JSON.stringify(snapshot);
   const stableSnapshot = useMemo(
     () => JSON.parse(serialized) as typeof snapshot,
     [serialized]
   );
   const lastRefresh = useRef(0);
+  const refetchAccount = account.refetch;
   const refresh = useCallback(() => {
-    if (!enabled || Date.now() - lastRefresh.current < 30_000) return;
+    if (
+      !supported ||
+      !connected ||
+      session.blocked ||
+      Date.now() - lastRefresh.current < 30_000
+    )
+      return;
     lastRefresh.current = Date.now();
-    void client.invalidateQueries({ queryKey: challengeKeys.all(actor) });
-  }, [enabled, client, actor]);
+    if (!identity) void refetchAccount();
+    else void client.invalidateQueries({ queryKey: challengeKeys.all(actor) });
+  }, [
+    supported,
+    connected,
+    session.blocked,
+    identity,
+    refetchAccount,
+    client,
+    actor,
+  ]);
   return {
     snapshot: stableSnapshot,
     refresh,

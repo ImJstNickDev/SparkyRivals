@@ -1,3 +1,4 @@
+import { useWatchConnectivity } from '../../src/hooks/useWatchConnectivity';
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { useWatchChallenges } from '../../src/hooks/useWatchChallenges';
 import {
@@ -18,6 +19,7 @@ jest.mock('../../modules/watch-connectivity', () => ({
   default: { isSupported: () => true, isPaired: () => true },
 }));
 jest.mock('../../src/services/api/challengesApi');
+jest.mock('../../src/hooks/useWatchConnectivity');
 jest.mock('../../src/services/api/profileApi');
 jest.mock('../../src/services/storage', () => ({
   getActiveServerConfigId: jest.fn(),
@@ -36,6 +38,9 @@ function setup() {
 }
 beforeEach(() => {
   jest.clearAllMocks();
+  jest
+    .mocked(useWatchConnectivity)
+    .mockReturnValue({ isSupported: true, isPaired: true, isReachable: true });
   invalidateWatchChallengeSession(false);
   config.mockResolvedValue('server-a');
   jest
@@ -233,5 +238,53 @@ it('updates the account guard when a different authenticated user logs in', asyn
   );
   expect(result.current.snapshot.items[0].rows.find((r) => r.isSelf)?.id).toBe(
     peer
+  );
+});
+
+it('an API-key authentication failure on one result clears the entire snapshot', async () => {
+  const ctx = setup();
+  const { result } = renderHook(() => useWatchChallenges(true), ctx);
+  await waitFor(() =>
+    expect(result.current.snapshot.items[0]?.rows).toHaveLength(2)
+  );
+  api.results.mockRejectedValue(new ApiError('Invalid API key', 401));
+  await act(() =>
+    ctx.client.invalidateQueries({
+      queryKey: challengeKeys.results(actor, challenge.id),
+    })
+  );
+  await waitFor(() =>
+    expect(result.current.snapshot.state).toBe('unavailable')
+  );
+});
+it('recovers a failed cold-start profile check on a later context refresh', async () => {
+  const ctx = setup();
+  jest.mocked(fetchProfile).mockRejectedValueOnce(new Error('Offline'));
+  const { result } = renderHook(() => useWatchChallenges(true), ctx);
+  await waitFor(() => expect(fetchProfile).toHaveBeenCalledTimes(1));
+  await act(async () => {});
+  act(() => result.current.refresh());
+  await waitFor(() =>
+    expect(result.current.snapshot.items[0]?.rows).toHaveLength(2)
+  );
+});
+it('starts observing when a watch pairs and makes no Watch requests on unsupported platforms', async () => {
+  jest.mocked(useWatchConnectivity).mockReturnValue({
+    isSupported: false,
+    isPaired: false,
+    isReachable: false,
+  });
+  const { result, rerender } = renderHook(
+    () => useWatchChallenges(true),
+    setup()
+  );
+  await act(async () => {});
+  expect(api.list).not.toHaveBeenCalled();
+  jest
+    .mocked(useWatchConnectivity)
+    .mockReturnValue({ isSupported: true, isPaired: true, isReachable: true });
+  rerender({});
+  await waitFor(() =>
+    expect(result.current.snapshot.items[0]?.rows).toHaveLength(2)
   );
 });

@@ -478,7 +478,7 @@ export function useWatchCheckInBridge(enabled: boolean): void {
         summaryDate
       ),
     staleTime: 30_000,
-    enabled,
+    enabled: enabled && WatchConnectivity?.isSupported() === true,
   });
   const refreshContextData = useCallback(() => {
     refreshChallenges();
@@ -602,7 +602,7 @@ export function useWatchCheckInBridge(enabled: boolean): void {
         ...figures,
       };
 
-      // Superseded while the fetch above was in flight — a newer push has
+      // Superseded while the storage read above was in flight — a newer push has
       // already sent, or is about to, from fresher state than this one holds.
       if (generation !== pushGenerationRef.current) return;
       if (
