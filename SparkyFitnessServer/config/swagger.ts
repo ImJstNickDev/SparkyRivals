@@ -82,6 +82,7 @@ const options = {
               enum: [
                 'weight_reps',
                 'reps_only',
+                'bodyweight_reps',
                 'duration',
                 'duration_distance',
               ],
