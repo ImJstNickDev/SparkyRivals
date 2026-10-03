@@ -212,3 +212,4 @@ export * from "./constants/corosSportTypes.ts";
 export * from "./schemas/database/Challenges.zod.ts";
 export * from "./schemas/database/ChallengeParticipants.zod.ts";
 export * from "./schemas/api/Challenges.api.zod.ts";
+export * from "./challenges/client.ts";
