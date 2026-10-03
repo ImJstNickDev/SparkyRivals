@@ -6,7 +6,7 @@ import {
   createChallengeRequestSchema,
   challengeTimezoneSchema,
 } from '@workspace/shared';
-import { Footprints } from 'lucide-react';
+import { Footprints, Timer } from 'lucide-react';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { useChallengeMutation } from '@/hooks/Challenges/useChallenges';
 import { Button } from '@/components/ui/button';
@@ -29,7 +29,8 @@ export default function CreateChallengePage() {
   );
 }
 function CreateForm({ defaultTimezone }: { defaultTimezone: string }) {
-  const { t, day } = useChallengeFormat();
+  const [metric, setMetric] = useState<'steps' | 'workout_time'>('steps');
+  const { t, day, rules } = useChallengeFormat(metric);
   const [timezone, setTimezone] = useState(
     defaultTimezone || Intl.DateTimeFormat().resolvedOptions().timeZone
   );
@@ -47,6 +48,7 @@ function CreateForm({ defaultTimezone }: { defaultTimezone: string }) {
     if (busy.current) return;
     const parsed = createChallengeRequestSchema.safeParse({
       name,
+      metric,
       start_date: start,
       end_date: end,
       timezone,
@@ -91,17 +93,46 @@ function CreateForm({ defaultTimezone }: { defaultTimezone: string }) {
           )}
         </p>
       </header>
+      <fieldset className="grid gap-3 sm:grid-cols-2">
+        <legend className="mb-3 font-semibold">
+          {t('challenges.metric', 'Challenge metric')}
+        </legend>
+        {(['steps', 'workout_time'] as const).map((value) => (
+          <label
+            key={value}
+            className="flex cursor-pointer items-center gap-3 rounded-2xl border p-4"
+          >
+            <input
+              type="radio"
+              name="metric"
+              value={value}
+              checked={metric === value}
+              onChange={() => setMetric(value)}
+            />
+            {value === 'steps'
+              ? t('challenges.stepsMetric', 'Steps')
+              : t('challenges.workoutTime', 'Workout time')}
+          </label>
+        ))}
+      </fieldset>
       <section className="flex items-center gap-4 rounded-3xl bg-primary/5 p-5">
-        <Footprints aria-hidden className="h-9 w-9 shrink-0" />
+        {metric === 'workout_time' ? (
+          <Timer aria-hidden className="h-9 w-9 shrink-0" />
+        ) : (
+          <Footprints aria-hidden className="h-9 w-9 shrink-0" />
+        )}
         <div>
-          <h2 className="font-semibold">
-            {t('challenges.rules', 'Steps · Highest total wins')}
-          </h2>
+          <h2 className="font-semibold">{rules}</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            {t(
-              'challenges.canonicalHint',
-              'Your existing daily step totals count. There is nothing extra to track.'
-            )}
+            {metric === 'workout_time'
+              ? t('challenges.workoutHint', {
+                  defaultValue:
+                    'Recorded qualifying workout duration counts. Calories and workout count do not decide the winner.',
+                })
+              : t(
+                  'challenges.canonicalHint',
+                  'Your existing daily step totals count. There is nothing extra to track.'
+                )}
           </p>
         </div>
       </section>
@@ -191,10 +222,15 @@ function CreateForm({ defaultTimezone }: { defaultTimezone: string }) {
             }}
           />
           <p className="text-sm text-muted-foreground">
-            {t(
-              'challenges.timezoneHint',
-              'This sets when the Challenge starts and ends. Steps keep their existing daily date buckets.'
-            )}
+            {metric === 'workout_time'
+              ? t('challenges.workoutTimezoneHint', {
+                  defaultValue:
+                    'This sets when the Challenge starts and ends. Workouts keep their existing daily date buckets.',
+                })
+              : t(
+                  'challenges.timezoneHint',
+                  'This sets when the Challenge starts and ends. Steps keep their existing daily date buckets.'
+                )}
           </p>
         </div>
       </details>
@@ -214,10 +250,15 @@ function CreateForm({ defaultTimezone }: { defaultTimezone: string }) {
           </p>
         )}
         <p className="text-sm text-muted-foreground">
-          {t(
-            'challenges.createConsent',
-            'You join automatically. Invited people must accept before their steps are shared. Dates and rules cannot be changed after creation.'
-          )}
+          {metric === 'workout_time'
+            ? t('challenges.workoutConsent', {
+                defaultValue:
+                  'You join automatically. Invited people must accept before aggregate workout time is shared. Dates and rules cannot be changed after creation.',
+              })
+            : t(
+                'challenges.createConsent',
+                'You join automatically. Invited people must accept before their steps are shared. Dates and rules cannot be changed after creation.'
+              )}
         </p>
       </div>
       {validationError && (

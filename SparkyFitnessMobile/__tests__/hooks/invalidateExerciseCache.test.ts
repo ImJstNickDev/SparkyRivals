@@ -47,6 +47,7 @@ describe('invalidateExerciseCache', () => {
       queryKey: ['workoutPlanTemplates'],
     });
 
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['challenges'] });
     invalidateSpy.mockRestore();
   });
 });

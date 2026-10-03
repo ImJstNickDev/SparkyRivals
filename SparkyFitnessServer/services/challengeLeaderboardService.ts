@@ -6,7 +6,7 @@ import {
 } from '@workspace/shared';
 import repository, {
   type ChallengeWithMembership,
-  type ChallengeStepPoint,
+  type ChallengeMetricPoint,
 } from '../models/challengeRepository.js';
 import { describeChallenge } from './challengeService.js';
 import { ChallengeError } from '../utils/challengeErrors.js';
@@ -14,10 +14,11 @@ import { ChallengeError } from '../utils/challengeErrors.js';
 /** Pure scoring over the consent projection, never a second persisted health store. */
 export function calculateChallengeLeaderboard(
   challengeRow: ChallengeWithMembership,
-  points: ChallengeStepPoint[],
+  points: ChallengeMetricPoint[],
   evaluatedAt: Date
 ): ChallengeLeaderboardResponse {
   const challenge = describeChallenge(challengeRow, evaluatedAt);
+  const workout = challenge.metric === 'workout_time';
   const cancelled = challenge.lifecycle === 'cancelled';
   const rankingAvailable =
     challenge.lifecycle === 'active' || challenge.lifecycle === 'completed';
@@ -29,7 +30,7 @@ export function calculateChallengeLeaderboard(
         : challenge.end_date;
   const grouped = new Map<
     string,
-    { name: string; points: Map<string, ChallengeStepPoint> }
+    { name: string; points: Map<string, ChallengeMetricPoint> }
   >();
   if (!cancelled)
     for (const point of points) {
@@ -40,7 +41,7 @@ export function calculateChallengeLeaderboard(
       }
       if (
         point.entry_date &&
-        point.steps !== null &&
+        point.value !== null &&
         through &&
         point.entry_date >= challenge.start_date &&
         point.entry_date <= through
@@ -60,7 +61,8 @@ export function calculateChallengeLeaderboard(
       const eligible = through !== null && date <= through;
       daily.push({
         date,
-        value: point?.steps ?? 0,
+        value: point ? (point.value ?? 0) : 0,
+        ...(workout ? { workout_count: point?.workout_count ?? 0 } : {}),
         present: point !== undefined,
         eligible,
       });
@@ -72,6 +74,14 @@ export function calculateChallengeLeaderboard(
       display_name: member.name,
       membership_status: 'accepted',
       total_score: daily.reduce((sum, day) => sum + day.value, 0),
+      ...(workout
+        ? {
+            total_workout_count: daily.reduce(
+              (sum, day) => sum + (day.workout_count ?? 0),
+              0
+            ),
+          }
+        : {}),
       rank: null,
       is_tied: false,
       gap_to_leader: null,
@@ -82,7 +92,8 @@ export function calculateChallengeLeaderboard(
           ? (daily.find((day) => day.date === challenge.progress.today) ?? null)
           : null,
       coverage: {
-        days_with_steps: member.points.size,
+        days_with_data: member.points.size,
+        ...(!workout ? { days_with_steps: member.points.size } : {}),
         eligible_days: daily.filter((day) => day.eligible).length,
         latest_data_update_at: latest?.toISOString() ?? null,
       },
@@ -111,7 +122,8 @@ export function calculateChallengeLeaderboard(
     }
   }
   return {
-    contract_version: 1,
+    contract_version: workout ? 2 : 1,
+    score_unit: workout ? 'seconds' : 'steps',
     challenge,
     calculated_at: evaluatedAt.toISOString(),
     reconciles: true,

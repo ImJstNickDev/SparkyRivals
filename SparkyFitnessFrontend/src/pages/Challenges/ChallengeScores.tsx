@@ -3,7 +3,7 @@ import type {
   ChallengeLeaderboardResponse,
   ChallengeDailyScore,
 } from '@workspace/shared';
-import { Trophy, Footprints } from 'lucide-react';
+import { Trophy, Footprints, Timer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useChallengeFormat } from './presentation';
@@ -17,7 +17,20 @@ export function ChallengeScores({
   actor: string;
   compact?: boolean;
 }) {
-  const { t, number, locale } = useChallengeFormat();
+  const {
+    t,
+    number,
+    locale,
+    score,
+    noData,
+    totalLabel,
+    coverageHint,
+    workoutCount,
+    leading,
+    behind,
+    coverage,
+    solo,
+  } = useChallengeFormat(result.challenge.metric);
   const entries = compact ? result.entries.slice(0, 3) : result.entries;
   const ownEntry = result.entries.find((e) => e.user_id === actor);
   if (compact && ownEntry && !entries.includes(ownEntry))
@@ -48,12 +61,8 @@ export function ChallengeScores({
             : leaders.length > 1
               ? t('challenges.tiedLead', '{{names}} share the lead', { names })
               : result.lead_margin !== null
-                ? t('challenges.leading', '{{name}} leads by {{steps}} steps', {
-                    name: names,
-                    count: result.lead_margin,
-                    steps: number(result.lead_margin),
-                  })
-                : t('challenges.oneCompetitor', 'Your next step starts here')}
+                ? leading(names, result.lead_margin)
+                : solo}
         </p>
       )}
       <ol
@@ -86,11 +95,14 @@ export function ChallengeScores({
             <p
               className={`${versus ? 'text-4xl sm:text-5xl' : 'text-3xl'} mt-4 font-semibold tracking-tight tabular-nums`}
             >
-              {number(entry.total_score)}
+              {score(entry.total_score)}
             </p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {t('challenges.totalSteps', 'total steps')}
-            </p>
+            <p className="mt-1 text-sm text-muted-foreground">{totalLabel}</p>
+            {entry.total_workout_count !== undefined && (
+              <p className="text-sm text-muted-foreground">
+                {workoutCount(entry.total_workout_count)}
+              </p>
+            )}
             <div
               aria-hidden
               className="mt-4 h-2 overflow-hidden rounded-full bg-muted"
@@ -106,31 +118,23 @@ export function ChallengeScores({
               <p className="mt-3 text-sm">
                 {t('challenges.todayValue', 'Today: {{value}}', {
                   value: entry.today.present
-                    ? number(entry.today.value)
-                    : t('challenges.noData', 'No step data'),
+                    ? score(entry.today.value)
+                    : noData,
                 })}
               </p>
             )}
             {!compact && (
               <>
                 <p className="mt-3 text-sm text-muted-foreground">
-                  {t(
-                    'challenges.coverage',
-                    '{{present}} of {{eligible}} elapsed days have step data',
-                    {
-                      count: entry.coverage.eligible_days,
-                      present: number(entry.coverage.days_with_steps),
-                      eligible: number(entry.coverage.eligible_days),
-                    }
+                  {coverage(
+                    entry.coverage.days_with_data ??
+                      entry.coverage.days_with_steps ??
+                      0,
+                    entry.coverage.eligible_days
                   )}
                 </p>
                 {entry.gap_to_leader !== null && entry.gap_to_leader > 0 && (
-                  <p className="mt-1 text-sm">
-                    {t('challenges.behind', '{{steps}} steps behind the lead', {
-                      count: entry.gap_to_leader,
-                      steps: number(entry.gap_to_leader),
-                    })}
-                  </p>
+                  <p className="mt-1 text-sm">{behind(entry.gap_to_leader)}</p>
                 )}
               </>
             )}
@@ -147,12 +151,7 @@ export function ChallengeScores({
         </p>
       )}
       {!compact && (
-        <p className="text-sm text-muted-foreground">
-          {t(
-            'challenges.coverageHint',
-            'Missing data counts as zero in the score, but does not mean no steps were taken. Available data may still change.'
-          )}
-        </p>
+        <p className="text-sm text-muted-foreground">{coverageHint}</p>
       )}
     </div>
   );
@@ -165,7 +164,8 @@ export function ChallengeDailyHistory({
   result: ChallengeLeaderboardResponse;
   actor: string;
 }) {
-  const { t, number, day } = useChallengeFormat();
+  const { t, number, day, noData, scoreWithUnit, workoutCount } =
+    useChallengeFormat(result.challenge.metric);
   const [selected, setSelected] = useState(
     result.entries.find((e) => e.user_id === actor)?.user_id ??
       result.entries[0]?.user_id ??
@@ -190,16 +190,17 @@ export function ChallengeDailyHistory({
     !point?.eligible
       ? t('challenges.notStarted', 'Not started')
       : !point.present
-        ? t('challenges.noData', 'No step data')
-        : t('challenges.stepsValue', '{{steps}} steps', {
-            count: point.value,
-            steps: number(point.value),
-          });
+        ? noData
+        : scoreWithUnit(point.value);
   return (
     <section className="space-y-5 rounded-3xl border bg-card p-5 sm:p-7">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="flex items-center gap-2 text-xl font-semibold">
-          <Footprints aria-hidden className="h-5 w-5" />
+          {result.challenge.metric === 'workout_time' ? (
+            <Timer aria-hidden className="h-5 w-5" />
+          ) : (
+            <Footprints aria-hidden className="h-5 w-5" />
+          )}
           {t('challenges.dailyHistory', 'Every day counts')}
         </h2>
         {!versus && (
@@ -254,7 +255,14 @@ export function ChallengeDailyHistory({
                         <span className="break-words">
                           {entry.display_name}
                         </span>
-                        <span className="tabular-nums">{value(p)}</span>
+                        <span className="tabular-nums">
+                          {value(p)}
+                          {p?.present && p.workout_count !== undefined && (
+                            <span className="block text-xs text-muted-foreground">
+                              {workoutCount(p.workout_count)}
+                            </span>
+                          )}
+                        </span>
                       </div>
                       <div aria-hidden className="h-1.5 rounded-full bg-muted">
                         <div

@@ -24,6 +24,7 @@ export const useDiaryInvalidation = () => {
   const queryClient = useQueryClient();
 
   return useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['challenges'] });
     queryClient.invalidateQueries({ queryKey: exerciseEntryKeys.all });
     queryClient.invalidateQueries({ queryKey: exerciseKeys.all });
     queryClient.invalidateQueries({ queryKey: presetKeys.all });
@@ -106,6 +107,7 @@ export const useExerciseInvalidation = () => {
     queryClient.invalidateQueries({ queryKey: exerciseKeys.all });
     queryClient.invalidateQueries({ queryKey: presetKeys.all });
     queryClient.invalidateQueries({ queryKey: ['workoutPlanTemplates'] });
+    queryClient.invalidateQueries({ queryKey: ['challenges'] });
     queryClient.invalidateQueries({ queryKey: exerciseEntryKeys.all });
     queryClient.invalidateQueries({ queryKey: dailyProgressKeys.all });
     queryClient.invalidateQueries({ queryKey: diaryReportKeys.all });

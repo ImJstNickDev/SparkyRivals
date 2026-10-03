@@ -21,7 +21,9 @@ export function ChallengeCard({
   onPress: () => void;
   featured?: boolean;
 }) {
-  const { t, day, number, statuses } = useChallengeFormat();
+  const { t, day, number, statuses, rules } = useChallengeFormat(
+    challenge.metric
+  );
   const { actor } = useChallengeIdentity();
   const result = useChallengeResults(challenge);
   const pending = challenge.my_membership === 'pending';
@@ -36,6 +38,7 @@ export function ChallengeCard({
           ? t('challenges.invitation', { defaultValue: 'Invitation' })
           : statuses[challenge.lifecycle]}
       </Text>
+      <Text className="text-text-secondary text-sm">{rules}</Text>
       <Text
         accessibilityRole="header"
         className="text-text-primary text-2xl font-bold"
@@ -62,9 +65,13 @@ export function ChallengeCard({
         </Text>
       ) : cancelled ? (
         <Text className="text-text-secondary">
-          {t('challenges.cancelledHint', {
-            defaultValue: 'Cancelled. Step sharing has stopped.',
-          })}
+          {challenge.metric === 'workout_time'
+            ? t('challenges.workoutCancelledHint', {
+                defaultValue: 'Cancelled. Workout time sharing has stopped.',
+              })
+            : t('challenges.cancelledHint', {
+                defaultValue: 'Cancelled. Step sharing has stopped.',
+              })}
         </Text>
       ) : result.isError ? (
         <ChallengeProblem retry={() => void result.refetch()} />

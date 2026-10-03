@@ -16,6 +16,7 @@ struct ChallengeDetailView: View {
         if let item, let snapshot = store.context.challengeSnapshot {
             ScrollView {
                 VStack(spacing: 10) {
+                    Text(item.isWorkoutTime ? "Workout time" : "Steps").font(.caption2).foregroundStyle(.secondary)
                     Text(item.statusLabel).font(.caption2).foregroundStyle(.secondary)
                     Text(item.name).font(.headline).multilineTextAlignment(.center)
                         .accessibilityAddTraits(.isHeader)
@@ -79,7 +80,7 @@ struct ChallengeDetailView: View {
 
     @ViewBuilder
     private func rules(_ item: WatchChallenge) -> some View {
-        Label("Steps · highest total", systemImage: "figure.walk").font(.caption)
+        Label(item.isWorkoutTime ? "Workout time · highest total" : "Steps · highest total", systemImage: item.isWorkoutTime ? "timer" : "figure.walk").font(.caption)
         if let count = item.participantCount {
             Text("\(count) participants").font(.caption).foregroundStyle(.secondary)
         }

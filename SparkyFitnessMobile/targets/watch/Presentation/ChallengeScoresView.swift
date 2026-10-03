@@ -11,19 +11,21 @@ struct ChallengeScoresView: View {
                 // two five/six-digit scores into half a watch display.
                 VStack(spacing: 2) {
                     Text("You").font(.caption).foregroundStyle(.secondary)
-                    Text(ChallengeFormat.steps(own.total))
+                    Text(item.isWorkoutTime ? ChallengeDurationFormat.string(own.total) : ChallengeFormat.steps(own.total))
                         .font(.system(.largeTitle, design: .rounded, weight: .bold))
                         .monospacedDigit().lineLimit(1).minimumScaleFactor(0.65)
-                    Text("steps").font(.caption2).foregroundStyle(.secondary)
+                    Text(item.isWorkoutTime ? "Workout time" : "steps").font(.caption2).foregroundStyle(.secondary)
                     Text(ChallengeFormat.rank(own)).font(.caption2)
+                    if let count = own.workoutCount { Text("\(count) workouts").font(.caption2) }
                 }
                 .accessibilityElement(children: .combine)
                 VStack(spacing: 2) {
                     Text(opponent.name).font(.caption).lineLimit(2)
-                    Text("\(ChallengeFormat.steps(opponent.total)) steps")
+                    Text(ChallengeFormat.score(opponent.total, item: item))
                         .font(.system(.title3, design: .rounded, weight: .semibold)).monospacedDigit()
                 }
                 .accessibilityElement(children: .combine)
+                if let count = opponent.workoutCount { Text("\(count) workouts").font(.caption2) }
                 difference(own)
                 if item.lifecycle == .completed, opponent.leader {
                     Label("\(opponent.name) currently leads", systemImage: "trophy").font(.caption)
@@ -45,8 +47,8 @@ struct ChallengeScoresView: View {
                     if item.lifecycle == .active { today(own) }
                 }
             }
-            if let own = item.ownRow, own.daysWithSteps < own.eligibleDays {
-                Text("Step data on \(own.daysWithSteps) of \(own.eligibleDays) days. Missing days count as zero; they may not have synced.")
+            if let own = item.ownRow, own.dataDays < own.eligibleDays {
+                Text("Data on \(own.dataDays) of \(own.eligibleDays) days. Missing days count as zero; they may not have synced.")
                     .font(.caption2).foregroundStyle(.secondary)
             }
         }
@@ -60,10 +62,10 @@ struct ChallengeScoresView: View {
         } else if own.leader && own.tied {
             Label("Tied for the lead", systemImage: "equal").font(.headline)
         } else if own.leader, let margin = item.leadMargin {
-            Label("Ahead by \(ChallengeFormat.steps(margin))", systemImage: "arrow.up")
+            Label("Ahead by \(ChallengeFormat.score(margin, item: item))", systemImage: "arrow.up")
                 .font(.headline).foregroundStyle(.tint)
         } else if let gap = own.gapToLeader, gap > 0 {
-            Label("\(ChallengeFormat.steps(gap)) to the lead", systemImage: "arrow.up.right")
+            Label("\(ChallengeFormat.score(gap, item: item)) to the lead", systemImage: "arrow.up.right")
                 .font(.headline)
         }
     }
@@ -76,14 +78,15 @@ struct ChallengeScoresView: View {
                 Spacer(minLength: 0)
                 if row.leader { Image(systemName: "trophy").accessibilityLabel("Current leader") }
             }
-            Text("\(ChallengeFormat.steps(row.total)) steps").monospacedDigit()
+            Text(ChallengeFormat.score(row.total, item: item)).monospacedDigit()
+            if let count = row.workoutCount { Text("\(count) workouts").font(.caption2) }
             if row.tied { Text("Tied rank").font(.caption2).foregroundStyle(.secondary) }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(6)
         .background(row.isSelf ? Color.accentColor.opacity(0.16) : Color.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(row.isSelf ? String(localized: "You") : row.name), \(ChallengeFormat.rank(row)), \(ChallengeFormat.steps(row.total)) steps")
+        .accessibilityLabel("\(row.isSelf ? String(localized: "You") : row.name), \(ChallengeFormat.rank(row)), \(ChallengeFormat.score(row.total, item: item))")
     }
 
     @ViewBuilder
@@ -95,9 +98,9 @@ struct ChallengeScoresView: View {
                 Text("\(row.isSelf ? String(localized: "You") : row.name) · \(ChallengeFormat.dayLabel(point.date, timezone: item.timezone))")
                     .font(.caption2).foregroundStyle(.secondary)
                 if point.eligible && point.present {
-                    Text("\(ChallengeFormat.steps(point.value)) steps").font(.caption).monospacedDigit()
+                    Text(ChallengeFormat.score(point.value, item: item)).font(.caption).monospacedDigit()
                 } else {
-                    Text(point.eligible ? "No step data" : "Not started").font(.caption)
+                    Text(point.eligible ? (item.isWorkoutTime ? "No workout recorded" : "No step data") : "Not started").font(.caption)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)

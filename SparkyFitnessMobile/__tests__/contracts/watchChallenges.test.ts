@@ -45,7 +45,7 @@ it('adds an optional persisted field and clears it through the adapter on absent
     'previous.challengeSnapshot'
   );
   const mapper = watch('Adapters/ChallengePayloadMapper.swift');
-  expect(mapper).toContain('integer(payload["version"]) == 1');
+  expect(mapper).toContain('[1, 2].contains(version)');
   expect(mapper).toContain('payload["state"] as? String == "ready"');
   expect(mapper).toContain('else { return nil }');
 });
@@ -165,4 +165,24 @@ it('keeps all screenshot states DEBUG-only and wired to the existing manual capt
   expect(workflow).toContain('shoot "challenge-$state" none challenge');
   expect(workflow).toContain('bash scripts/test-watch-models.sh');
   expect(workflow).toContain('workflow_dispatch:');
+});
+
+it('maps workout units through typed models and preserves legacy Steps defaults', () => {
+  const mapper = watch('Adapters/ChallengePayloadMapper.swift');
+  expect(mapper).toContain('[1, 2].contains(version)');
+  for (const key of ['metric', 'scoreUnit', 'workoutCount', 'daysWithData'])
+    expect(mapper).toContain(`["${key}"]`);
+  expect(watch('Domain/ChallengeModels.swift')).toContain(
+    'DateComponentsFormatter'
+  );
+  expect(watch('Presentation/ChallengeScoresView.swift')).toContain(
+    'No workout recorded'
+  );
+  for (const state of [
+    'workoutVersus',
+    'workoutGroup',
+    'workoutCompleted',
+    'workoutNoData',
+  ])
+    expect(watch('Application/ScreenshotChallengeSeed.swift')).toContain(state);
 });

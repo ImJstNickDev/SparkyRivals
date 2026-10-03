@@ -66,7 +66,7 @@ export function ChallengeInvitees({
       <Text className="text-text-secondary">
         {t('challenges.consentHint', {
           defaultValue:
-            'Each person chooses whether to join. Only Challenge step data is shared.',
+            'Each person chooses whether to join. Only aggregates for the chosen Challenge metric are shared.',
         })}
       </Text>
       {connections.isPending ? (

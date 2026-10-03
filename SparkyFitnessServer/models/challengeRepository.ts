@@ -157,11 +157,12 @@ async function update(
     return (result.rowCount ?? 0) > 0;
   });
 }
-export interface ChallengeStepPoint {
+export interface ChallengeMetricPoint {
   user_id: string;
   display_name: string;
   entry_date: string | null;
-  steps: number | null;
+  value: number | null;
+  workout_count?: number;
   data_updated_at: Date | null;
 }
 async function leaderboard(actor: string, id: string) {
@@ -173,8 +174,10 @@ async function leaderboard(actor: string, id: string) {
       const clock = await client.query<{ evaluated_at: Date }>(
         'SELECT CURRENT_TIMESTAMP AS evaluated_at'
       );
-      const points = await client.query<ChallengeStepPoint>(
-        'SELECT * FROM public.challenge_step_points($1)',
+      const points = await client.query<ChallengeMetricPoint>(
+        challenge.metric === 'workout_time'
+          ? 'SELECT user_id, display_name, entry_date, workout_seconds AS value, workout_count, data_updated_at FROM public.challenge_workout_points($1)'
+          : 'SELECT user_id, display_name, entry_date, steps AS value, data_updated_at FROM public.challenge_step_points($1)',
         [id]
       );
       return {

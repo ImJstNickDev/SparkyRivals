@@ -74,14 +74,24 @@ export function ChallengeActions({
     Alert.alert(
       labels[action],
       action === 'leave'
-        ? t('challenges.leaveConfirm', {
-            defaultValue:
-              'Leave this Challenge? Your steps will be removed from its results, and you cannot rejoin.',
-          })
-        : t('challenges.cancelConfirm', {
-            defaultValue:
-              'Cancel for everyone? Step sharing stops and this cannot be undone.',
-          }),
+        ? challenge.metric === 'workout_time'
+          ? t('challenges.workoutLeaveConfirm', {
+              defaultValue:
+                'Leave this Challenge? Your workout time will be removed from its results, and you cannot rejoin.',
+            })
+          : t('challenges.leaveConfirm', {
+              defaultValue:
+                'Leave this Challenge? Your steps will be removed from its results, and you cannot rejoin.',
+            })
+        : challenge.metric === 'workout_time'
+          ? t('challenges.workoutCancelConfirm', {
+              defaultValue:
+                'Cancel for everyone? Workout time sharing stops and this cannot be undone.',
+            })
+          : t('challenges.cancelConfirm', {
+              defaultValue:
+                'Cancel for everyone? Step sharing stops and this cannot be undone.',
+            }),
       [
         {
           text: t('challenges.keep', { defaultValue: 'Go back' }),

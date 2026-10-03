@@ -17,7 +17,9 @@ export function ChallengeCard({
   challenge: ChallengeResponse;
   featured?: boolean;
 }) {
-  const { t, day, statuses, number } = useChallengeFormat();
+  const { t, day, statuses, number, rules } = useChallengeFormat(
+    challenge.metric
+  );
   const { actor } = useChallengeIdentity();
   const results = useChallengeResults(challenge);
   const pending = challenge.my_membership === 'pending';
@@ -32,6 +34,7 @@ export function ChallengeCard({
               ? t('challenges.invitation', 'Invitation')
               : statuses[challenge.lifecycle]}
           </Badge>
+          <p className="text-xs text-muted-foreground">{rules}</p>
           <h3 className="break-words text-2xl font-semibold tracking-tight">
             <Link
               className="hover:underline focus-visible:underline"
@@ -55,17 +58,26 @@ export function ChallengeCard({
       </div>
       {pending ? (
         <p className="text-muted-foreground">
-          {t(
-            'challenges.invitationDescription',
-            'A friendly steps Challenge is waiting. Review the rules before sharing your step totals.'
-          )}
+          {challenge.metric === 'workout_time'
+            ? t('challenges.workoutInvite', {
+                defaultValue:
+                  'A Workout Time Challenge is waiting. Review the rules before sharing aggregate workout time.',
+              })
+            : t(
+                'challenges.invitationDescription',
+                'A friendly steps Challenge is waiting. Review the rules before sharing your step totals.'
+              )}
         </p>
       ) : challenge.lifecycle === 'cancelled' ? (
         <p>
-          {t(
-            'challenges.cancelledHint',
-            'Cancelled. Step sharing has stopped.'
-          )}
+          {challenge.metric === 'workout_time'
+            ? t('challenges.workoutCancelledHint', {
+                defaultValue: 'Cancelled. Workout time sharing has stopped.',
+              })
+            : t(
+                'challenges.cancelledHint',
+                'Cancelled. Step sharing has stopped.'
+              )}
         </p>
       ) : results.isError ? (
         <p role="alert">

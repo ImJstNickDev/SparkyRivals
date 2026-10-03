@@ -72,7 +72,13 @@ export default function ChallengeDetailPage() {
           {challenge.timezone}
         </p>
         <p className="font-medium">
-          {t('challenges.rules', 'Steps · Highest total wins')}
+          {challenge.metric === 'workout_time'
+            ? t('challenges.workoutRules', {
+                defaultValue: 'Workout time · Highest total wins',
+              })
+            : t('challenges.rules', {
+                defaultValue: 'Steps · Highest total wins',
+              })}
         </p>
         {challenge.lifecycle === 'active' && (
           <div className="space-y-2">
@@ -125,10 +131,15 @@ export default function ChallengeDetailPage() {
             </p>
           )}
           <p>
-            {t(
-              'challenges.acceptPrivacy',
-              'Accept to share your daily step totals for the whole Challenge date range, including earlier days. Other health data stays private.'
-            )}
+            {challenge.metric === 'workout_time'
+              ? t('challenges.workoutAcceptHint', {
+                  defaultValue:
+                    'Accept to share daily aggregate workout time and session counts for the whole Challenge date range, including earlier days. Workout details and other health data stay private.',
+                })
+              : t(
+                  'challenges.acceptPrivacy',
+                  'Accept to share your daily step totals for the whole Challenge date range, including earlier days. Other health data stays private.'
+                )}
           </p>
           {challenge.lifecycle === 'completed' ||
           challenge.lifecycle === 'cancelled' ? (
@@ -151,10 +162,14 @@ export default function ChallengeDetailPage() {
       <ChallengeActions key={challenge.id} detail={detail.data} />
       {challenge.lifecycle === 'cancelled' ? (
         <p className="rounded-3xl bg-muted p-8 text-muted-foreground">
-          {t(
-            'challenges.cancelledHint',
-            'Cancelled. Step sharing has stopped.'
-          )}
+          {challenge.metric === 'workout_time'
+            ? t('challenges.workoutCancelledHint', {
+                defaultValue: 'Cancelled. Workout time sharing has stopped.',
+              })
+            : t(
+                'challenges.cancelledHint',
+                'Cancelled. Step sharing has stopped.'
+              )}
         </p>
       ) : (
         !pending && (
@@ -165,10 +180,15 @@ export default function ChallengeDetailPage() {
                   {t('challenges.currentResults', 'Current results')}
                 </h2>
                 <p className="text-muted-foreground">
-                  {t(
-                    'challenges.reconciles',
-                    'Results can change when step data arrives late or is corrected.'
-                  )}
+                  {challenge.metric === 'workout_time'
+                    ? t('challenges.workoutReconciles', {
+                        defaultValue:
+                          'Results can change when workouts arrive late, are edited or deleted.',
+                      })
+                    : t(
+                        'challenges.reconciles',
+                        'Results can change when step data arrives late or is corrected.'
+                      )}
                 </p>
               </section>
             )}

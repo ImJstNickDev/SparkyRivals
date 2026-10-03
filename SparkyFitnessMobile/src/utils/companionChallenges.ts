@@ -95,6 +95,7 @@ export function buildCompanionChallenges(input: {
       challenge.my_membership === 'accepted' &&
       cached?.data?.challenge.id === challenge.id &&
       cached.data.challenge.lifecycle === challenge.lifecycle &&
+      cached.data.challenge.metric === challenge.metric &&
       cached.data.challenge.my_membership === 'accepted' &&
       cached.data.entries.some((row) => row.user_id === input.actor)
         ? cached.data
@@ -109,6 +110,9 @@ export function buildCompanionChallenges(input: {
           )
         : [];
     items.push({
+      ...(metadata.metric === 'workout_time'
+        ? { metric: 'workout_time' as const, scoreUnit: 'seconds' as const }
+        : {}),
       id: challenge.id,
       name: clip(metadata.name),
       lifecycle: challenge.lifecycle,
@@ -141,14 +145,36 @@ export function buildCompanionChallenges(input: {
         ...(row.gap_to_leader != null
           ? { gapToLeader: row.gap_to_leader }
           : {}),
-        ...(row.today ? { today: { ...row.today } } : {}),
-        daysWithSteps: row.coverage.days_with_steps,
+        ...(row.today
+          ? {
+              today: {
+                date: row.today.date,
+                value: row.today.value,
+                present: row.today.present,
+                eligible: row.today.eligible,
+                ...(row.today.workout_count !== undefined
+                  ? { workoutCount: row.today.workout_count }
+                  : {}),
+              },
+            }
+          : {}),
+        ...(metadata.metric === 'workout_time'
+          ? {
+              daysWithData: row.coverage.days_with_data ?? 0,
+              workoutCount: row.total_workout_count ?? 0,
+            }
+          : {
+              daysWithSteps:
+                row.coverage.days_with_data ??
+                row.coverage.days_with_steps ??
+                0,
+            }),
         eligibleDays: row.coverage.eligible_days,
       })),
     });
   }
   return {
-    version: 1,
+    version: items.some((item) => item.metric === 'workout_time') ? 2 : 1,
     accountKey: input.accountKey,
     state: 'ready',
     generatedAt,

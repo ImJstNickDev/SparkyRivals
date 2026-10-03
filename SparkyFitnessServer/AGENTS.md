@@ -324,3 +324,9 @@ Before adding a feature or changing auth/permission behavior, read:
 - For work inside `SparkyFitnessServer/`, this file wins over repo-root guidance on package-specific details
 - Use `../AGENTS.md` for monorepo context
 - If a task spans multiple packages, combine this guide with the other affected package guides instead of relying on one file alone
+
+## Workout Time source map
+
+- Workout Time projection: `db/rls_policies.sql:challenge_workout_points` supplies
+  the common leaderboard service with canonical daily seconds/counts. Read
+  `../docs/fork/WORKOUT_CHALLENGES.md` for qualification, consent and rounding.

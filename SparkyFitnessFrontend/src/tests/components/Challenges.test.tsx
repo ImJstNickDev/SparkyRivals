@@ -28,6 +28,7 @@ import {
   challenge,
   detail,
   results,
+  workoutResults,
   connection,
 } from '../fixtures/challenges';
 jest.mock('@/hooks/Challenges/useChallenges');
@@ -537,4 +538,85 @@ it('hides personal Challenge content in delegated profile context', () => {
   expect(screen.queryByText(challenge.name)).not.toBeInTheDocument();
   fireEvent.click(screen.getByText('Use my profile'));
   expect(switchToUser).toHaveBeenCalledWith(null);
+});
+
+describe('Workout time presentation', () => {
+  it('creates a workout-time competition while keeping Steps the default', async () => {
+    show(<CreateChallengePage />);
+    expect(screen.getByRole('radio', { name: 'Steps' })).toBeChecked();
+    fireEvent.click(screen.getByRole('radio', { name: 'Workout time' }));
+    fireEvent.change(screen.getByLabelText('Challenge name'), {
+      target: { value: 'Time together' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Create Challenge' }));
+    await waitFor(() =>
+      expect(mutateAsync).toHaveBeenCalledWith({
+        action: 'create',
+        body: expect.objectContaining({
+          metric: 'workout_time',
+          scoring_mode: 'sum',
+        }),
+      })
+    );
+  });
+  it.each(['active', 'completed'] as const)(
+    'renders %s versus duration, margin and secondary counts',
+    (lifecycle) => {
+      show(
+        <ChallengeScores
+          actor={actor}
+          result={{
+            ...workoutResults,
+            challenge: { ...workoutResults.challenge, lifecycle },
+          }}
+        />
+      );
+      expect(screen.getAllByText('3h 42m').length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/4 workouts/).length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/24m/).length).toBeGreaterThan(0);
+      expect(screen.queryByText(/54,280/)).not.toBeInTheDocument();
+    }
+  );
+  it('renders group server ranks and ties without treating counts as tiebreakers', () => {
+    const entries = [
+      ...workoutResults.entries,
+      {
+        ...workoutResults.entries[0]!,
+        user_id: third,
+        display_name: 'Luca',
+        rank: 1,
+        is_tied: true,
+        total_workout_count: 1,
+      },
+    ];
+    show(
+      <ChallengeScores actor={actor} result={{ ...workoutResults, entries }} />
+    );
+    expect(screen.getByText('Luca')).toBeInTheDocument();
+    expect(screen.getByText('1 workout')).toBeInTheDocument();
+  });
+  it('distinguishes qualifying zero duration from no workout recorded in daily history', () => {
+    show(<ChallengeDailyHistory actor={actor} result={workoutResults} />);
+    expect(screen.getAllByText('0m').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('No workout recorded').length).toBeGreaterThan(
+      0
+    );
+    expect(screen.queryByText('No step data')).not.toBeInTheDocument();
+  });
+  it('shows a workout invitation without score disclosure', () => {
+    h.useChallenges.mockReturnValue({
+      ...query({
+        pages: [
+          {
+            challenges: [
+              { ...workoutResults.challenge, my_membership: 'pending' },
+            ],
+          },
+        ],
+      }),
+    } as unknown as ReturnType<typeof hooks.useChallenges>);
+    show(<ChallengesPage />);
+    expect(screen.getAllByText(/Workout time/).length).toBeGreaterThan(0);
+    expect(screen.queryByText('3h 42m')).not.toBeInTheDocument();
+  });
 });

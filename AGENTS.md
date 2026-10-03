@@ -176,7 +176,9 @@ Keep the upstream license, attribution, history, functionality, and package guid
 - Existing SparkyFitness systems own canonical health/activity data. Do not add
   a second ingestion pipeline or copy health records into a competing store.
 - Challenge backend: see `docs/fork/CHALLENGES.md` for `/api/v2/challenges`,
-  consent/RLS, live canonical steps and the shared response contract.
+  consent/RLS, live canonical metrics and the shared response contract. Workout
+  qualification, seconds/count semantics and companion versions are documented in
+  `docs/fork/WORKOUT_CHALLENGES.md`; never grant generic diary access.
 - Challenge web/mobile source maps, consent-aware cache rules and native test
   boundaries: `docs/fork/CHALLENGE_UI.md`. Apple Watch source maps and the single
   composed-context/account-clearing contract: `docs/fork/APPLE_WATCH_CHALLENGES.md`.

@@ -422,3 +422,20 @@ WHERE tablename = 'table_name';
 These tables do not store health history or scores. The existing check-in
 `(user_id, entry_date)` key serves canonical step queries. Membership uses its own
 RLS domain, without family permission inheritance. See the security-tier guide.
+
+## SparkyRivals Workout Time Challenges
+
+Challenge metric now permits `steps` and `workout_time`; scoring remains `sum`.
+`challenges` and `challenge_participants` remain Tier 1 with explicit membership
+consent, separate from family/caregiver health permissions. No table or permission
+tier was added. A narrow `challenge_workout_points` function exposes only consenting
+participants' daily duration/session-count aggregates within immutable Challenge
+bounds. Ordinary exercise diary RLS is unchanged. Steps consent cannot read workout
+aggregates, and workout consent cannot read the Steps projection.
+
+Accepting a workout invitation shares total/daily qualifying workout time and count,
+not names, notes, routes, heart rate, reps, weights or calories. Planned/incomplete
+and synthetic Active Calories entries do not count. Results reconcile when canonical
+workouts change, including after a Challenge ends. Ambiguous unmarked legacy workouts
+are conservatively omitted. See the repository's `docs/fork/WORKOUT_CHALLENGES.md`
+for precise qualification, duration rounding and compatibility details.

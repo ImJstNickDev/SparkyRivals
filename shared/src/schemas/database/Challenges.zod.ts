@@ -16,7 +16,7 @@ export const challengeTimezoneSchema = z
     "Invalid IANA timezone",
   );
 export const challengeNameSchema = z.string().trim().min(1).max(100);
-export const challengeMetricSchema = z.enum(["steps"]);
+export const challengeMetricSchema = z.enum(["steps", "workout_time"]);
 export const challengeScoringModeSchema = z.enum(["sum"]);
 export const challengesSchema = z.object({
   id: z.uuid(),

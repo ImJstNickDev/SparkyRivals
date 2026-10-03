@@ -1,5 +1,12 @@
 # Wear OS Challenges — Milestone 5
 
+## Workout Time extension — Milestone 6
+
+[WORKOUT_CHALLENGES.md](WORKOUT_CHALLENGES.md) documents the implemented second
+metric, canonical session qualification, contract versions, metric-aware clients
+and companion snapshot v1/v2 transition. Steps behavior and privacy/transport
+boundaries below remain intact. Native device acceptance remains outstanding.
+
 SparkyRivals has a read-only, non-standalone Android/Wear OS Challenge companion.
 It displays server results relayed by the Android phone. It does not authenticate
 to the server, read health sensors, ingest health data or calculate competition

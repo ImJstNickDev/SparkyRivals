@@ -1,5 +1,12 @@
 # Architecture audit and future Challenges design
 
+## Workout Time extension — Milestone 6
+
+[WORKOUT_CHALLENGES.md](WORKOUT_CHALLENGES.md) documents the implemented second
+metric, canonical session qualification, contract versions, metric-aware clients
+and companion snapshot v1/v2 transition. Steps behavior and privacy/transport
+boundaries below remain intact. Native device acceptance remains outstanding.
+
 Verified against upstream `f8df11ac3b019d022d3fa4a1b39c1b2f8576d361` on
 2026-10-02. Challenge and Watch sections were updated through milestone 5 on 2026-10-03.
 Other sections describing future work remain proposals.
@@ -321,8 +328,9 @@ without a Challenge ingestion path. Values remain user-editable; server arithmet
 is authoritative but is not anti-cheat verification.
 
 Metrics/scoring modes are explicit constrained enums to extend deliberately. Other
-metrics need canonical adapters, units and timezone/overlap rules; workout scoring,
-recurrence, goals and social extras remain later milestones. Web/mobile/watch will
+metrics need canonical adapters, units and timezone/overlap rules. Workout Time now
+uses the consent-limited canonical session projection; recurrence, goals and social
+extras remain later milestones. Web/mobile/watch will
 consume server projections and must not calculate independent winners.
 
 ## Challenge clients — milestone 3

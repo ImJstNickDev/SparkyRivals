@@ -35,11 +35,34 @@ describe('Challenge repository snapshots and bounded queries', () => {
         'BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY',
       ]);
       expect(query.mock.calls[3]).toEqual([
-        'SELECT * FROM public.challenge_step_points($1)',
+        'SELECT user_id, display_name, entry_date, steps AS value, data_updated_at FROM public.challenge_step_points($1)',
         [id],
       ]);
       expect(query.mock.calls[4]).toEqual(['COMMIT']);
       expect(release).toHaveBeenCalledOnce();
+    }
+  );
+  it.each([1, 10, 100])(
+    'uses the same bounded snapshot for %i workout participants',
+    async (count) => {
+      query
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({
+          rows: [{ id, metric: 'workout_time', my_membership: 'accepted' }],
+        })
+        .mockResolvedValueOnce({ rows: [{ evaluated_at: new Date() }] })
+        .mockResolvedValueOnce({
+          rows: Array.from({ length: count }, () => ({
+            entry_date: null,
+            value: null,
+          })),
+        })
+        .mockResolvedValueOnce({ rows: [] });
+      expect((await repository.leaderboard(actor, id))?.points).toHaveLength(
+        count
+      );
+      expect(query).toHaveBeenCalledTimes(5);
+      expect(query.mock.calls[3]?.[0]).toContain('workout_seconds AS value');
     }
   );
   it('does not project scores for an invisible challenge', async () => {

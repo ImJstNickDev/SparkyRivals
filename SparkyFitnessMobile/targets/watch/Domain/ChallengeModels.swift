@@ -28,6 +28,9 @@ struct WatchChallenge: Codable, Equatable, Identifiable {
     let leadMargin: Double?
     let rows: [ChallengeParticipant]
 
+    // Optional so persisted v1 Steps contexts remain decodable.
+    var metric: ChallengeMetric? = nil
+    var isWorkoutTime: Bool { metric == .workoutTime }
     var ownRow: ChallengeParticipant? { rows.first(where: \.isSelf) }
     var isVersus: Bool { participantCount == 2 && rows.count == 2 && ownRow != nil }
 }
@@ -45,6 +48,9 @@ struct ChallengeParticipant: Codable, Equatable, Identifiable {
     let today: ChallengeDay?
     let daysWithSteps: Int
     let eligibleDays: Int
+    var daysWithData: Int? = nil
+    var workoutCount: Int? = nil
+    var dataDays: Int { daysWithData ?? daysWithSteps }
 }
 
 struct ChallengeDay: Codable, Equatable {
@@ -52,4 +58,21 @@ struct ChallengeDay: Codable, Equatable {
     let value: Double
     let present: Bool
     let eligible: Bool
+    var workoutCount: Int? = nil
+}
+
+enum ChallengeMetric: String, Codable {
+    case steps
+    case workoutTime = "workout_time"
+}
+
+/// Formatting only; integer seconds remain authoritative server values.
+enum ChallengeDurationFormat {
+    static func string(_ seconds: Double) -> String {
+        let formatter = DateComponentsFormatter()
+        formatter.allowedUnits = [.hour, .minute, .second]
+        formatter.unitsStyle = .abbreviated
+        formatter.zeroFormattingBehavior = .dropAll
+        return formatter.string(from: max(0, seconds)) ?? "0s"
+    }
 }

@@ -39,4 +39,13 @@
     <string name="unavailable_detail">This Challenge is no longer available. Return to Challenges.</string>
     <plurals name="days_left"><item quantity="one">%1$d day left</item><item quantity="other">%1$d days left</item></plurals>
     <plurals name="participants"><item quantity="one">%1$d participant</item><item quantity="other">%1$d participants</item></plurals>
+    <string name="workout_time">Workout time</string>
+    <string name="steps_label">Steps</string>
+    <string name="workout_rule">Workout time · highest total</string>
+    <string name="workout_coverage">Some days have no qualifying workout recorded. Devices may not have synced yet.</string>
+    <string name="no_workout">No workout recorded</string>
+    <string name="hours_short">%1$sh</string>
+    <string name="minutes_short">%1$sm</string>
+    <string name="seconds_short">%1$ss</string>
+    <plurals name="workouts"><item quantity="one">%1$s workout</item><item quantity="other">%1$s workouts</item></plurals>
 </resources>
