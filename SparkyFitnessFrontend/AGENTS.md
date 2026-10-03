@@ -115,3 +115,9 @@ When searching, ignore `node_modules/`, `dist/`, and every locale except `public
 - For work inside `SparkyFitnessFrontend/`, this file wins over repo-root guidance on package-specific details.
 - If a task spans packages, combine this guide with the other affected package guides.
 - If you add a new domain folder, route family, or cross-cutting convention, update the Domain list, Source Map, and Quick Routing sections of this file in the same change.
+
+## Workout Time source map
+
+- Challenge metric presentation: `pages/Challenges/presentation.ts` uses the
+  shared duration formatter; `useInvalidateKeys` refreshes results after exercise
+  edits. See `../docs/fork/WORKOUT_CHALLENGES.md` for unit/coverage contracts.

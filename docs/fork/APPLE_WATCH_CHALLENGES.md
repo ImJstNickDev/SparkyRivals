@@ -1,5 +1,12 @@
 # Apple Watch Challenges — Milestone 4
 
+## Workout Time extension — Milestone 6
+
+[WORKOUT_CHALLENGES.md](WORKOUT_CHALLENGES.md) documents the implemented second
+metric, canonical session qualification, contract versions, metric-aware clients
+and companion snapshot v1/v2 transition. Steps behavior and privacy/transport
+boundaries below remain intact. Native device acceptance remains outstanding.
+
 The existing native watchOS companion now has a read-only **Challenges** page.
 The iPhone projects the same server responses used by its Challenge screens into
 the existing WatchConnectivity context. There is no Watch API client, credential,

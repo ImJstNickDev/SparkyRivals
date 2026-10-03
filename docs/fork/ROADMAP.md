@@ -74,7 +74,7 @@ visual/accessibility acceptance or paired-device checks. Those remain outstandin
 no native binary or screenshot is claimed. PR #5 merged normally at
 `e52c89b1314927309d42a351da8f509f44970ec5`.
 
-## 5. Wear OS companion — implemented; native/device acceptance remains
+## 5. Wear OS companion — merged as PR #6; native/device acceptance remains
 
 Tracked Kotlin/Wear Material 3 source is generated into a separate `:wear` module
 by clean Expo prebuild. Custom opt-in profiles share phone application ID and
@@ -88,18 +88,16 @@ See [WEAR_OS_CHALLENGES.md](WEAR_OS_CHALLENGES.md) for protocol, source maps,
 validation and the physical Galaxy Watch checklist. Linux prebuild/mobile tests
 and actual protocol JVM compilation pass. Android/Compose APK compilation,
 emulator/device visuals, TalkBack and paired Data Layer acceptance remain open.
-The Wear PR is intentionally unmerged; no credentials or deployment were created.
+PR #6 is merged. No credentials or deployment were created.
 
-## 6. Workout integration
+## 6. Workout integration — implemented; review and native acceptance pending
 
-Improve read-only recent-workout presentation first. Normalize session grouping,
-provider identity, corrected/deleted imports, distance/time units, and duplicate
-daily-energy/workout totals. Only then define an optional, versioned workout scoring
-strategy with explicit eligibility and tests. Distance, active minutes, and active
-energy each need a separately specified canonical metric adapter.
-
-Exit: data semantics and scoring policy are explicit, auditable, and server-owned;
-step competitions retain their original rules.
+Workout Time (`workout_time`, integer seconds) joins Steps end-to-end. Canonical
+session projection, consent-only aggregates, generic ranking, secondary session
+counts, web/mobile selectors and watch duration rendering are implemented. No
+calories/points/combined score. See [WORKOUT_CHALLENGES.md](WORKOUT_CHALLENGES.md)
+and [WORKOUT_VALIDATION.md](WORKOUT_VALIDATION.md). Native compile/device debt from
+Milestones 4/5 remains explicit; no workout logging was added to Wear.
 
 ## 7. Polish and expansion
 

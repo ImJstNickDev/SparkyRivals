@@ -42,3 +42,9 @@
 
 - Keep this package export-focused and schema-focused; logic that scales should live in consuming packages.
 - Never export stale or unfinished types; if a consumer is drafting code and needs a type not yet here, add it.
+
+## Workout Time source map
+
+- `src/challenges/duration.ts` formats integer seconds without scoring; Challenge
+  result v1 Steps compatibility and v2 workout units/counts are described in
+  `../docs/fork/WORKOUT_CHALLENGES.md`. Validate all consumers after edits.

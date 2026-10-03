@@ -43,8 +43,11 @@ merged at `747280650d58fcfde1617a12eab04b829eb3bff2`. Milestone 3
 at `e52c89b1314927309d42a351da8f509f44970ec5`. Native Apple compile/device/visual
 acceptance is still pending. Milestone 5 implements the
 [Wear OS/Galaxy Watch companion](WEAR_OS_CHALLENGES.md), with durable Data Layer
-state and prebuild-safe native sources. Its PR remains unmerged; Android/Compose
-compilation and paired hardware acceptance remain outstanding.
+state and prebuild-safe native sources. PR #6 merged at
+`a132e3f8ca6fd8a449cf17b8c5b7ee3d9b66713d`; Android/Compose compilation and paired
+hardware acceptance remain outstanding. Milestone 6 adds
+[Workout Time Challenges](WORKOUT_CHALLENGES.md) across server and clients, pending
+feature review. See [validation evidence](WORKOUT_VALIDATION.md).
 
 GitHub Actions remain **disabled**. Inherited publishing/mutation jobs are now
 guarded off in forks; validation enablement is documented, not performed. No store
@@ -62,9 +65,10 @@ up to 100 consented participants. The server owns
 scores and winners, including recalculation after late data or corrections. Build
 on existing health ingestion and storage. Leave room for multiple participants,
 distance, active time, energy, scoring strategies, recurrence, personal goals,
-streaks, and history. Display workouts early; defer workout scoring.
+streaks, and history. Workout Time now ranks canonical qualifying duration; calories
+and blended scoring remain outside the product scope.
 
-Targets are web, iPhone, Android, the existing native Apple Watch app, and a future
+Targets are web, iPhone, Android, the existing native Apple Watch app, and the
 Kotlin/Compose Wear OS companion for Galaxy Watch and other Wear OS devices.
 
 The future experience should be a polished fitness/social app: clear competitors,

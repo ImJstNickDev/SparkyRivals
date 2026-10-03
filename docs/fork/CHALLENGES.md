@@ -1,5 +1,9 @@
 # SparkyRivals Challenge backend
 
+Milestone 6 adds [Workout Time](WORKOUT_CHALLENGES.md). The Steps-specific
+sections below retain their original semantics; metric/unit/coverage evolution and
+the narrow workout projection are documented there.
+
 Milestone 2 adds a private, consent-based competition domain. The server owns
 Challenge state and scoring. Existing SparkyFitness check-ins remain the only
 canonical daily step store. No UI, separate ingestion path, health-history copy,
@@ -7,7 +11,7 @@ background scoring job, cache or permanent winner is introduced.
 
 ## Schema and consent
 
-`challenges` stores creator, name, `metric=steps`, `scoring_mode=sum`, inclusive
+`challenges` stores creator, name, `metric=steps|workout_time`, `scoring_mode=sum`, inclusive
 start/end DATEs, an IANA timezone, cancellation and audit timestamps.
 `challenge_participants` has a composite `(challenge_id, user_id)` primary key,
 inviter, status and invitation/acceptance/decline/leave/audit timestamps.
@@ -63,7 +67,7 @@ require self context and return `Cache-Control: no-store`.
 
 | Method / suffix         | Contract                                                                                                         |
 | ----------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `POST /`                | Name, start/end dates, timezone, optional `metric=steps`, `scoring_mode=sum`, `participant_ids`; 201 detail      |
+| `POST /`                | Name, start/end dates, timezone, optional `metric=steps                                                          | workout_time`, `scoring_mode=sum`, `participant_ids`; 201 detail |
 | `GET /`                 | `limit` (1–50, default 20), `offset` (0–10000); caller's pending/accepted competitions, newest first; `has_more` |
 | `GET /:id`              | Challenge rules, derived lifecycle/progress, authorized roster                                                   |
 | `PATCH /:id`            | Strict `{name}` only; upcoming creator rename                                                                    |
@@ -175,11 +179,11 @@ or replace all sources with last-write-wins.
 
 ## Extension boundary
 
-Metrics and scoring modes are explicit constrained enums (`steps`, `sum`) mirrored
+Metrics and scoring modes are explicit constrained enums (`steps|workout_time`, `sum`) mirrored
 in SQL and shared schemas. Future metrics add a canonical read adapter, units,
 consent scope, constraints and tests; they do not require changing the N-member
 model. No arbitrary JSON rule engine or scoring DSL exists. Recurrence, goals,
-workout scoring and social extras remain later milestones.
+additional metrics and social extras remain later milestones.
 
 Future web/mobile/watch clients consume these server results. A phone can compose
 a compact Watch snapshot using the existing WatchConnectivity architecture. Wear

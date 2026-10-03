@@ -1,5 +1,12 @@
 # Challenge clients — Milestone 3
 
+## Workout Time extension — Milestone 6
+
+[WORKOUT_CHALLENGES.md](WORKOUT_CHALLENGES.md) documents the implemented second
+metric, canonical session qualification, contract versions, metric-aware clients
+and companion snapshot v1/v2 transition. Steps behavior and privacy/transport
+boundaries below remain intact. Native device acceptance remains outstanding.
+
 The web and iOS/Android clients implement the existing steps/sum Challenge API.
 They display server results; they never calculate authoritative scores, ranks,
 winners, lifecycle, time remaining, or coverage. Read [CHALLENGES.md](CHALLENGES.md)
