@@ -214,3 +214,5 @@ export * from "./schemas/database/ChallengeParticipants.zod.ts";
 export * from "./schemas/api/Challenges.api.zod.ts";
 export * from "./challenges/client.ts";
 export { formatChallengeDuration } from "./challenges/duration.ts";
+
+export * from "./challenges/rematch.ts";

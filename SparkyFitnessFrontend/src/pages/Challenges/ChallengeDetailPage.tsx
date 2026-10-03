@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { RefreshCw } from 'lucide-react';
 import {
   useChallengeDetail,
@@ -158,6 +158,13 @@ export default function ChallengeDetailPage() {
             </p>
           )}
         </section>
+      )}
+      {!pending && ['completed', 'cancelled'].includes(challenge.lifecycle) && (
+        <Button asChild variant="outline">
+          <Link to={`/challenges/new?rematch=${challenge.id}`}>
+            {t('challenges.rematch', 'Rematch')}
+          </Link>
+        </Button>
       )}
       <ChallengeActions key={challenge.id} detail={detail.data} />
       {challenge.lifecycle === 'cancelled' ? (

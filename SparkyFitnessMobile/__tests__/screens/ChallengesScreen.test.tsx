@@ -661,3 +661,61 @@ describe('Workout time', () => {
     expect(view.queryByText('3h 42m')).toBeNull();
   });
 });
+
+describe('Rematch', () => {
+  it.each(['completed', 'cancelled'] as const)(
+    'opens an editable draft from %s',
+    (lifecycle) => {
+      setDetail({ ...detail, challenge: { ...challenge, lifecycle } });
+      const view = screen('ChallengeDetail');
+      fireEvent.press(view.getByText('Rematch'));
+      expect(nav.navigate).toHaveBeenCalledWith('CreateChallenge', {
+        rematchId: challenge.id,
+      });
+    }
+  );
+  it('prefills workout metric and current friends without auto-submitting', async () => {
+    setDetail({
+      ...detail,
+      challenge: {
+        ...challenge,
+        lifecycle: 'completed',
+        metric: 'workout_time',
+      },
+    });
+    const view = display(
+      <CreateChallengeScreen
+        navigation={
+          nav as unknown as RootStackScreenProps<'CreateChallenge'>['navigation']
+        }
+        route={{
+          key: 'create',
+          name: 'CreateChallenge',
+          params: { rematchId: challenge.id },
+        }}
+      />
+    );
+    expect(
+      view.getByText(
+        'Review your rematch. Everyone you invite will choose whether to join again.'
+      )
+    ).toBeTruthy();
+    expect(view.getByDisplayValue(challenge.name)).toBeTruthy();
+    expect(mutateAsync).not.toHaveBeenCalled();
+    fireEvent.changeText(
+      view.getByDisplayValue(challenge.name),
+      'Another round'
+    );
+    fireEvent.press(view.getByText('Create Challenge'));
+    await waitFor(() =>
+      expect(mutateAsync).toHaveBeenCalledWith({
+        action: 'create',
+        body: expect.objectContaining({
+          name: 'Another round',
+          metric: 'workout_time',
+          participant_ids: [peer],
+        }),
+      })
+    );
+  });
+});

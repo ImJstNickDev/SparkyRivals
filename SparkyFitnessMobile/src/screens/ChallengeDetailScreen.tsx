@@ -227,6 +227,18 @@ export default function ChallengeDetailScreen({
               </>
             )
           )}
+          {!pending &&
+            ['completed', 'cancelled'].includes(challenge.lifecycle) && (
+              <Button
+                onPress={() =>
+                  navigation.navigate('CreateChallenge', {
+                    rematchId: challenge.id,
+                  })
+                }
+              >
+                {t('challenges.rematch', { defaultValue: 'Rematch' })}
+              </Button>
+            )}
           <ChallengeActions
             key={challenge.id}
             detail={detail.data}

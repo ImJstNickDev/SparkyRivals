@@ -6791,6 +6791,9 @@
     "workoutCancelConfirm": "Cancel for everyone? Workout time sharing stops and this cannot be undone.",
     "workoutCancelledHint": "Cancelled. Workout time sharing has stopped.",
     "workoutReconciles": "Results can change when workouts arrive late, are edited or deleted.",
-    "workoutAcceptHint": "Accept to share daily aggregate workout time and session counts for the whole Challenge date range, including earlier days. Workout details and other health data stay private."
+    "workoutAcceptHint": "Accept to share daily aggregate workout time and session counts for the whole Challenge date range, including earlier days. Workout details and other health data stay private.",
+    "rematch": "Rematch",
+    "rematchReview": "Review your rematch. Everyone you invite will choose whether to join again.",
+    "rematchOmitted": "Some previous participants are no longer eligible and have not been selected."
   }
 }
