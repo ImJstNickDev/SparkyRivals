@@ -5,6 +5,7 @@ import { useLocation, Outlet, useNavigate } from 'react-router-dom';
 import { debug, info, error } from '@/utils/logging';
 import {
   Home,
+  Trophy,
   Activity, // Used for Check-In
   CalendarHeart,
   BarChart3,
@@ -233,6 +234,11 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     if (!isActingOnBehalf) {
       tabs.push(
         { value: '/', label: t('nav.diary'), icon: Home },
+        {
+          value: '/challenges',
+          label: t('challenges.title', 'Challenges'),
+          icon: Trophy,
+        },
         { value: '/checkin', label: t('nav.checkin'), icon: Activity }
       );
       if (cycleSettings?.enabled) {
@@ -327,6 +333,11 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     if (!isActingOnBehalf) {
       mobileTabs.push(
         { value: '/', label: t('nav.diary'), icon: Home },
+        {
+          value: '/challenges',
+          label: t('challenges.title', 'Challenges'),
+          icon: Trophy,
+        },
         { value: '/reports', label: t('nav.reports'), icon: BarChart3 },
         {
           value: 'Add',

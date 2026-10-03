@@ -54,6 +54,15 @@ const ResetPassword = lazyWithChunkRecovery(
 );
 const Index = lazyWithChunkRecovery(() => import('@/pages/Index'));
 const Diary = lazyWithChunkRecovery(() => import('@/pages/Diary/Diary'));
+const Challenges = lazyWithChunkRecovery(
+  () => import('@/pages/Challenges/ChallengesPage')
+);
+const ChallengeDetail = lazyWithChunkRecovery(
+  () => import('@/pages/Challenges/ChallengeDetailPage')
+);
+const CreateChallenge = lazyWithChunkRecovery(
+  () => import('@/pages/Challenges/CreateChallengePage')
+);
 const CheckIn = lazyWithChunkRecovery(() => import('./pages/CheckIn/CheckIn'));
 const FoodDatabaseManager = lazyWithChunkRecovery(
   () => import('./pages/Foods/Foods')
@@ -383,6 +392,21 @@ const router = createBrowserRouter([
         ErrorBoundary: RootErrorBoundary,
         children: [
           { index: true, Component: Diary, ErrorBoundary: RouteErrorBoundary },
+          {
+            path: 'challenges',
+            Component: Challenges,
+            ErrorBoundary: RouteErrorBoundary,
+          },
+          {
+            path: 'challenges/new',
+            Component: CreateChallenge,
+            ErrorBoundary: RouteErrorBoundary,
+          },
+          {
+            path: 'challenges/:id',
+            Component: ChallengeDetail,
+            ErrorBoundary: RouteErrorBoundary,
+          },
           {
             path: 'checkin',
             Component: CheckIn,

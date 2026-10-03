@@ -23,6 +23,14 @@ const freshness = {
   refetchOnWindowFocus: true,
   refetchOnReconnect: true,
 } as const;
+export function useChallengeRefresh() {
+  const client = useQueryClient();
+  const { actor, enabled } = useChallengeIdentity();
+  return () =>
+    enabled
+      ? client.invalidateQueries({ queryKey: challengeKeys.all(actor) })
+      : Promise.resolve();
+}
 export function useChallenges() {
   const { actor, enabled } = useChallengeIdentity();
   return useInfiniteQuery({
