@@ -77,6 +77,9 @@ describe('Wear build identity', () => {
     expect(once.match(/include ':wear'/g)).toHaveLength(1);
     expect(template).not.toContain('com.facebook.react');
     expect(template).not.toContain('assembleDebug.dependsOn');
+    expect(template).toContain(
+      'buildToolsVersion rootProject.ext.buildToolsVersion'
+    );
   });
   it('declares watch-only non-standalone without health or network permissions', () => {
     const manifest = fs.readFileSync(

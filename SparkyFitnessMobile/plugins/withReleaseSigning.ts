@@ -51,6 +51,17 @@ gradle.taskGraph.whenReady { graph ->
         if (${custom} && System.getenv('EAS_BUILD') != 'true' && android.defaultConfig.versionCode <= 1) {
             throw new GradleException('Owned local/CI releases require EXPO_BUILD_NUMBER greater than 1 at prebuild. Allocate a new monotonically increasing number for every distributed build.')
         }
+        if (${custom}) {
+            // Expo Constants/Metro evaluate app.config again during Gradle.
+            // A profile used only during prebuild can embed upstream runtime config.
+            def runtimeIdentity = providers.exec {
+                workingDir rootProject.projectDir.parentFile
+                commandLine 'node', '-e', "const i = require('./app.identifiers').resolveAppIdentity(); process.stdout.write(i.mode === 'custom' && !i.configOnly ? i.androidPackage : 'invalid')"
+            }.standardOutput.asText.get().trim()
+            if (runtimeIdentity != android.defaultConfig.applicationId) {
+                throw new GradleException('Build profile differs from generated native identity. Run Gradle through the same build:profile environment used for prebuild.')
+            }
+        }
         def signing = android.buildTypes.release.signingConfig
         if (signing == null || signing.name == 'debug' ||
             signing.storeFile == android.signingConfigs.debug.storeFile ||

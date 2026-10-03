@@ -7,7 +7,8 @@ ignored; never make durable edits inside `ios/` or `android/`.
 
 See [validation evidence](BUILD_VALIDATION.md), [current identifiers](IDENTIFIERS.md),
 and upstream [mobile development guide](../../SparkyFitnessMobile/README.md).
-No build in this milestone was submitted, published, or run on a cloud builder.
+No store submission or publication is configured. Native build and device acceptance
+results are recorded separately; configuration validation alone is not acceptance.
 
 ## Identity and profiles
 
@@ -139,10 +140,14 @@ debug signing. Gradle reads these existing names as properties or environment:
 - `MYAPP_RELEASE_KEY_ALIAS`, `MYAPP_RELEASE_STORE_PASSWORD`,
   `MYAPP_RELEASE_KEY_PASSWORD`: private signing configuration.
 
-Prefer a credential manager or private Gradle properties over command-line
-passwords. No permanent keystore was generated in this milestone. Provision it
-before distributing an APK/AAB, restrict its permissions, and back up the key,
-alias, passwords, certificate fingerprints and recovery procedure securely.
+Prefer a credential manager or mode-0600 `~/.gradle/gradle.properties` over
+command-line passwords. The maintainer has already generated the permanent PKCS12
+key at `~/.local/share/sparkyrivals/signing/sparkyrivals-release.p12`, alias
+`sparkyrivals-release`. Do not recreate/rotate it or create a second Wear key.
+Expected SHA-256 certificate fingerprint:
+`3E:B2:F9:50:8D:15:9C:C1:50:14:1A:9A:57:0D:37:71:24:4F:59:10:59:D0:AE:09:E9:61:28:1E:B6:42:D5:2A`.
+Back up the key, alias, passwords and fingerprint in secure off-host custody.
+Never put passwords in chat, command arguments, tracked files or Expo config.
 The same application ID requires signing continuity for future upgrades.
 
 The guard inspects the **final selected signing config** when release tasks are
@@ -152,11 +157,11 @@ standard debug alias. An unexpected upstream Gradle layout fails prebuild clearl
 EAS can supply remote credentials or its local `credentials.json` workflow; both
 use its normal signing injection. Credentials files/directories are ignored.
 See [EAS Android signing injection](https://docs.expo.dev/build-reference/android-builds/#configuring-gradle).
-This integration was inspected and generated locally; actual signed Gradle/EAS
-execution remains to be tested with the owned key and native toolchain.
+The native acceptance record must distinguish generated signing wiring from
+actual APK verification using this permanent key.
 
 For local/CI distribution, allocate a monotonically increasing `EXPO_BUILD_NUMBER`
-(1–2100000000) for each binary, then prebuild with it. It sets Android `versionCode`
+(2–999999999 when Wear is enabled) for each phone binary, then prebuild with it. It sets Android `versionCode`
 and iOS `buildNumber`; Apple child versions follow the host config. Owned local
 Android release tasks reject the default 1. Example allocation for testing is 100;
 do not repeatedly distribute that number. EAS uses `appVersionSource=remote` and
@@ -164,11 +169,46 @@ do not repeatedly distribute that number. EAS uses `appVersionSource=remote` and
 local releases before changing build systems. The application marketing version
 continues following the existing upstream version tooling.
 
-After account/key setup, prebuild through the intended profile **without**
-`APP_CONFIG_ONLY`, then `cd android && ./gradlew :app:assembleRelease` or
-`:app:bundleRelease`. Debug validation uses `:app:assembleDebug`. This host still
-lacks the required Android SDK/JDK 17 setup, so these commands were not executed.
-Use SDK 36 and the NDK/Gradle versions selected by the generated project.
+Use the production pair helper, with newly allocated numbers:
+
+```sh
+EXPO_BUILD_NUMBER=<allocated-phone-code> EXPO_WEAR_BUILD_NUMBER=<allocated-wear-code> \
+  bash scripts/build-owned-android.sh
+```
+
+It cleans/regenerates Android, validates native metadata, compiles phone and Wear
+release APKs, runs Wear JVM tests and verifies both package/version/certificate
+identities. The phone APK's bundled Expo config must also match owned production
+EAS identity. **Keep `build:profile` active during Gradle, not only prebuild**:
+Expo Constants and Metro reevaluate dynamic config during compilation. The release
+guard rejects a runtime/generated package mismatch before building.
+
+For incremental native builds after a correct prebuild:
+
+```sh
+EXPO_BUILD_NUMBER=<allocated-phone-code> EXPO_WEAR_BUILD_NUMBER=<allocated-wear-code> \
+JAVA_HOME=/usr/lib/jvm/java-17-openjdk ANDROID_HOME=/opt/android-sdk NODE_ENV=production \
+  pnpm build:profile sparkyrivals-production-internal bash -c \
+  'cd android && ./gradlew :app:assembleRelease :wear:assembleRelease :wear:testDebugUnitTest --max-workers=4 -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=1g -Djava.util.concurrent.ForkJoinPool.common.parallelism=4"'
+```
+
+The Arch laptop now has JDK 17.0.20.1 at the path above; do not change default Java.
+SDK 36, Build Tools 36.0.0, NDK 27.1.12297006, AGP 8.12.0, Kotlin 2.1.20 and
+Gradle 9.3.1 are used. The local helper bounds workers/common-pool packaging
+parallelism and selects a 4 GB heap / 1 GB metaspace per command; the default
+2 GB heap exhausted memory while packaging the multi-ABI phone APK. No global
+Java/Gradle setting is changed. Existing third-party modules also require Build Tools 35.0.0
+and CMake 3.22.1. Install missing components with the current `android sdk` CLI,
+not new scripts built around deprecated sdkmanager. `/opt/android-sdk` group access
+requires a login/session with the `android-sdk` supplemental group.
+
+Final APKs are generated at `android/app/build/outputs/apk/release/app-release.apk`
+and `android/wear/build/outputs/apk/release/wear-release.apk`. Prebuild clean deletes
+these outputs; archive approved artifacts privately outside generated folders.
+Use Python 3.11+ with `scripts/verify-android-release.py --phone <apk> --wear <apk> --phone-code <n>
+--wear-code <n>` to run `apksigner verify --print-certs`, aapt metadata checks and
+bundled config checks without loading signing passwords. Actual device testing
+still requires explicit user interaction.
 
 ## Apple registration and provisioning
 
@@ -269,7 +309,8 @@ copy tracked `targets/wear/` into generated `android/wear/`; default upstream
 builds omit it. Phone and Wear share applicationId and the final selected phone
 signing config, including Debug. No separate Wear signing key may be introduced.
 Wear Release rejects debug/absent credentials, inspection mode and an implicit
-Wear build number. EAS ownership and permanent signing setup above remain open.
+Wear build number. Owned EAS identity and permanent key custody are now configured;
+actual signed artifacts/device transport require the acceptance checks above.
 
 With Wear enabled, allocate phone `EXPO_BUILD_NUMBER` below 1000000000 and Wear
 `EXPO_WEAR_BUILD_NUMBER` from 1000000000 through 2100000000. Wear release requires
@@ -292,8 +333,8 @@ configured. The watch feature is required and standalone is false.
 
 [WEAR_OS_CHALLENGES.md](WEAR_OS_CHALLENGES.md) contains exact prebuild/test commands,
 source maps, limits, recovery and the physical Galaxy Watch checklist. This Linux
-host ran native protocol JVM tests and metadata checks, but no Gradle APK build,
-Compose instrumentation, emulator or physical-watch acceptance.
+host has now compiled the Wear debug APK and run 34 Gradle JVM tests.
+Compose instrumentation, emulator and physical-watch acceptance remain separate.
 
 ## Milestone 7 native surface validation
 

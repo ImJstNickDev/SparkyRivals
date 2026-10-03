@@ -23,7 +23,7 @@ Use this section and [BUILDING.md](BUILDING.md) for current behavior.
 | EAS owner/project            | `EXPO_OWNER`, `EXPO_EAS_PROJECT_ID` required for normal custom builds; upstream UUID rejected. Owned profiles: `imjstnickdev` / `63f08cec-3f87-4cee-89be-bebf970b6262`; EAS session verified                   | 1; provisioning/device acceptance pending                                      |
 | Unsigned inspection          | Explicit `APP_CONFIG_ONLY=1`; missing EAS metadata omitted; EAS builders/Android release tasks reject it                                                  | 1; not a distribution mode                                    |
 | App Store Connect            | Upstream `6757314392` submission profile removed; no fork store destination configured                                                                    | Resolved hazard; owned listing/setup pending                  |
-| Android release signing      | Prebuild plugin consumes `MYAPP_RELEASE_*` Gradle props/env or final EAS-injected config; release cannot select debug fallback                            | 1; permanent key and native signed validation pending         |
+| Android release signing      | Prebuild plugin consumes `MYAPP_RELEASE_*` Gradle props/env or final EAS-injected config; release cannot select debug fallback                            | 1; permanent key exists; signed artifact/device acceptance tracked in 8A         |
 | Versions                     | `EXPO_BUILD_NUMBER` for local numbers; owned local Android release rejects default 1. Owned EAS profiles use remote auto-increment                        | 1; allocate/reconcile counters before distribution            |
 | Maps key                     | Existing build-only `GOOGLE_MAPS_ANDROID_API_KEY`; owned package/certificate restrictions still required if enabled                                       | 1; provider setup optional                                    |
 | Own health records           | Existing runtime `Application.applicationId` / HealthKit `currentAppSource().bundleIdentifier` retained; all owned variants regression-tested             | 1                                                             |
@@ -53,9 +53,11 @@ WidgetKit, ExpoWidgetsTarget and Watch widget each need their own App ID/profile
 and the same variant group; Live Activity support remains enabled. Generated APNs
 `development` is not proof of distribution provisioning.
 
-No Apple account/team/membership or device signing was verified. No Android
-permanent key was created. EAS CLI reported **Not logged in** and no project UUID
-was assigned. [BUILDING.md](BUILDING.md) gives registration, provisioning,
+During 8A, EAS authenticated as `imjstnick` with owner access to `imjstnickdev`;
+the owned project and one enabled registered iPhone were verified. Paid Apple
+membership/team and permanent Android key were supplied by the maintainer.
+No password/private key is tracked. Actual Apple provisioning/native/device
+acceptance remains distinct from these account/metadata checks. [BUILDING.md](BUILDING.md) gives registration, provisioning,
 key recovery, versioning, scheme/server setup and safe workflow enablement steps.
 [BUILD_VALIDATION.md](BUILD_VALIDATION.md) distinguishes prebuild/config evidence
 from unrun native compilation and hardware behavior.
@@ -79,7 +81,7 @@ The versioned DataItem path `/sparkyrivals/challenges/v1` and phone capability
 Changing them requires a paired protocol migration. The manifest is watch-only
 and non-standalone; no health collection permissions or server credentials exist.
 Generated metadata checks pass. Actual APK signer equality, native compilation,
-pairing and owned production key custody remain acceptance/setup tasks; see
+and pairing remain acceptance tasks; owned production key custody is established; see
 [WEAR_OS_CHALLENGES.md](WEAR_OS_CHALLENGES.md).
 
 ## Historical bootstrap inventory

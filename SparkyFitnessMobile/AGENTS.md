@@ -296,6 +296,15 @@ npx expo prebuild --clean
 
 ## Widgets And Native Config
 
+- Owned release acceptance: `../docs/fork/BUILDING.md`. The existing
+  `eas.json` owned base supplies non-secret EAS owner/project/team identities;
+  `sparkyrivals-production-internal` keeps production IDs with internal delivery.
+  `scripts/build-owned-android.sh` generates the production phone/Wear pair;
+  `scripts/verify-android-release.py` checks allocated codes and the permanent
+  certificate fingerprint without reading passwords. Keep credentials private,
+  preserve the single phone/Wear signing authority, and record actual native/device
+  evidence separately from prebuild/Jest checks.
+
 - iOS launches through the UIScene life cycle, which the iOS 27 SDK (Xcode 27) requires — a build that still creates its window in `AppDelegate` is killed at launch in `_UIApplicationEvaluateRuntimeIssueForNoSceneLifecycleAdoption`. The SDK 57 prebuild template predates this, so `plugins/withSceneLifecycle.ts` applies the SDK 58 template's changes: `AppDelegate` conforms to `ExpoReactNativeFactoryProvider` and stops starting React Native, a `SceneDelegate.swift` subclassing expo's `ExpoAppSceneDelegate` (needs `expo` >= 57.0.25) is added to the app target, and `Info.plist` gets `UIApplicationSceneManifest`. The plugin throws if `AppDelegate.swift` no longer matches the template; delete it when moving to SDK 58, whose template already does all three.
 - iOS widgets live under `targets/widget/`, share data through the app group from `app.identifiers.js`, and reload through `ExtensionStorage` in `useWidgetSync`.
 - Current iOS widgets are calorie and macro widgets. When changing display, update Swift views, shared helpers, TS snapshot shape, and reload kind handling together.
