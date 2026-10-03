@@ -20,6 +20,9 @@ export function ChallengeScores({
   const { t, number } = useChallengeFormat();
   const [limit, setLimit] = useState(20);
   const entries = result.entries.slice(0, compact ? 3 : limit);
+  const ownEntry = result.entries.find((e) => e.user_id === actor);
+  if (compact && ownEntry && !entries.includes(ownEntry))
+    entries.push(ownEntry);
   const leaders = result.entries.filter((e) =>
     result.leader_user_ids.includes(e.user_id)
   );
@@ -33,21 +36,31 @@ export function ChallengeScores({
           accessibilityRole="header"
           className="text-text-primary text-xl font-semibold"
         >
-          {leaders.length > 1
-            ? t('challenges.tiedLead', {
-                defaultValue: '{{names}} share the lead',
-                names,
-              })
-            : result.lead_margin !== null
-              ? t('challenges.leading', {
-                  defaultValue: '{{name}} leads by {{steps}} steps',
-                  name: names,
-                  count: result.lead_margin,
-                  steps: number(result.lead_margin),
+          {result.challenge.lifecycle === 'completed'
+            ? leaders.length > 1
+              ? t('challenges.currentTiedWinners', {
+                  defaultValue: 'Current tied winners: {{names}}',
+                  names,
                 })
-              : t('challenges.oneCompetitor', {
-                  defaultValue: 'Your next step starts here',
-                })}
+              : t('challenges.currentWinner', {
+                  defaultValue: 'Current winner: {{name}}',
+                  name: names,
+                })
+            : leaders.length > 1
+              ? t('challenges.tiedLead', {
+                  defaultValue: '{{names}} share the lead',
+                  names,
+                })
+              : result.lead_margin !== null
+                ? t('challenges.leading', {
+                    defaultValue: '{{name}} leads by {{steps}} steps',
+                    name: names,
+                    count: result.lead_margin,
+                    steps: number(result.lead_margin),
+                  })
+                : t('challenges.oneCompetitor', {
+                    defaultValue: 'Your next step starts here',
+                  })}
         </Text>
       )}
       {entries.map((entry) => (

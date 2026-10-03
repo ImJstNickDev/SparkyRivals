@@ -29,7 +29,14 @@ export default function ChallengesScreen({
     title: t('challenges.title', { defaultValue: 'Challenges' }),
     left: { kind: 'back' },
   });
-  const challenges = query.data?.pages.flatMap((p) => p.challenges) ?? [];
+  const challenges = [
+    ...new Map(
+      (query.data?.pages.flatMap((p) => p.challenges) ?? []).map((c) => [
+        c.id,
+        c,
+      ])
+    ).values(),
+  ];
   const sections = [
     {
       title: t('challenges.invitations', { defaultValue: 'Invitations' }),

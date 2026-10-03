@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import {
   selectChallengeInvitees,
   CHALLENGE_MAX_PARTICIPANTS,
@@ -30,6 +31,23 @@ export function ChallengeInvitees({
     actor,
     excluded
   );
+  useEffect(() => {
+    if (!connections.data || connections.isError || connections.isFetching)
+      return;
+    const allowed = selectChallengeInvitees(connections.data, actor, excluded);
+    const retained = selected.filter((id) =>
+      allowed.some((p) => p.user_id === id)
+    );
+    if (retained.length !== selected.length) onChange(retained);
+  }, [
+    connections.data,
+    connections.isError,
+    connections.isFetching,
+    actor,
+    excluded,
+    selected,
+    onChange,
+  ]);
   return (
     <fieldset className="space-y-3">
       <legend className="mb-2 font-semibold">

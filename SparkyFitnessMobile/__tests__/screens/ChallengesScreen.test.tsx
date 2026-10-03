@@ -564,3 +564,32 @@ it('uses English singular forms without leaking placeholders', () => {
   expect(view.getByText('Nico leads by 1 step')).toBeTruthy();
   expect(view.getAllByText('1 step')).toHaveLength(2);
 });
+it('keeps your position visible below the compact top three', () => {
+  const group = {
+    ...results,
+    entries: Array.from({ length: 4 }, (_, i) => ({
+      ...results.entries[0]!,
+      user_id: i === 3 ? actor : String(i),
+      display_name: `Friend ${i}`,
+      rank: i + 1,
+    })),
+  };
+  const view = display(
+    <ChallengeScores result={group} actor={actor} compact />
+  );
+  expect(view.getByText('Friend 3 (you)')).toBeTruthy();
+  expect(view.getByText('Rank 4')).toBeTruthy();
+});
+it.each([false, true])('labels completed current winners (tie=%s)', (tied) => {
+  const result = {
+    ...results,
+    challenge: { ...challenge, lifecycle: 'completed' as const },
+    leader_user_ids: tied ? [actor, peer] : [actor],
+  };
+  const view = display(<ChallengeScores result={result} actor={actor} />);
+  expect(
+    view.getByText(
+      tied ? 'Current tied winners: Nico, Marta' : 'Current winner: Nico'
+    )
+  ).toBeTruthy();
+});

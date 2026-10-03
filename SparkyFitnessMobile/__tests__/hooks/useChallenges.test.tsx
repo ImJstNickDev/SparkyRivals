@@ -190,5 +190,5 @@ it('surfaces offline failures and never retries membership writes', async () => 
     ).rejects.toThrow('offline');
   });
   expect(api.respond).toHaveBeenCalledTimes(1);
-  expect(result.current.isError).toBe(true);
+  await waitFor(() => expect(result.current.isError).toBe(true));
 });

@@ -54,9 +54,9 @@ export function ChallengeLoading() {
       aria-label={t('challenges.loading', 'Loading Challenges')}
       className="space-y-4"
     >
-      <Skeleton className="h-10 w-2/3" />
-      <Skeleton className="h-56 w-full rounded-3xl" />
-      <Skeleton className="h-24 w-full rounded-3xl" />
+      <Skeleton className="motion-reduce:animate-none h-10 w-2/3" />
+      <Skeleton className="motion-reduce:animate-none h-56 w-full rounded-3xl" />
+      <Skeleton className="motion-reduce:animate-none h-24 w-full rounded-3xl" />
     </div>
   );
 }

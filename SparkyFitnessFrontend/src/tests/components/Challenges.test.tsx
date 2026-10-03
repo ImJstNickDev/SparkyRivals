@@ -1,3 +1,5 @@
+import { ChallengeInvitees } from '@/pages/Challenges/ChallengeInvitees';
+import { useActiveUser } from '@/contexts/ActiveUserContext';
 import React from 'react';
 import {
   fireEvent,
@@ -30,7 +32,10 @@ import {
 } from '../fixtures/challenges';
 jest.mock('@/hooks/Challenges/useChallenges');
 jest.mock('@/contexts/ActiveUserContext', () => ({
-  useActiveUser: () => ({ isActingOnBehalf: false, switchToUser: jest.fn() }),
+  useActiveUser: jest.fn(() => ({
+    isActingOnBehalf: false,
+    switchToUser: jest.fn(),
+  })),
 }));
 jest.mock('@/contexts/PreferencesContext', () => ({
   usePreferences: () => ({ timezone: 'Europe/Rome' }),
@@ -66,6 +71,10 @@ function show(ui: React.ReactElement, path = '/challenges') {
 }
 beforeEach(() => {
   jest.clearAllMocks();
+  jest.mocked(useActiveUser).mockReturnValue({
+    isActingOnBehalf: false,
+    switchToUser: jest.fn(),
+  } as unknown as ReturnType<typeof useActiveUser>);
   h.useChallengeRefresh.mockReturnValue(refetch);
   h.useChallengeIdentity.mockReturnValue({ actor, enabled: true });
   h.useChallenges.mockReturnValue({
@@ -412,4 +421,120 @@ describe('creation', () => {
     show(<CreateChallengePage />);
     expect(screen.queryByLabelText('Marta')).not.toBeInTheDocument();
   });
+});
+it('keeps your own position on a compact group card', () => {
+  const group = {
+    ...results,
+    entries: Array.from({ length: 4 }, (_, i) => ({
+      ...results.entries[0]!,
+      user_id: i === 3 ? actor : `${peer}-${i}`,
+      display_name: `Friend ${i}`,
+      rank: i + 1,
+    })),
+  };
+  show(<ChallengeScores result={group} actor={actor} compact />);
+  expect(screen.getByText('Friend 3')).toBeInTheDocument();
+  expect(screen.getByText('Rank 4')).toBeInTheDocument();
+});
+it.each([false, true])(
+  'labels reconciled completed winners (tie=%s)',
+  (tied) => {
+    const result = {
+      ...results,
+      challenge: { ...challenge, lifecycle: 'completed' as const },
+      leader_user_ids: tied ? [actor, peer] : [actor],
+    };
+    show(<ChallengeScores result={result} actor={actor} />);
+    expect(
+      screen.getByText(
+        tied ? 'Current tied winners: Nico and Marta' : 'Current winner: Nico'
+      )
+    ).toBeInTheDocument();
+  }
+);
+it('uses singular steps without an unresolved interpolation', () => {
+  const result = {
+    ...results,
+    lead_margin: 1,
+    entries: results.entries.map((e) => ({
+      ...e,
+      daily: [{ date: '2026-10-03', value: 1, present: true, eligible: true }],
+    })),
+  };
+  show(
+    <>
+      <ChallengeScores result={result} actor={actor} />
+      <ChallengeDailyHistory result={result} actor={actor} />
+    </>
+  );
+  expect(screen.getByText('Nico leads by 1 step')).toBeInTheDocument();
+  expect(screen.getAllByText('1 step')).toHaveLength(2);
+});
+it('does not submit invalid calendar ranges', () => {
+  show(<CreateChallengePage />);
+  fireEvent.change(screen.getByLabelText('Challenge name'), {
+    target: { value: 'Together' },
+  });
+  fireEvent.change(screen.getByLabelText('Start date'), {
+    target: { value: '2026-10-09' },
+  });
+  fireEvent.change(screen.getByLabelText('End date'), {
+    target: { value: '2026-10-03' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Create Challenge' }));
+  expect(mutateAsync).not.toHaveBeenCalled();
+  expect(screen.getByRole('alert')).toBeInTheDocument();
+});
+it('retains inputs on failed creation', async () => {
+  mutateAsync.mockRejectedValueOnce(new Error('offline'));
+  show(<CreateChallengePage />);
+  fireEvent.change(screen.getByLabelText('Challenge name'), {
+    target: { value: 'Keep me' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Create Challenge' }));
+  await waitFor(() => expect(mutateAsync).toHaveBeenCalled());
+  expect(screen.getByDisplayValue('Keep me')).toBeInTheDocument();
+});
+it('invites an eligible connection through the owner dialog', async () => {
+  h.useChallengeDetail.mockReturnValue(
+    query({
+      ...detail,
+      participants: detail.participants.slice(0, 1),
+    }) as unknown as ReturnType<typeof hooks.useChallengeDetail>
+  );
+  show(<ChallengeDetailPage />, `/challenges/${challenge.id}`);
+  fireEvent.click(screen.getByRole('button', { name: 'Invite' }));
+  fireEvent.click(screen.getByLabelText('Marta'));
+  fireEvent.click(
+    within(screen.getByRole('dialog')).getByRole('button', { name: 'Invite' })
+  );
+  await waitFor(() =>
+    expect(mutateAsync).toHaveBeenCalledWith({
+      action: 'invite',
+      id: challenge.id,
+      userId: peer,
+    })
+  );
+});
+
+it('removes selected connections after eligibility changes', () => {
+  h.useChallengeConnections.mockReturnValue(
+    query([{ ...connection, is_active: false }]) as unknown as ReturnType<
+      typeof hooks.useChallengeConnections
+    >
+  );
+  const change = jest.fn();
+  show(<ChallengeInvitees selected={[peer]} onChange={change} />);
+  expect(change).toHaveBeenCalledWith([]);
+});
+it('hides personal Challenge content in delegated profile context', () => {
+  const switchToUser = jest.fn();
+  jest.mocked(useActiveUser).mockReturnValue({
+    isActingOnBehalf: true,
+    switchToUser,
+  } as unknown as ReturnType<typeof useActiveUser>);
+  show(<ChallengesPage />);
+  expect(screen.queryByText(challenge.name)).not.toBeInTheDocument();
+  fireEvent.click(screen.getByText('Use my profile'));
+  expect(switchToUser).toHaveBeenCalledWith(null);
 });

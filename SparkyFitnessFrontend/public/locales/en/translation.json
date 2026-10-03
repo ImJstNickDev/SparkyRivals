@@ -6762,12 +6762,14 @@
     "dayProgress_other": "Day {{current}} of {{total}} · {{remaining}} days left",
     "dayProgress_one": "Day {{current}} of {{total}} · {{remaining}} day left",
     "stepsValue_other": "{{steps}} steps",
-    "stepsValue_one": "{{step}} step",
+    "stepsValue_one": "{{steps}} step",
     "leading_other": "{{name}} leads by {{steps}} steps",
-    "leading_one": "{{name}} leads by {{step}} step",
+    "leading_one": "{{name}} leads by {{steps}} step",
     "behind_other": "{{steps}} steps behind the lead",
-    "behind_one": "{{step}} step behind the lead",
+    "behind_one": "{{steps}} step behind the lead",
     "coverage_other": "{{present}} of {{eligible}} elapsed days have step data",
-    "coverage_one": "{{present}} of {{eligible}} elapsed day has step data"
+    "coverage_one": "{{present}} of {{eligible}} elapsed day has step data",
+    "currentWinner": "Current winner: {{name}}",
+    "currentTiedWinners": "Current tied winners: {{names}}"
   }
 }

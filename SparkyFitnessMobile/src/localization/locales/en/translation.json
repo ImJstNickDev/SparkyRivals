@@ -5879,6 +5879,8 @@
     "timezoneDetails": "Timezone & daily totals",
     "hubDescription": "A little friendly competition. A little more movement.",
     "creatorJoined": "You join automatically. Your friends receive invitations.",
-    "validationError": "Add a name, a valid timezone and a date range of 1–366 days starting today or within the next year."
+    "validationError": "Add a name, a valid timezone and a date range of 1–366 days starting today or within the next year.",
+    "currentWinner": "Current winner: {{name}}",
+    "currentTiedWinners": "Current tied winners: {{names}}"
   }
 }

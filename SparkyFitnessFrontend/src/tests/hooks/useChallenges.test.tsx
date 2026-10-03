@@ -124,5 +124,35 @@ it('surfaces failed actions without a success claim', async () => {
       result.current.mutateAsync({ action: 'accept', id: challenge.id })
     ).rejects.toThrow('offline');
   });
-  expect(result.current.isError).toBe(true);
+  await waitFor(() => expect(result.current.isError).toBe(true));
+});
+it.each([
+  {
+    action: 'create',
+    body: {
+      name: 'Together',
+      metric: 'steps',
+      scoring_mode: 'sum',
+      start_date: '2026-10-03',
+      end_date: '2026-10-09',
+      timezone: 'UTC',
+      participant_ids: [],
+    },
+  },
+  { action: 'rename', id: challenge.id, name: 'Tomorrow' },
+  { action: 'invite', id: challenge.id, userId: actor },
+] as const)('invalidates lists and results after $action', async (command) => {
+  const context = setup();
+  const invalidate = jest.spyOn(context.client, 'invalidateQueries');
+  const { result } = renderHook(() => useChallengeMutation(), context);
+  await act(() =>
+    result.current.mutateAsync(
+      command.action === 'create'
+        ? { ...command, body: { ...command.body, participant_ids: [] } }
+        : command
+    )
+  );
+  expect(invalidate).toHaveBeenCalledWith({
+    queryKey: challengeKeys.all(actor),
+  });
 });

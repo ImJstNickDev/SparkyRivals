@@ -19,6 +19,9 @@ export function ChallengeScores({
 }) {
   const { t, number, locale } = useChallengeFormat();
   const entries = compact ? result.entries.slice(0, 3) : result.entries;
+  const ownEntry = result.entries.find((e) => e.user_id === actor);
+  if (compact && ownEntry && !entries.includes(ownEntry))
+    entries.push(ownEntry);
   const leaders = result.entries.filter((e) =>
     result.leader_user_ids.includes(e.user_id)
   );
@@ -32,15 +35,25 @@ export function ChallengeScores({
       {result.ranking_available && leaders.length > 0 && (
         <p className="flex items-start gap-2 text-lg font-semibold">
           <Trophy aria-hidden className="mt-1 h-5 w-5 shrink-0" />
-          {leaders.length > 1
-            ? t('challenges.tiedLead', '{{names}} share the lead', { names })
-            : result.lead_margin !== null
-              ? t('challenges.leading', '{{name}} leads by {{steps}} steps', {
+          {result.challenge.lifecycle === 'completed'
+            ? leaders.length > 1
+              ? t(
+                  'challenges.currentTiedWinners',
+                  'Current tied winners: {{names}}',
+                  { names }
+                )
+              : t('challenges.currentWinner', 'Current winner: {{name}}', {
                   name: names,
-                  count: result.lead_margin,
-                  steps: number(result.lead_margin),
                 })
-              : t('challenges.oneCompetitor', 'Your next step starts here')}
+            : leaders.length > 1
+              ? t('challenges.tiedLead', '{{names}} share the lead', { names })
+              : result.lead_margin !== null
+                ? t('challenges.leading', '{{name}} leads by {{steps}} steps', {
+                    name: names,
+                    count: result.lead_margin,
+                    steps: number(result.lead_margin),
+                  })
+                : t('challenges.oneCompetitor', 'Your next step starts here')}
         </p>
       )}
       <ol
