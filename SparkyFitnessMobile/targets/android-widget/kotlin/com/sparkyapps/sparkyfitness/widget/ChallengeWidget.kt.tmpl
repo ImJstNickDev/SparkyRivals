@@ -48,6 +48,7 @@ class ChallengeWidget : GlanceAppWidget() {
                     Text(value?.optString("title") ?: localized.getString(R.string.sparky_challenge_widget_name),style=TextStyle(color=GlanceTheme.colors.onSurface,fontWeight=FontWeight.Bold,fontSize=16.sp),maxLines=1)
                     Text(value?.optString("status") ?: localized.getString(R.string.challenge_widget_not_synced),style=TextStyle(color=GlanceTheme.colors.onSurfaceVariant,fontSize=12.sp),maxLines=2)
                     if (value != null) {
+                        if (value.optString("score").isEmpty()) Text(value.optString("metric"),style=TextStyle(color=GlanceTheme.colors.onSurfaceVariant,fontSize=12.sp),maxLines=1)
                         Text(value.optString("score"),style=TextStyle(color=GlanceTheme.colors.primary,fontSize=24.sp,fontWeight=FontWeight.Bold),maxLines=1)
                         Text(value.optString("rank"),style=TextStyle(color=GlanceTheme.colors.onSurface,fontSize=13.sp),maxLines=1)
                         Text(value.optString("gap"),style=TextStyle(color=GlanceTheme.colors.onSurface,fontSize=13.sp),maxLines=1)

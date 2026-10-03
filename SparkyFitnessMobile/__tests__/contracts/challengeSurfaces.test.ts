@@ -17,6 +17,7 @@ it('keeps both existing phone widgets and registers the third in existing target
   expect(widget).toContain('[.systemSmall, .systemMedium]');
   expect(widget).toContain('generatedAt / 1000');
   expect(widget).toContain('value.state == "ready"');
+  expect(widget).toContain('if value.score.isEmpty { Text(value.metric)');
 });
 it('Android third widget has its own snapshot and variant-aware destination', () => {
   const base =
@@ -51,6 +52,7 @@ it('Watch complication clears through adopted context and keeps old complication
   );
   expect(view).toContain('!value.accountKey.isEmpty');
   expect(view).toContain('ComplicationLink.challenge.url');
+  expect(view).toContain('value.rank.isEmpty ? value.status');
   expect(read('targets/watch/Domain/WatchDeepLink.swift')).toContain(
     'case challenge'
   );

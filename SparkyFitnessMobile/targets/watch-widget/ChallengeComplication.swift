@@ -50,9 +50,9 @@ private struct ChallengeComplicationView: View {
             if let value = entry.snapshot {
                 switch family {
                 case .accessoryInline:
-                    Text("\(stale ? "↻ " : "")\(value.rank) · \(value.score)")
+                    Text(value.rank.isEmpty ? value.status : "\(stale ? "↻ " : "")\(value.rank) · \(value.score)")
                 case .accessoryCircular:
-                    VStack(spacing: 1) { Image(systemName: stale ? "clock" : "trophy"); Text(value.rank).font(.caption2); Text(value.score).font(.caption2).minimumScaleFactor(0.6) }
+                    VStack(spacing: 1) { Image(systemName: stale ? "clock" : "trophy"); if value.rank.isEmpty { Text(value.status).font(.caption2).lineLimit(2) } else { Text(value.rank).font(.caption2); Text(value.score).font(.caption2).minimumScaleFactor(0.6) } }
                 default:
                     VStack(alignment: .leading, spacing: 1) {
                         Text(value.title).font(.headline).lineLimit(1)

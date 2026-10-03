@@ -55,4 +55,6 @@
     <string name="surface_leading">Leading</string>
     <string name="surface_stale_short">Stale</string>
     <string name="surface_time_short">Time</string>
+    <string name="surface_invite_short">Invite</string>
+    <string name="surface_soon_short">Soon</string>
 </resources>

@@ -56,6 +56,7 @@ private struct ChallengeWidgetView: View {
             Label(entry.snapshot?.title ?? localizedWidgetString("widget.challenge.name"), systemImage: "trophy")
                 .font(.caption.bold()).lineLimit(1)
             if let value = entry.snapshot {
+                if value.score.isEmpty { Text(value.metric).font(.caption2).foregroundStyle(.secondary) }
                 Text(value.status).font(.caption2).foregroundStyle(.secondary).lineLimit(2)
                 Text(value.score).font(.system(.title2, design: .rounded).bold()).minimumScaleFactor(0.6).lineLimit(1)
                 Text(value.rank).font(.caption)
