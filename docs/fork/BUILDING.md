@@ -256,13 +256,36 @@ For each variant you intend to install/distribute:
 
 For ad-hoc Watch installation, verify the **Watch's own UDID** is registered and
 included in both embedded Watch app/widget profiles. Registering only the paired
-iPhone is insufficient. Build 1005 compiled/exported successfully but its Watch
-profiles contained only the iPhone UDID, blocking physical Watch acceptance.
+iPhone is insufficient. The original build 1005 compiled/exported successfully
+but its Watch profiles contained only the iPhone UDID. An interactive EAS re-sign
+corrected that omission; see [release evidence](RELEASE_VALIDATION.md).
 Inspect profile device membership privately before requesting another install;
 never commit device IDs. A non-interactive build that merely reuses the same
 profiles does not add the missing device. Follow Apple's
 [registered-device distribution guidance](https://developer.apple.com/documentation/xcode/distributing-your-app-to-registered-devices)
 and stop for device registration or Apple authentication before refreshing profiles.
+
+EAS CLI 24.10.0's manual **Input** registration has no Watch device class; choose
+**Unknown** for the Watch. Its non-interactive ad-hoc refresh filters iOS devices
+to iPhone/iPad and excludes this entry, so use interactive provisioning and select
+both devices explicitly for the targets. Reuse the existing Distribution Certificate.
+If EAS reports that Apple could not provision a selected device, stop rather than
+export another artifact without it.
+
+After registration, an existing successful internal build can be re-signed without
+recompiling. Run the following locally, completing any Apple authentication yourself:
+
+```sh
+pnpm build:profile sparkyrivals-production-internal pnpm dlx eas-cli@24.10.0 build:resign \
+  --platform ios --id YOUR_SUCCESSFUL_INTERNAL_BUILD_ID \
+  --target-profile sparkyrivals-production-internal --no-wait
+```
+
+Choose devices again when the old profile lacks the Watch, and select iPhone plus
+Watch at each target prompt. Decline optional push setup for this milestone.
+Inspect the exported profiles before installation, then install the re-signed IPA
+over the existing iPhone app before retrying its embedded Watch app. A successful
+cloud re-sign does not itself prove Watch installation or launch.
 
 The inherited manual `ios-build.yml` now selects a profile and discovers generated
 workspace/launch IDs. It compiles unsigned simulators, not device provisioning.

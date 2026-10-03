@@ -76,26 +76,40 @@ that it opens to onboarding. This is a user-observed installation/launch result,
 separate from IPA inspection and cloud compilation. Authentication, HealthKit,
 widgets and paired Apple Watch behavior are not established by that confirmation.
 
-### Apple Watch installation blocker (2026-10-04)
+### Apple Watch installation diagnosis and profile recovery (2026-10-04)
 
 The maintainer reported “This app could not be installed at this time” on an
 Apple Watch Series 7 (GPS), watchOS 26.1 (23S37). IPA inspection confirms both
 Watch targets have `MinimumOSVersion=10.0`, WatchOS platform/device-family metadata,
 and arm64_32/arm64 executable slices. The OS minimum is not the blocker found here.
 
-Both embedded Watch provisioning profiles contain exactly one allowed device:
-the registered **iPhone**, not the Watch. A fresh EAS device listing for the owned
-team also contains only that enabled iPhone. Earlier profile checks established
+Both original embedded Watch provisioning profiles contained exactly one allowed
+device: the registered **iPhone**, not the Watch. The EAS device listing for the
+owned team also contained only that enabled iPhone. Earlier profile checks established
 team, capabilities, certificate and nonempty device lists, but did not establish
 the presence of the physical Watch's UDID. Successful Xcode export does not
 establish install eligibility for that Watch.
 
-Next: obtain the paired Watch UDID privately with the maintainer's physical-device
-assistance, register it through the owned provisioning flow, refresh the Watch
-app/widget profiles and verify its inclusion in the next exported artifact before
-retrying installation. Reusing the existing profiles unchanged cannot fix this
-omission. Device registration/Apple authentication remain human-interaction gates.
-No certificate rotation, OS update or deployment-target change was performed.
+The maintainer installed the missing Arch `usbmuxd` daemon and approved USB pairing.
+A read-only companion-registry query through the installed libimobiledevice library
+retrieved the paired Watch UDID privately and confirmed the omission. The maintainer
+registered that device with EAS, completed Apple authentication and interactively
+selected both devices for all five profiles, retaining the existing certificate.
+Push notification setup was declined without saving a new preference.
+
+EAS re-signed the existing build 1005 successfully:
+[3be0adb6-2aa2-4ae1-b57d-415ef7a88965](https://expo.dev/accounts/imjstnickdev/projects/sparkyrivals/builds/3be0adb6-2aa2-4ae1-b57d-415ef7a88965).
+Direct inspection of the new IPA confirms **both physical device IDs in all five
+profiles**, the same Distribution Certificate, team and App Groups, unchanged
+Info.plists and build 1005 throughout. This was a re-sign, not a new compilation.
+No certificate rotation, OS update or deployment-target change was needed.
+
+The artifact and non-secret verification JSON are private under
+`~/.local/share/sparkyrivals/artifacts/milestone-8a/ios-1005-watch-resigned/`.
+IPA SHA-256: `2feac1d5a5a956b61f8ac96940f7962613277628baa0524ac8399d859900b6e3`.
+The maintainer has been asked to install this updated IPA over the existing iPhone
+app, then retry Watch installation. Physical Watch launch remains unverified until
+that check; corrected profile membership alone is not a device-test result.
 
 ## Android compilation
 
