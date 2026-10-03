@@ -186,8 +186,15 @@ The exported Watch app including its complication totals **3,132,465 bytes
 uncompressed**; the complete phone IPA is 34,056,081 bytes. The captured logs do
 not expose required/available-byte values from the Watch's installer. Consequently
 neither genuinely exhausted Watch storage nor a faulty capacity check is proven.
-No user data was deleted. A normal Watch restart and one unchanged-build retry
-have been requested before considering further changes. Private capture:
+No user data was deleted. The maintainer restarted the Watch normally and retried
+without updating watchOS or replacing the build. At 01:34:10 the phone transferred
+a **37,632-byte placeholder**; at 01:34:15 it received `Got install done`, explicitly
+followed by `Finished placeholder install ... enqueueing actual install`. This is
+not a completed app installation. The actual app phase (`p = N`) returned the same
+remote error 12 at 01:34:44. Another attempt at 01:35:15 was also refused with the
+same error. The normal restart therefore did not resolve full-app installation. A watchOS
+26.6 update/retry remains outstanding; the underlying installer capacity check is
+still unexplained. Private capture:
 `/tmp/sparkyrivals-8a/watch-install-storage-jDO0IT.log`.
 
 ## Android compilation
