@@ -99,3 +99,25 @@ publishing namespaces, secrets, bots, translations, release tags, and external
 notifications. Do not attach credentials to inherited upstream publication jobs.
 Milestone 1 owns enabling validation and configuring derivative builds; publishing
 and store submission need their own explicit release decision.
+# Read-only upstream rule
+
+`CodeWithCJ/SparkyFitness` is reference-only for this derivative. Never perform
+any GitHub write there, including issues, PRs, comments, reviews, releases,
+workflow dispatches or settings. All writes explicitly target
+`ImJstNickDev/SparkyRivals`; PRs target our `main` only.
+
+Configure each clone:
+
+```sh
+git remote set-url --push upstream disabled://read-only/CodeWithCJ/SparkyFitness
+git remote -v
+```
+
+Keep the upstream fetch URL unchanged. This local guard complements the explicit
+repository selection for `gh`; it does not protect GitHub API calls by itself.
+
+Milestone 1 PR #1 merged with a normal merge commit on 2026-10-03:
+`14ff6ea3096138fd9f6ef12daf0188007dd09e3c`. The subsequent upstream fetch found
+`a341ab4844a649435cb1f7c653e21fffa69b7b22`; our merged main was 13 commits ahead
+and 10 behind. Those 10 upstream commits are deferred to a controlled sync task.
+Milestone 2 starts from this merged fork main without integrating upstream drift.
