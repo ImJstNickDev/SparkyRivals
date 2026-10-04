@@ -117,3 +117,49 @@ export const workoutResults: ChallengeLeaderboardResponse = {
     },
   })),
 };
+
+/** Modern contract fixture: server-authoritative fixed-point points, no raw-value tie-break. */
+export const goalResults: ChallengeLeaderboardResponse = {
+  ...results,
+  contract_version: 3,
+  score_unit: 'points',
+  canonical_unit: 'steps',
+  score_scale: 1_000_000,
+  challenge: {
+    ...challenge,
+    scoring_mode: 'goal_progress',
+    duration_days: 7,
+    start_next_day: false,
+    locked_at: '2026-10-03T00:00:00Z',
+  },
+  entries: results.entries.map((entry, index) => ({
+    ...entry,
+    target_value: index ? 16000 : 8000,
+    total_score: 140,
+    total_score_scaled: '140000000',
+    total_actual_value: index ? 22400 : 11200,
+    rank: 1,
+    is_tied: true,
+    gap_to_leader: 0,
+    gap_to_next_rank: null,
+    daily: entry.daily.map((day) => ({
+      ...day,
+      value: day.present ? 140 : 0,
+      actual_value: day.present ? (index ? 22400 : 11200) : 0,
+      score_scaled: day.present ? '140000000' : '0',
+      progress_points: day.present ? 140 : 0,
+      goal_reached: day.present,
+    })),
+    today: {
+      ...entry.daily[0]!,
+      value: 140,
+      actual_value: index ? 22400 : 11200,
+      score_scaled: '140000000',
+      progress_points: 140,
+      goal_reached: true,
+    },
+    coverage: { ...entry.coverage, days_with_data: 1 },
+  })),
+  leader_user_ids: [actor, peer],
+  lead_margin: 0,
+};

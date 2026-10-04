@@ -30,7 +30,9 @@ export function ChallengeActions({
   const [name, setName] = useState(challenge.name);
   const [selected, setSelected] = useState<string[]>([]);
   const open =
-    challenge.lifecycle === 'active' || challenge.lifecycle === 'upcoming';
+    challenge.lifecycle === 'lobby' ||
+    challenge.lifecycle === 'active' ||
+    challenge.lifecycle === 'upcoming';
   const owner = actor === challenge.creator_user_id;
   const capacity = CHALLENGE_MAX_PARTICIPANTS - participants.length;
   const labels = {
@@ -132,7 +134,9 @@ export function ChallengeActions({
           <Button
             accessibilityRole="button"
             variant="secondary"
-            disabled={mutation.isPending || capacity <= 0}
+            disabled={
+              mutation.isPending || capacity <= 0 || !!challenge.locked_at
+            }
             onPress={() => {
               mutation.reset();
               setSelected([]);
@@ -141,7 +145,7 @@ export function ChallengeActions({
           >
             {labels.invite}
           </Button>
-          {challenge.lifecycle === 'upcoming' && (
+          {['lobby', 'upcoming'].includes(challenge.lifecycle) && (
             <Button
               accessibilityRole="button"
               variant="secondary"

@@ -27,3 +27,26 @@ export const fetchGoalsRange = async (
     operation: 'fetch goals range',
   });
 };
+
+/** The existing goal timeline stores all personal goals; no local preference copy. */
+export async function saveDailyGoals(
+  date: string,
+  goals: DailyGoals
+): Promise<void> {
+  const { custom_nutrients, custom_meal_percentages, ...fields } = goals;
+  await apiFetch({
+    endpoint: '/api/goals/manage-timeline',
+    method: 'POST',
+    body: {
+      ...Object.fromEntries(
+        Object.entries(fields).map(([key, value]) => [`p_${key}`, value])
+      ),
+      custom_nutrients,
+      custom_meal_percentages,
+      p_start_date: date,
+      p_cascade: false,
+    },
+    serviceName: 'Goals API',
+    operation: 'save goals',
+  });
+}

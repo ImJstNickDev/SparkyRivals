@@ -22,7 +22,8 @@ export function ChallengeCard({
   featured?: boolean;
 }) {
   const { t, day, number, statuses, rules } = useChallengeFormat(
-    challenge.metric
+    challenge.metric,
+    challenge.scoring_mode
   );
   const { actor } = useChallengeIdentity();
   const result = useChallengeResults(challenge);

@@ -245,6 +245,16 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) => {
             />
 
             <SettingsRowGroup>
+              {isConnected && (
+                <SettingsRow
+                  icon="calorie-settings"
+                  title={t('goals.personal', {
+                    defaultValue: 'Personal activity goals',
+                  })}
+                  onPress={() => navigation.navigate('PersonalGoals')}
+                  iconColor={catCalories}
+                />
+              )}
               <SettingsRow
                 icon="app-settings"
                 title={t('settings.rows.app', { defaultValue: 'App Settings' })}

@@ -10,13 +10,14 @@ import { apiFetch } from './apiClient';
 const path = (id: string) => `/api/v2/challenges/${encodeURIComponent(id)}`;
 const request = (
   endpoint: string,
-  method: 'GET' | 'POST' | 'PATCH' = 'GET',
+  method: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE' = 'GET',
   body?: unknown
 ) =>
   apiFetch<unknown>({
     endpoint,
     method,
     body,
+    headers: { 'X-Challenge-Contract-Version': '3' },
     serviceName: 'Challenges API',
     operation: 'update or read Challenge',
   });
@@ -46,6 +47,24 @@ export const challengesApi = {
   invite: async (id: string, user_id: string) =>
     challengeDetailResponseSchema.parse(
       await request(`${path(id)}/invitations`, 'POST', { user_id })
+    ),
+  target: async (id: string, target_value: number, expected_revision: number) =>
+    challengeDetailResponseSchema.parse(
+      await request(`${path(id)}/target`, 'PUT', {
+        target_value,
+        expected_revision,
+      })
+    ),
+  ready: async (id: string, ready: boolean, expected_revision: number) =>
+    challengeDetailResponseSchema.parse(
+      await request(`${path(id)}/ready`, 'PUT', { ready, expected_revision })
+    ),
+  withdraw: async (id: string, userId: string) =>
+    challengeDetailResponseSchema.parse(
+      await request(
+        `${path(id)}/invitations/${encodeURIComponent(userId)}`,
+        'DELETE'
+      )
     ),
   respond: async (
     id: string,

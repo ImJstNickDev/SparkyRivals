@@ -5938,7 +5938,138 @@
       "rank": "Rank {{rank}} of {{participants}}",
       "stale": "May be out of date",
       "remaining_one": "{{number}} day remaining",
-      "remaining_other": "{{number}} days remaining"
+      "remaining_other": "{{number}} days remaining",
+      "lobby": "Waiting for players · Ready in the app"
+    },
+    "aggregateConsent": "Only daily aggregates for the chosen metric and your chosen target are shared after acceptance. Other health data stays private.",
+    "cancelledAggregate": "Cancelled. Challenge data sharing has stopped.",
+    "aggregateReconciles": "Results can change when canonical data arrives late, is corrected or deleted. Locked targets stay unchanged.",
+    "withdrawn": "Withdrawn",
+    "targetDisplay": "Daily target: {{target}}",
+    "type": "Challenge type",
+    "metricHint": "Only the chosen daily aggregate is shared after acceptance. Personal targets are confirmed in the lobby and lock when everyone is Ready.",
+    "duration": "Duration in days (1–366)",
+    "nextDay": "Start on next full day",
+    "readyTiming": "Starts when all invitations are resolved and everyone is Ready. With next full day off, the entire current day counts, including activity before activation.",
+    "waitingDates": "Dates set when everyone is Ready",
+    "lobby": "Waiting for players",
+    "noMetricData": "No data recorded",
+    "metricCoverageHint": "Missing data scores zero. It does not mean all devices have synced. Results can change when data is corrected.",
+    "metricLeading": "{{name}} leads by {{value}}",
+    "metricBehind": "{{value}} behind the lead",
+    "metricCoverage": "{{present}} of {{eligible}} elapsed days have data",
+    "yourChallenge": "Your Challenge",
+    "progressRules": "Each day earns actual ÷ your target × 100 points, without a cap. Points accumulate; equal points tie.",
+    "goalDayRules": "Each day at or above your target counts once. Equal goal-day totals tie.",
+    "lobbyRules": "At least two people must join. Pending invitations block the start. Choose your own target, save it and press Ready. Targets lock when everyone is Ready.",
+    "nextDayHint": "When everyone is Ready, targets lock and scoring starts on the next full day in the Challenge timezone.",
+    "immediateHint": "When everyone is Ready, scoring starts immediately. The entire current Challenge-local day counts, including earlier activity.",
+    "withdraw": "Withdraw invitation",
+    "dailyTarget": "Your daily target ({{unit}})",
+    "goalSuggested": "Suggested from your personal goal. You can choose a different target for this Challenge.",
+    "saveTarget": "Save target",
+    "invalidTarget": "Enter a positive target with at most six decimal places in the canonical unit.",
+    "ready": "Ready",
+    "notReady": "Not ready",
+    "unready": "Not ready",
+    "lockedTargets": "Locked daily targets",
+    "durationReview_one": "{{count}} calendar day",
+    "durationReview_other": "{{count}} calendar days",
+    "groups": {
+      "movement": "Movement",
+      "workout": "Workout",
+      "hydration": "Hydration"
+    },
+    "membership": {
+      "accepted": "Accepted",
+      "pending": "Pending",
+      "declined": "Declined",
+      "left": "Left",
+      "withdrawn": "Withdrawn"
+    },
+    "units": {
+      "steps": "steps",
+      "meters": "distance",
+      "kcal": "kcal",
+      "seconds": "workout time",
+      "milliliters": "hydration",
+      "points": "points",
+      "goal_days": "goal days"
+    },
+    "types": {
+      "step-race": "Step Race",
+      "step-goal": "Step Goal",
+      "step-streak": "Step Streak",
+      "distance-race": "Distance Race",
+      "distance-goal": "Distance Goal",
+      "distance-streak": "Distance Streak",
+      "active-calories": "Active Calories",
+      "move-goal": "Move Goal",
+      "move-streak": "Move Goal Streak",
+      "workout-minutes": "Workout Minutes",
+      "workout-minutes-goal": "Workout Minutes Goal",
+      "workout-minutes-streak": "Workout Minutes Streak",
+      "workout-calories": "Workout Calories",
+      "workout-calorie-goal": "Workout Calorie Goal",
+      "workout-calorie-streak": "Workout Calorie Streak",
+      "workout-distance": "Workout Distance",
+      "hydration-goal": "Hydration Goal",
+      "hydration-streak": "Hydration Streak"
+    },
+    "typeLabels": {
+      "steps": {
+        "sum": "Step Race",
+        "goal_progress": "Step Goal",
+        "goal_days": "Step Streak"
+      },
+      "distance": {
+        "sum": "Distance Race",
+        "goal_progress": "Distance Goal",
+        "goal_days": "Distance Streak"
+      },
+      "active_calories": {
+        "sum": "Active Calories",
+        "goal_progress": "Move Goal",
+        "goal_days": "Move Goal Streak"
+      },
+      "workout_time": {
+        "sum": "Workout Minutes",
+        "goal_progress": "Workout Minutes Goal",
+        "goal_days": "Workout Minutes Streak"
+      },
+      "workout_calories": {
+        "sum": "Workout Calories",
+        "goal_progress": "Workout Calorie Goal",
+        "goal_days": "Workout Calorie Streak"
+      },
+      "workout_distance": {
+        "sum": "Workout Distance"
+      },
+      "hydration": {
+        "goal_progress": "Hydration Goal",
+        "goal_days": "Hydration Streak"
+      }
     }
+  },
+  "goals": {
+    "goalsSettings": {
+      "targetExerciseCaloriesBurned": "Exercise Calories",
+      "targetExerciseDurationMinutes": "Ex. Duration (min)"
+    },
+    "personal": "Personal activity goals",
+    "moveExplanation": "You can import today’s Apple Fitness Move goal. Apple Health may ask for Activity Summary access. Your saved goal changes only after you choose Use and Save.",
+    "readMove": "Read Apple Move goal",
+    "useMove": "Use {{value}} kcal from Apple Move",
+    "moveUnavailable": "Apple Move goal unavailable. You can enter your own active-calorie goal.",
+    "activityExplanation": "Goals use your normal dated goal timeline. They can suggest a Challenge target; changing a personal goal never changes a locked Challenge target.",
+    "invalid": "Use positive numbers or leave a goal blank.",
+    "saveError": "Could not save goals. Try again.",
+    "saved": "Goals saved",
+    "steps_goal": "Daily steps",
+    "distance_goal_meters": "Daily distance",
+    "active_calories_goal": "Daily active calories",
+    "target_exercise_duration_minutes": "Workout duration",
+    "target_exercise_calories_burned": "Workout calories",
+    "water_goal_ml": "Hydration"
   }
 }

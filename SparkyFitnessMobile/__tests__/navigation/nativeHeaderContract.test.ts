@@ -4,6 +4,8 @@ import path from 'node:path';
 const mobileRoot = path.resolve(__dirname, '../..');
 
 const NATIVE_TABS_ROUTE_EXCLUSIONS = {
+  PersonalGoals:
+    'Dated personal goals editor presented above Settings on the root stack.',
   Challenges:
     'Root-stack competition hub entered from Dashboard; preserves the existing native tab layout.',
   ChallengeDetail: 'Root-stack competition results route above the tab host.',

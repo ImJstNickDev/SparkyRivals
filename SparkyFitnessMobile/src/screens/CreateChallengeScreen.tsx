@@ -1,7 +1,9 @@
+import { challengeTypeText } from '../utils/challengeLabels';
 import { useRef, useState } from 'react';
-import { Text, View } from 'react-native';
+import { Text, View, Switch } from 'react-native';
 import {
   prepareChallengeRematch,
+  CHALLENGE_TYPES,
   type ChallengeRematchDraft,
   addDays,
   todayInZone,
@@ -18,7 +20,7 @@ import {
 import { usePreferences } from '../hooks/usePreferences';
 import { useScreenHeader } from '../hooks/useScreenHeader';
 import Button from '../components/ui/Button';
-import SegmentedControl from '../components/SegmentedControl';
+import BottomSheetPicker from '../components/BottomSheetPicker';
 import FormInput from '../components/FormInput';
 import CalendarSheet, {
   type CalendarSheetRef,
@@ -104,10 +106,19 @@ function CreateForm({
   timezoneDefault: string;
   navigation: Props['navigation'];
 }) {
-  const [metric, setMetric] = useState<'steps' | 'workout_time'>(
-    draft?.metric ?? 'steps'
+  const [typeId, setTypeId] = useState<string>(
+    CHALLENGE_TYPES.find(
+      (type) =>
+        type.metric === (draft?.metric ?? 'steps') &&
+        type.scoring_mode === (draft?.scoring_mode ?? 'sum')
+    )?.id ?? 'step-race'
   );
-  const { t, day, rules } = useChallengeFormat(metric);
+  const type = CHALLENGE_TYPES.find((type) => type.id === typeId)!;
+  const { metric, scoring_mode } = type;
+  const goalMode = scoring_mode !== 'sum';
+  const [duration, setDuration] = useState(String(draft?.duration_days ?? 7));
+  const [nextDay, setNextDay] = useState(draft?.start_next_day ?? false);
+  const { t, day, rules } = useChallengeFormat(metric, scoring_mode);
   const mutation = useChallengeMutation();
   const busy = useRef(false);
   const [timezone, setTimezone] = useState(timezoneDefault);
@@ -134,16 +145,17 @@ function CreateForm({
     const parsed = createChallengeRequestSchema.safeParse({
       name,
       metric,
-      start_date: start,
-      end_date: end,
+      scoring_mode,
+      ...(goalMode
+        ? { duration_days: Number(duration), start_next_day: nextDay }
+        : { start_date: start, end_date: end }),
       timezone,
       participant_ids: selected,
     });
     const today = validZone ? todayInZone(timezone) : '';
     if (
       !parsed.success ||
-      start < today ||
-      start > addDays(today || start, 366)
+      (!goalMode && (start < today || start > addDays(today || start, 366)))
     ) {
       setInvalid(true);
       return;
@@ -177,34 +189,49 @@ function CreateForm({
             'Choose your days, invite your people, and keep moving together.',
         })}
       </Text>
-      <SegmentedControl
-        segments={[
-          {
-            key: 'steps',
-            label: t('challenges.stepsMetric', { defaultValue: 'Steps' }),
-          },
-          {
-            key: 'workout_time',
-            label: t('challenges.workoutTime', {
-              defaultValue: 'Workout time',
-            }),
-          },
-        ]}
-        activeKey={metric}
-        onSelect={setMetric}
+      <BottomSheetPicker
+        title={t('challenges.type', { defaultValue: 'Challenge type' })}
+        value={typeId}
+        onSelect={setTypeId}
+        sections={(['movement', 'workout', 'hydration'] as const).map(
+          (group) => ({
+            title: {
+              movement: t('challenges.groups.movement', {
+                defaultValue: 'Movement',
+              }),
+              workout: t('challenges.groups.workout', {
+                defaultValue: 'Workout',
+              }),
+              hydration: t('challenges.groups.hydration', {
+                defaultValue: 'Hydration',
+              }),
+            }[group],
+            options: CHALLENGE_TYPES.filter((item) => item.group === group).map(
+              (item) => ({
+                value: item.id,
+                label: challengeTypeText(t, item.metric, item.scoring_mode),
+              })
+            ),
+          })
+        )}
       />
       <View className="rounded-2xl bg-surface p-5 gap-2">
         <Text className="text-text-primary font-semibold text-lg">{rules}</Text>
         <Text className="text-text-secondary">
-          {metric === 'workout_time'
-            ? t('challenges.workoutHint', {
+          {goalMode || !['steps', 'workout_time'].includes(metric)
+            ? t('challenges.metricHint', {
                 defaultValue:
-                  'Recorded qualifying workout duration counts. Calories and workout count do not decide the winner.',
+                  'Only the chosen daily aggregate is shared after acceptance. Personal targets are confirmed in the lobby and lock when everyone is Ready.',
               })
-            : t('challenges.canonicalHint', {
-                defaultValue:
-                  'Your existing daily step totals count. There is nothing extra to track.',
-              })}
+            : metric === 'workout_time'
+              ? t('challenges.workoutHint', {
+                  defaultValue:
+                    'Recorded qualifying workout duration counts. Calories and workout count do not decide the winner.',
+                })
+              : t('challenges.canonicalHint', {
+                  defaultValue:
+                    'Your existing daily step totals count. There is nothing extra to track.',
+                })}
         </Text>
       </View>
       <View className="gap-2">
@@ -224,52 +251,94 @@ function CreateForm({
           })}
         />
       </View>
-      <View className="flex-row flex-wrap gap-3">
-        <Button
-          accessibilityRole="button"
-          variant="secondary"
-          disabled={!validZone}
-          onPress={() => preset(1)}
-        >
-          {t('challenges.todayPreset', { defaultValue: 'Today' })}
-        </Button>
-        <Button
-          accessibilityRole="button"
-          variant="secondary"
-          disabled={!validZone}
-          onPress={() => preset(7)}
-        >
-          {t('challenges.weekPreset', { defaultValue: '7 days from today' })}
-        </Button>
-      </View>
-      <View className="gap-2">
-        <Text className="text-text-primary font-semibold">
-          {t('challenges.startDate', { defaultValue: 'Start date' })}
-        </Text>
-        <Button
-          accessibilityRole="button"
-          accessibilityLabel={t('challenges.chooseStart', {
-            defaultValue: 'Choose start date',
-          })}
-          variant="secondary"
-          onPress={() => startCalendar.current?.present()}
-        >
-          {day(start)}
-        </Button>
-        <Text className="text-text-primary font-semibold">
-          {t('challenges.endDate', { defaultValue: 'End date' })}
-        </Text>
-        <Button
-          accessibilityRole="button"
-          accessibilityLabel={t('challenges.chooseEnd', {
-            defaultValue: 'Choose end date',
-          })}
-          variant="secondary"
-          onPress={() => endCalendar.current?.present()}
-        >
-          {day(end)}
-        </Button>
-      </View>
+      {goalMode ? (
+        <View className="gap-3">
+          <Text className="text-text-primary">
+            {t('challenges.duration', {
+              defaultValue: 'Duration in days (1–366)',
+            })}
+          </Text>
+          <FormInput
+            accessibilityLabel={t('challenges.duration', {
+              defaultValue: 'Duration in days (1–366)',
+            })}
+            value={duration}
+            onChangeText={setDuration}
+            keyboardType="number-pad"
+          />
+          <View className="flex-row items-center justify-between gap-3">
+            <Text className="text-text-primary flex-1">
+              {t('challenges.nextDay', {
+                defaultValue: 'Start on next full day',
+              })}
+            </Text>
+            <Switch
+              accessibilityLabel={t('challenges.nextDay', {
+                defaultValue: 'Start on next full day',
+              })}
+              value={nextDay}
+              onValueChange={setNextDay}
+            />
+          </View>
+          <Text className="text-text-secondary">
+            {t('challenges.readyTiming', {
+              defaultValue:
+                'Starts when all invitations are resolved and everyone is Ready. With next full day off, the entire current day counts, including activity before activation.',
+            })}
+          </Text>
+        </View>
+      ) : (
+        <>
+          <View className="flex-row flex-wrap gap-3">
+            <Button
+              accessibilityRole="button"
+              variant="secondary"
+              disabled={!validZone}
+              onPress={() => preset(1)}
+            >
+              {t('challenges.todayPreset', { defaultValue: 'Today' })}
+            </Button>
+            <Button
+              accessibilityRole="button"
+              variant="secondary"
+              disabled={!validZone}
+              onPress={() => preset(7)}
+            >
+              {t('challenges.weekPreset', {
+                defaultValue: '7 days from today',
+              })}
+            </Button>
+          </View>
+          <View className="gap-2">
+            <Text className="text-text-primary font-semibold">
+              {t('challenges.startDate', { defaultValue: 'Start date' })}
+            </Text>
+            <Button
+              accessibilityRole="button"
+              accessibilityLabel={t('challenges.chooseStart', {
+                defaultValue: 'Choose start date',
+              })}
+              variant="secondary"
+              onPress={() => startCalendar.current?.present()}
+            >
+              {day(start)}
+            </Button>
+            <Text className="text-text-primary font-semibold">
+              {t('challenges.endDate', { defaultValue: 'End date' })}
+            </Text>
+            <Button
+              accessibilityRole="button"
+              accessibilityLabel={t('challenges.chooseEnd', {
+                defaultValue: 'Choose end date',
+              })}
+              variant="secondary"
+              onPress={() => endCalendar.current?.present()}
+            >
+              {day(end)}
+            </Button>
+          </View>
+        </>
+      )}
       {draft && (
         <Text accessibilityRole="text" className="text-text-secondary">
           {t('challenges.rematchReview', {
@@ -312,15 +381,20 @@ function CreateForm({
             autoCorrect={false}
           />
           <Text className="text-text-secondary">
-            {metric === 'workout_time'
-              ? t('challenges.workoutTimezoneHint', {
+            {goalMode || !['steps', 'workout_time'].includes(metric)
+              ? t('challenges.metricHint', {
                   defaultValue:
-                    'This sets when the Challenge starts and ends. Workouts keep their existing daily date buckets.',
+                    'Only the chosen daily aggregate is shared after acceptance. Personal targets are confirmed in the lobby and lock when everyone is Ready.',
                 })
-              : t('challenges.timezoneHint', {
-                  defaultValue:
-                    'This sets when the Challenge starts and ends. Steps keep their existing daily date buckets.',
-                })}
+              : metric === 'workout_time'
+                ? t('challenges.workoutTimezoneHint', {
+                    defaultValue:
+                      'This sets when the Challenge starts and ends. Workouts keep their existing daily date buckets.',
+                  })
+                : t('challenges.timezoneHint', {
+                    defaultValue:
+                      'This sets when the Challenge starts and ends. Steps keep their existing daily date buckets.',
+                  })}
           </Text>
         </View>
       )}
@@ -332,7 +406,13 @@ function CreateForm({
           {t('challenges.review', { defaultValue: 'Ready to go?' })}
         </Text>
         <Text className="text-text-primary">
-          {day(start)} – {day(end)}
+          {goalMode
+            ? t('challenges.durationReview', {
+                defaultValue: '{{count}} calendar days',
+                defaultValue_one: '{{count}} calendar day',
+                count: Number(duration),
+              })
+            : `${day(start)} – ${day(end)}`}
         </Text>
         <Text className="text-text-secondary">{timezone}</Text>
         <Text className="text-text-secondary">

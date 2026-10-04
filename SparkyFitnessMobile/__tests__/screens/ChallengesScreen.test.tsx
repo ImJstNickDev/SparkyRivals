@@ -1,3 +1,6 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { fetchDailyGoals } from '../../src/services/api/goalsApi';
+import { ChallengeLobby } from '../../src/components/challenges/ChallengeLobby';
 import i18n from '../../src/localization/i18n';
 import english from '../../src/localization/locales/en/translation.json';
 import React from 'react';
@@ -30,10 +33,12 @@ import {
   detail,
   results,
   workoutResults,
+  goalResults,
   connection,
 } from '../helpers/challenges';
 
 jest.mock('../../src/hooks/useChallenges');
+jest.mock('../../src/services/api/goalsApi');
 jest.mock('../../src/hooks/usePreferences');
 jest.mock('../../src/hooks/useScreenHeader', () => ({
   useScreenHeader: () => null,
@@ -73,7 +78,13 @@ const display = (element: React.ReactNode) =>
         insets: { top: 0, bottom: 0, left: 0, right: 0 },
       }}
     >
-      {element}
+      <QueryClientProvider
+        client={
+          new QueryClient({ defaultOptions: { queries: { retry: false } } })
+        }
+      >
+        {element}
+      </QueryClientProvider>
     </SafeAreaProvider>
   );
 const screen = (name: 'Challenges' | 'ChallengeDetail' | 'CreateChallenge') => {
@@ -136,6 +147,11 @@ beforeEach(() => {
     isError: false,
     refetch,
   } as unknown as ReturnType<typeof hooks.useChallengeIdentity>);
+  jest
+    .mocked(fetchDailyGoals)
+    .mockResolvedValue({ steps_goal: 8000 } as Awaited<
+      ReturnType<typeof fetchDailyGoals>
+    >);
   setList([challenge]);
   setDetail(detail);
   setResults(results);
@@ -144,6 +160,7 @@ beforeEach(() => {
   );
   h.useChallengeMutation.mockReturnValue({
     mutateAsync,
+    mutate: mutateAsync,
     isPending: false,
     isError: false,
     reset: jest.fn(),
@@ -601,7 +618,7 @@ it.each([false, true])('labels completed current winners (tie=%s)', (tied) => {
 describe('Workout time', () => {
   it('selects the workout metric on creation', async () => {
     const view = screen('CreateChallenge');
-    fireEvent.press(view.getByText('Workout time'));
+    fireEvent.press(view.getByLabelText('Workout Minutes'));
     fireEvent.changeText(
       view.getByLabelText('Challenge name'),
       'Time together'
@@ -720,5 +737,160 @@ describe('Rematch', () => {
         }),
       })
     );
+  });
+});
+
+describe('Goal Challenge functional flows', () => {
+  const lobby: ChallengeDetailResponse = {
+    ...detail,
+    challenge: {
+      ...challenge,
+      scoring_mode: 'goal_progress',
+      lifecycle: 'lobby',
+      start_date: null,
+      end_date: null,
+      duration_days: 7,
+      start_next_day: false,
+      locked_at: null,
+    },
+    participants: detail.participants.map((p) => ({
+      ...p,
+      target_value: null,
+      ready_at: null,
+      target_revision: 0,
+    })),
+  };
+  it('creates a duration-based goal lobby with immediate start as default', async () => {
+    const view = screen('CreateChallenge');
+    fireEvent.press(view.getByLabelText('Step Goal'));
+    fireEvent.changeText(view.getByLabelText('Challenge name'), 'Our goal');
+    expect(view.getByLabelText('Start on next full day').props.value).toBe(
+      false
+    );
+    fireEvent.press(view.getByText('Create Challenge'));
+    await waitFor(() =>
+      expect(mutateAsync).toHaveBeenCalledWith({
+        action: 'create',
+        body: expect.objectContaining({
+          metric: 'steps',
+          scoring_mode: 'goal_progress',
+          duration_days: 7,
+          start_next_day: false,
+        }),
+      })
+    );
+    expect(mutateAsync.mock.calls[0][0].body).not.toHaveProperty('start_date');
+  });
+  it('suggests the personal goal but sends only the chosen self target with a revision', async () => {
+    const view = display(<ChallengeLobby detail={lobby} />);
+    await waitFor(() =>
+      expect(view.getByLabelText('Your daily target (steps)').props.value).toBe(
+        '8000'
+      )
+    );
+    expect(mutateAsync).not.toHaveBeenCalled();
+    fireEvent.changeText(
+      view.getByLabelText('Your daily target (steps)'),
+      '9000'
+    );
+    fireEvent.press(view.getByText('Save target'));
+    expect(mutateAsync).toHaveBeenCalledWith({
+      action: 'target',
+      id: challenge.id,
+      target: 9000,
+      revision: 0,
+    });
+  });
+  it('requires a target when no personal goal exists', async () => {
+    jest
+      .mocked(fetchDailyGoals)
+      .mockResolvedValue({} as Awaited<ReturnType<typeof fetchDailyGoals>>);
+    const view = display(<ChallengeLobby detail={lobby} />);
+    await waitFor(() =>
+      expect(view.getByLabelText('Your daily target (steps)')).toBeTruthy()
+    );
+    fireEvent.press(view.getByText('Save target'));
+    expect(mutateAsync).not.toHaveBeenCalled();
+    expect(view.getByRole('alert')).toBeTruthy();
+  });
+  it.each([false, true])(
+    'confirms Ready/unready intent when ready=%s',
+    async (ready) => {
+      const value = {
+        ...lobby,
+        participants: lobby.participants.map((p) => ({
+          ...p,
+          target_value: 8000,
+          target_revision: 2,
+          ready_at: ready ? '2026-10-04T12:00:00Z' : null,
+        })),
+      };
+      const view = display(<ChallengeLobby detail={value} />);
+      await waitFor(() =>
+        expect(view.getByLabelText('Your daily target (steps)')).toBeTruthy()
+      );
+      fireEvent.press(
+        view.getByRole('button', { name: ready ? 'Not ready' : 'Ready' })
+      );
+      expect(mutateAsync).toHaveBeenCalledWith({
+        action: 'ready',
+        id: challenge.id,
+        ready: !ready,
+        revision: 2,
+      });
+    }
+  );
+  it('offers creator withdrawal only for pending participants', async () => {
+    const value = {
+      ...lobby,
+      participants: lobby.participants.map((p) =>
+        p.user_id === peer ? { ...p, status: 'pending' as const } : p
+      ),
+    };
+    const view = display(<ChallengeLobby detail={value} />);
+    fireEvent.press(view.getByText('Withdraw invitation'));
+    expect(mutateAsync).toHaveBeenCalledWith({
+      action: 'withdraw',
+      id: challenge.id,
+      userId: peer,
+    });
+  });
+  it('shows locked targets without mutation controls', () => {
+    const value = {
+      ...lobby,
+      challenge: {
+        ...lobby.challenge,
+        lifecycle: 'active' as const,
+        locked_at: '2026-10-04T12:00:00Z',
+      },
+      participants: lobby.participants.map((p) => ({
+        ...p,
+        target_value: 8000,
+      })),
+    };
+    const view = display(<ChallengeLobby detail={value} />);
+    expect(view.getByText('Locked daily targets')).toBeTruthy();
+    expect(view.queryByText('Save target')).toBeNull();
+  });
+});
+
+describe('Goal result units', () => {
+  it('shows uncapped points and each participant target without inventing a tiebreak', () => {
+    const view = display(
+      <ChallengeScores actor={actor} result={goalResults} />
+    );
+    expect(view.getAllByText('140 pts')).toHaveLength(2);
+    expect(view.getByText('Daily target: 8,000 steps')).toBeTruthy();
+    expect(view.getByText('Daily target: 16,000 steps')).toBeTruthy();
+    expect(view.getAllByText(/Rank 1.*Tied/)).toHaveLength(2);
+  });
+  it('keeps canonical actuals and percentage in daily history', () => {
+    const view = display(
+      <ChallengeDailyHistory actor={actor} result={goalResults} />
+    );
+    expect(
+      view.getAllByText(/11,200 steps.*8,000 steps.*140%/).length
+    ).toBeGreaterThan(0);
+    expect(view.getAllByText('No data recorded').length).toBeGreaterThan(0);
   });
 });

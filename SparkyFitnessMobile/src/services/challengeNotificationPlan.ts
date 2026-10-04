@@ -60,7 +60,7 @@ export function planChallengeNotifications(input: {
         prefs.invitations &&
         !input.remoteInvitations &&
         !ledger.seen[c.id] &&
-        ['active', 'upcoming'].includes(c.lifecycle)
+        ['active', 'upcoming', 'lobby'].includes(c.lifecycle)
       )
         alerts.push({
           key: `${c.id}:invitation`,
@@ -73,7 +73,9 @@ export function planChallengeNotifications(input: {
     if (
       !prefs.enabled ||
       c.my_membership !== 'accepted' ||
-      !['active', 'upcoming'].includes(c.lifecycle)
+      !['active', 'upcoming'].includes(c.lifecycle) ||
+      !c.start_date ||
+      !c.end_date
     )
       continue;
     const { start, end } = dayRangeToUtcRange(

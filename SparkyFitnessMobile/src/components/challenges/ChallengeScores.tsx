@@ -1,3 +1,7 @@
+import {
+  formatChallengeValue,
+  CHALLENGE_METRIC_UNITS,
+} from '@workspace/shared';
 import { useState } from 'react';
 import { Text, View } from 'react-native';
 import type {
@@ -29,7 +33,10 @@ export function ChallengeScores({
     behind,
     coverage,
     solo,
-  } = useChallengeFormat(result.challenge.metric);
+  } = useChallengeFormat(
+    result.challenge.metric,
+    result.challenge.scoring_mode
+  );
   const [limit, setLimit] = useState(20);
   const entries = result.entries.slice(0, compact ? 3 : limit);
   const ownEntry = result.entries.find((e) => e.user_id === actor);
@@ -102,6 +109,17 @@ export function ChallengeScores({
             <Text className="text-text-secondary text-sm mt-1">
               {totalLabel}
             </Text>
+            {entry.target_value != null && (
+              <Text className="text-text-secondary text-sm">
+                {t('challenges.targetDisplay', {
+                  defaultValue: 'Daily target: {{target}}',
+                  target: formatChallengeValue(
+                    entry.target_value,
+                    CHALLENGE_METRIC_UNITS[result.challenge.metric]
+                  ),
+                })}
+              </Text>
+            )}
             {entry.total_workout_count !== undefined && (
               <Text className="text-text-secondary text-sm">
                 {workoutCount(entry.total_workout_count)}
@@ -182,7 +200,7 @@ export function ChallengeDailyHistory({
   actor: string;
 }) {
   const { t, number, day, noData, scoreWithUnit, workoutCount } =
-    useChallengeFormat(result.challenge.metric);
+    useChallengeFormat(result.challenge.metric, result.challenge.scoring_mode);
   const [selected, setSelected] = useState(
     result.entries.find((e) => e.user_id === actor)?.user_id ??
       result.entries[0]?.user_id ??
@@ -254,6 +272,22 @@ export function ChallengeDailyHistory({
                     </Text>
                     <View>
                       <Text className="text-text-secondary">{value(p)}</Text>
+                      {p?.present &&
+                        p.actual_value !== undefined &&
+                        entry.target_value != null && (
+                          <Text className="text-text-secondary text-sm">
+                            {formatChallengeValue(
+                              p.actual_value,
+                              CHALLENGE_METRIC_UNITS[result.challenge.metric]
+                            )}{' '}
+                            /{' '}
+                            {formatChallengeValue(
+                              entry.target_value,
+                              CHALLENGE_METRIC_UNITS[result.challenge.metric]
+                            )}{' '}
+                            · {number(p.progress_points ?? 0)}%
+                          </Text>
+                        )}
                       {p?.present && p.workout_count !== undefined && (
                         <Text className="text-text-secondary text-sm">
                           {workoutCount(p.workout_count)}

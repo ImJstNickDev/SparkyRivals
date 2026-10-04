@@ -228,3 +228,25 @@ it('enabling against cached state waits for a fresh invitation baseline', () => 
   expect(fresh.alerts).toEqual([]);
   expect(fresh.ledger.seen[challenge.id]).toBe(now);
 });
+
+it('keeps lobby invitations local-fallback eligible without scheduling provisional lifecycle reminders', () => {
+  const lobby = {
+    ...challenge,
+    scoring_mode: 'goal_progress' as const,
+    lifecycle: 'lobby' as const,
+    start_date: null,
+    end_date: null,
+    duration_days: 7,
+    locked_at: null,
+  };
+  const accepted = planChallengeNotifications({
+    ...defaults(),
+    challenges: [lobby],
+  });
+  expect(accepted.alerts).toEqual([]);
+  const pending = planChallengeNotifications({
+    ...defaults(),
+    challenges: [{ ...lobby, my_membership: 'pending' }],
+  });
+  expect(pending.alerts.map((alert) => alert.kind)).toEqual(['invitation']);
+});

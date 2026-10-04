@@ -1,3 +1,4 @@
+import PersonalGoalsScreen from '../screens/PersonalGoalsScreen';
 import ChallengesScreen from '../screens/ChallengesScreen';
 import ChallengeDetailScreen from '../screens/ChallengeDetailScreen';
 import CreateChallengeScreen from '../screens/CreateChallengeScreen';
@@ -181,3 +182,5 @@ export const SafeChallenges = withErrorBoundary(ChallengesScreen, 'Challenges', 
 export const SafeChallengeDetail = withErrorBoundary(ChallengeDetailScreen, 'ChallengeDetail', { canGoBack: true });
 
 export const SafeCreateChallenge = withErrorBoundary(CreateChallengeScreen, 'CreateChallenge', { canGoBack: true });
+
+export const SafePersonalGoals = withErrorBoundary(PersonalGoalsScreen, 'PersonalGoals', { canGoBack: true });
