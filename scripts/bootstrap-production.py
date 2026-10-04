@@ -35,7 +35,37 @@ def exclusive_write(path, content):
         output.write(content)
 
 
-def prepare(root, data, url, local_test=False):
+def validate_push_secret(data, runtime, source=None):
+    target = data / 'secrets/expo_access_token'
+    if source is not None:
+        if not source.is_file() or source.is_symlink() or source.stat().st_mode & 0o077:
+            raise ValueError('Expo token input must be a private regular file (0600)')
+        value = source.read_text().strip()
+        if not value or any(char.isspace() for char in value) or value.startswith(('changeme', 'replace_with')):
+            raise ValueError('Expo token must be externally supplied and nonempty')
+        if target.is_symlink():
+            raise ValueError('Refusing symlink Expo token')
+        if target.exists():
+            if not target.is_file() or target.stat().st_mode & 0o077:
+                raise ValueError('Existing Expo token must be a private regular file (0600)')
+            if target.read_text().strip() != value:
+                raise ValueError('Existing Expo token preserved; rotate it explicitly')
+        else:
+            exclusive_write(target, value + '\n')
+    settings = dict(line.split('=', 1) for line in runtime.read_text().splitlines()
+                    if '=' in line and not line.lstrip().startswith('#'))
+    push_enabled = settings.get('SPARKY_FITNESS_REMOTE_PUSH_ENABLED', 'false')
+    if push_enabled not in ('true', 'false'):
+        raise ValueError('SPARKY_FITNESS_REMOTE_PUSH_ENABLED must be true or false')
+    if push_enabled == 'true':
+        if (target.is_symlink() or not target.is_file() or target.stat().st_mode & 0o077
+                or not target.read_text().strip()):
+            raise ValueError('Push enabled: supply private dockerdata/secrets/expo_access_token; bootstrap never generates it')
+        if settings.get('EXPO_ACCESS_TOKEN_FILE') != '/run/secrets/expo_access_token':
+            raise ValueError('Push enabled: set EXPO_ACCESS_TOKEN_FILE=/run/secrets/expo_access_token')
+
+
+def prepare(root, data, url, local_test=False, expo_token_source=None):
     url = validate_url(url, local_test)
     root = root.resolve()
     expected = root / 'dockerdata'
@@ -84,6 +114,7 @@ def prepare(root, data, url, local_test=False):
         else:
             template = (root / 'docker/sparkyrivals/runtime.env.example').read_text()
             exclusive_write(runtime, template.replace('@PUBLIC_URL@', url))
+        validate_push_secret(data, runtime, expo_token_source)
         if not local_test and not os.path.lexists(env_link):
             env_link.symlink_to('dockerdata/config/runtime.env')
     return runtime
@@ -94,12 +125,13 @@ def main():
     parser.add_argument('--url', required=True, help='Operator-chosen canonical HTTPS origin')
     parser.add_argument('--local-test', action='store_true', help='Disposable .test origin; no .env link')
     parser.add_argument('--data-dir', type=Path, help='Local-test directory beneath dockerdata')
+    parser.add_argument('--expo-access-token-file', type=Path, help='Import an externally supplied private Expo token without overwriting an existing token')
     args = parser.parse_args()
     if not args.local_test:
         subprocess.run(['docker', 'network', 'inspect', 'prod-frontend'],
                        check=True, stdout=subprocess.DEVNULL)
     data = args.data_dir or ROOT / 'dockerdata'
-    runtime = prepare(ROOT, data.absolute(), args.url, args.local_test)
+    runtime = prepare(ROOT, data.absolute(), args.url, args.local_test, args.expo_access_token_file)
     print(f'Prepared {runtime.relative_to(ROOT)}; no containers started, existing secrets preserved.')
     print('Review admin email, optional integrations and secure off-host backups before first startup.')
 

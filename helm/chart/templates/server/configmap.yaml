@@ -6,6 +6,7 @@ metadata:
     {{- include "sparkyfitness.labels" . | nindent 4 }}
     app.kubernetes.io/component: server
 data:
+  SPARKY_FITNESS_REMOTE_PUSH_ENABLED: {{ .Values.server.remotePush.enabled | quote }}
   NODE_ENV: {{ .Values.config.nodeEnv | quote }}
   TZ: {{ .Values.config.timezone | quote }}
   SPARKY_FITNESS_LOG_LEVEL: {{ .Values.config.logLevel | quote }}

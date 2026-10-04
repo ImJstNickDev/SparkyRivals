@@ -364,6 +364,9 @@ SERVER_UPLOADS_PATH=${uploadsPath.value}
     out += `\n# --- Server Runtime ---
 SPARKY_FITNESS_SERVER_PORT=${serverPort.value}
 SPARKY_FITNESS_LOG_LEVEL=${logLevel.value}
+# Remote invitation delivery is opt-in and requires an external Expo robot token.
+SPARKY_FITNESS_REMOTE_PUSH_ENABLED=false
+# EXPO_ACCESS_TOKEN_FILE=/run/secrets/expo_access_token
 TZ=${timezone.value}
 `;
     if (extraTrustedOrigins.value.trim()) {

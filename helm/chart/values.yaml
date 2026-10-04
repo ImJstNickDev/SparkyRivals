@@ -252,6 +252,11 @@ server:
     readOnlyRootFilesystem: true
     capabilities:
       drop: [ALL]
+  # -- Remote invitations use Expo only. Token must come from an operator-managed Secret.
+  remotePush:
+    enabled: false
+    existingSecret: ""
+    accessTokenKey: expo_access_token
   # -- Application secrets (encryption keys, auth tokens)
   # GitOps caveat: chart-managed generation persists existing values across
   # upgrades via a Kubernetes API `lookup`. In pure `helm template` mode
