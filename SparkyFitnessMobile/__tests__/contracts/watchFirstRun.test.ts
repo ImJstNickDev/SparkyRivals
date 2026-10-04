@@ -130,3 +130,14 @@ it('covers native first-run selection, hidden Entry and workout priority in the 
   ])
     expect(checks).toContain(assertion);
 });
+
+it('keeps upstream Now Playing next to an active workout without gating Challenges', () => {
+  const pages = watch('Domain/WatchPage.swift');
+  expect(pages).toContain('case nowPlaying');
+  expect(pages).toContain('guard workoutActive else { return pages }');
+  expect(pages).toContain('withMusic.firstIndex(of: .workout)');
+  expect(pages).toContain('withMusic.insert(.nowPlaying, at: after)');
+  expect(pages).toContain('page != .nowPlaying');
+  expect(content).toMatch(/case \.nowPlaying:\s+NowPlayingPage\(\)/);
+  expect(content).toMatch(/case \.challenge:\s+ChallengeView\(\)/);
+});
