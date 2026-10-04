@@ -6,7 +6,7 @@ import {
   useChallengeResults,
   useChallengeConnections,
 } from '@/hooks/Challenges/useChallenges';
-import { selectChallengeInvitees } from '@workspace/shared';
+import { challengeTypeLabel, selectChallengeInvitees } from '@workspace/shared';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -15,6 +15,7 @@ import {
   ChallengeError,
 } from './ChallengeChrome';
 import { ChallengeScores, ChallengeDailyHistory } from './ChallengeScores';
+import { ChallengeLobby } from './ChallengeLobby';
 import { ChallengeActions } from './ChallengeActions';
 import { useChallengeFormat } from './presentation';
 
@@ -72,13 +73,24 @@ export default function ChallengeDetailPage() {
           {challenge.timezone}
         </p>
         <p className="font-medium">
-          {challenge.metric === 'workout_time'
-            ? t('challenges.workoutRules', {
-                defaultValue: 'Workout time · Highest total wins',
-              })
-            : t('challenges.rules', {
-                defaultValue: 'Steps · Highest total wins',
-              })}
+          {challenge.scoring_mode !== 'sum' ||
+          !['steps', 'workout_time'].includes(challenge.metric)
+            ? t(
+                `challenges.typeLabels.${challenge.metric}.${challenge.scoring_mode}`,
+                {
+                  defaultValue: challengeTypeLabel(
+                    challenge.metric,
+                    challenge.scoring_mode
+                  ),
+                }
+              )
+            : challenge.metric === 'workout_time'
+              ? t('challenges.workoutRules', {
+                  defaultValue: 'Workout time · Highest total wins',
+                })
+              : t('challenges.rules', {
+                  defaultValue: 'Steps · Highest total wins',
+                })}
         </p>
         {challenge.lifecycle === 'active' && (
           <div className="space-y-2">
@@ -131,15 +143,21 @@ export default function ChallengeDetailPage() {
             </p>
           )}
           <p>
-            {challenge.metric === 'workout_time'
-              ? t('challenges.workoutAcceptHint', {
+            {challenge.scoring_mode !== 'sum' ||
+            !['steps', 'workout_time'].includes(challenge.metric)
+              ? t('challenges.aggregateConsent', {
                   defaultValue:
-                    'Accept to share daily aggregate workout time and session counts for the whole Challenge date range, including earlier days. Workout details and other health data stay private.',
+                    'Only daily aggregates for the chosen metric and your chosen target are shared after acceptance. Other health data stays private.',
                 })
-              : t(
-                  'challenges.acceptPrivacy',
-                  'Accept to share your daily step totals for the whole Challenge date range, including earlier days. Other health data stays private.'
-                )}
+              : challenge.metric === 'workout_time'
+                ? t('challenges.workoutAcceptHint', {
+                    defaultValue:
+                      'Accept to share daily aggregate workout time and session counts for the whole Challenge date range, including earlier days. Workout details and other health data stay private.',
+                  })
+                : t(
+                    'challenges.acceptPrivacy',
+                    'Accept to share your daily step totals for the whole Challenge date range, including earlier days. Other health data stays private.'
+                  )}
           </p>
           {challenge.lifecycle === 'completed' ||
           challenge.lifecycle === 'cancelled' ? (
@@ -166,20 +184,29 @@ export default function ChallengeDetailPage() {
           </Link>
         </Button>
       )}
+      {!pending && challenge.scoring_mode !== 'sum' && (
+        <ChallengeLobby detail={detail.data} />
+      )}
       <ChallengeActions key={challenge.id} detail={detail.data} />
       {challenge.lifecycle === 'cancelled' ? (
         <p className="rounded-3xl bg-muted p-8 text-muted-foreground">
-          {challenge.metric === 'workout_time'
-            ? t('challenges.workoutCancelledHint', {
-                defaultValue: 'Cancelled. Workout time sharing has stopped.',
+          {challenge.scoring_mode !== 'sum' ||
+          !['steps', 'workout_time'].includes(challenge.metric)
+            ? t('challenges.cancelledAggregate', {
+                defaultValue: 'Cancelled. Challenge data sharing has stopped.',
               })
-            : t(
-                'challenges.cancelledHint',
-                'Cancelled. Step sharing has stopped.'
-              )}
+            : challenge.metric === 'workout_time'
+              ? t('challenges.workoutCancelledHint', {
+                  defaultValue: 'Cancelled. Workout time sharing has stopped.',
+                })
+              : t(
+                  'challenges.cancelledHint',
+                  'Cancelled. Step sharing has stopped.'
+                )}
         </p>
       ) : (
-        !pending && (
+        !pending &&
+        challenge.lifecycle !== 'lobby' && (
           <>
             {challenge.lifecycle === 'completed' && (
               <section className="space-y-2">
@@ -187,15 +214,21 @@ export default function ChallengeDetailPage() {
                   {t('challenges.currentResults', 'Current results')}
                 </h2>
                 <p className="text-muted-foreground">
-                  {challenge.metric === 'workout_time'
-                    ? t('challenges.workoutReconciles', {
+                  {challenge.scoring_mode !== 'sum' ||
+                  !['steps', 'workout_time'].includes(challenge.metric)
+                    ? t('challenges.aggregateReconciles', {
                         defaultValue:
-                          'Results can change when workouts arrive late, are edited or deleted.',
+                          'Results can change when canonical data arrives late, is corrected or deleted. Locked targets stay unchanged.',
                       })
-                    : t(
-                        'challenges.reconciles',
-                        'Results can change when step data arrives late or is corrected.'
-                      )}
+                    : challenge.metric === 'workout_time'
+                      ? t('challenges.workoutReconciles', {
+                          defaultValue:
+                            'Results can change when workouts arrive late, are edited or deleted.',
+                        })
+                      : t(
+                          'challenges.reconciles',
+                          'Results can change when step data arrives late or is corrected.'
+                        )}
                 </p>
               </section>
             )}
@@ -242,7 +275,9 @@ export default function ChallengeDetailPage() {
                       ? t('challenges.pending', 'Invited')
                       : p.status === 'left'
                         ? t('challenges.left', 'Left')
-                        : t('challenges.declined', 'Declined')}
+                        : p.status === 'withdrawn'
+                          ? t('challenges.withdrawn', 'Withdrawn')
+                          : t('challenges.declined', 'Declined')}
                 </span>
               </li>
             ))}

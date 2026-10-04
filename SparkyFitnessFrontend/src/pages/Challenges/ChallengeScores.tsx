@@ -1,3 +1,7 @@
+import {
+  formatChallengeValue,
+  CHALLENGE_METRIC_UNITS,
+} from '@workspace/shared';
 import { useState } from 'react';
 import type {
   ChallengeLeaderboardResponse,
@@ -30,7 +34,10 @@ export function ChallengeScores({
     behind,
     coverage,
     solo,
-  } = useChallengeFormat(result.challenge.metric);
+  } = useChallengeFormat(
+    result.challenge.metric,
+    result.challenge.scoring_mode
+  );
   const entries = compact ? result.entries.slice(0, 3) : result.entries;
   const ownEntry = result.entries.find((e) => e.user_id === actor);
   if (compact && ownEntry && !entries.includes(ownEntry))
@@ -98,6 +105,17 @@ export function ChallengeScores({
               {score(entry.total_score)}
             </p>
             <p className="mt-1 text-sm text-muted-foreground">{totalLabel}</p>
+            {entry.target_value != null && (
+              <p className="text-sm text-muted-foreground">
+                {t('challenges.targetDisplay', {
+                  defaultValue: 'Daily target: {{target}}',
+                  target: formatChallengeValue(
+                    entry.target_value,
+                    CHALLENGE_METRIC_UNITS[result.challenge.metric]
+                  ),
+                })}
+              </p>
+            )}
             {entry.total_workout_count !== undefined && (
               <p className="text-sm text-muted-foreground">
                 {workoutCount(entry.total_workout_count)}
@@ -165,7 +183,7 @@ export function ChallengeDailyHistory({
   actor: string;
 }) {
   const { t, number, day, noData, scoreWithUnit, workoutCount } =
-    useChallengeFormat(result.challenge.metric);
+    useChallengeFormat(result.challenge.metric, result.challenge.scoring_mode);
   const [selected, setSelected] = useState(
     result.entries.find((e) => e.user_id === actor)?.user_id ??
       result.entries[0]?.user_id ??
@@ -257,6 +275,26 @@ export function ChallengeDailyHistory({
                         </span>
                         <span className="tabular-nums">
                           {value(p)}
+                          {p?.present &&
+                            p.actual_value !== undefined &&
+                            entry.target_value != null && (
+                              <span className="text-sm text-muted-foreground">
+                                {formatChallengeValue(
+                                  p.actual_value,
+                                  CHALLENGE_METRIC_UNITS[
+                                    result.challenge.metric
+                                  ]
+                                )}{' '}
+                                /{' '}
+                                {formatChallengeValue(
+                                  entry.target_value,
+                                  CHALLENGE_METRIC_UNITS[
+                                    result.challenge.metric
+                                  ]
+                                )}{' '}
+                                · {number(p.progress_points ?? 0)}%
+                              </span>
+                            )}
                           {p?.present && p.workout_count !== undefined && (
                             <span className="block text-xs text-muted-foreground">
                               {workoutCount(p.workout_count)}

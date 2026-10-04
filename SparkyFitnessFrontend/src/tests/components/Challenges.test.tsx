@@ -1,3 +1,6 @@
+import { ChallengeLobby } from '@/pages/Challenges/ChallengeLobby';
+import { useDailyGoals } from '@/hooks/Goals/useGoals';
+import type { ChallengeDetailResponse } from '@workspace/shared';
 import { ChallengeInvitees } from '@/pages/Challenges/ChallengeInvitees';
 import { useActiveUser } from '@/contexts/ActiveUserContext';
 import React from 'react';
@@ -29,9 +32,11 @@ import {
   detail,
   results,
   workoutResults,
+  goalResults,
   connection,
 } from '../fixtures/challenges';
 jest.mock('@/hooks/Challenges/useChallenges');
+jest.mock('@/hooks/Goals/useGoals');
 jest.mock('@/contexts/ActiveUserContext', () => ({
   useActiveUser: jest.fn(() => ({
     isActingOnBehalf: false,
@@ -72,6 +77,11 @@ function show(ui: React.ReactElement, path = '/challenges') {
 }
 beforeEach(() => {
   jest.clearAllMocks();
+  jest
+    .mocked(useDailyGoals)
+    .mockReturnValue(
+      query({ steps_goal: 8000 }) as unknown as ReturnType<typeof useDailyGoals>
+    );
   jest.mocked(useActiveUser).mockReturnValue({
     isActingOnBehalf: false,
     switchToUser: jest.fn(),
@@ -95,6 +105,7 @@ beforeEach(() => {
   );
   h.useChallengeMutation.mockReturnValue({
     mutateAsync,
+    mutate: mutateAsync,
     reset: jest.fn(),
     isPending: false,
     isError: false,
@@ -543,8 +554,12 @@ it('hides personal Challenge content in delegated profile context', () => {
 describe('Workout time presentation', () => {
   it('creates a workout-time competition while keeping Steps the default', async () => {
     show(<CreateChallengePage />);
-    expect(screen.getByRole('radio', { name: 'Steps' })).toBeChecked();
-    fireEvent.click(screen.getByRole('radio', { name: 'Workout time' }));
+    expect(
+      screen.getByRole('combobox', { name: 'Challenge type' })
+    ).toHaveValue('step-race');
+    fireEvent.change(screen.getByRole('combobox', { name: 'Challenge type' }), {
+      target: { value: 'workout-minutes' },
+    });
     fireEvent.change(screen.getByLabelText('Challenge name'), {
       target: { value: 'Time together' },
     });
@@ -650,7 +665,9 @@ describe('Rematch', () => {
       }) as unknown as ReturnType<typeof hooks.useChallengeDetail>
     );
     show(<CreateChallengePage />, `/challenges/new?rematch=${challenge.id}`);
-    expect(screen.getByRole('radio', { name: 'Workout time' })).toBeChecked();
+    expect(
+      screen.getByRole('combobox', { name: 'Challenge type' })
+    ).toHaveValue('workout-minutes');
     expect(screen.getByRole('checkbox')).toBeChecked();
     fireEvent.change(screen.getByLabelText('Challenge name'), {
       target: { value: 'Another round' },
@@ -667,5 +684,121 @@ describe('Rematch', () => {
         }),
       })
     );
+  });
+});
+
+describe('Goal lobbies', () => {
+  const lobby: ChallengeDetailResponse = {
+    ...detail,
+    challenge: {
+      ...challenge,
+      scoring_mode: 'goal_progress',
+      lifecycle: 'lobby',
+      start_date: null,
+      end_date: null,
+      duration_days: 7,
+      start_next_day: false,
+      locked_at: null,
+    },
+    participants: detail.participants.map((p) => ({
+      ...p,
+      target_value: null,
+      ready_at: null,
+      target_revision: 0,
+    })),
+  };
+  it('creates a duration-based goal lobby with immediate start by default', async () => {
+    show(<CreateChallengePage />);
+    fireEvent.change(screen.getByLabelText('Challenge type'), {
+      target: { value: 'step-goal' },
+    });
+    fireEvent.change(screen.getByLabelText('Challenge name'), {
+      target: { value: 'Our goal' },
+    });
+    expect(screen.getByLabelText('Start on next full day')).not.toBeChecked();
+    fireEvent.click(screen.getByRole('button', { name: 'Create Challenge' }));
+    await waitFor(() =>
+      expect(mutateAsync).toHaveBeenCalledWith({
+        action: 'create',
+        body: expect.objectContaining({
+          metric: 'steps',
+          scoring_mode: 'goal_progress',
+          duration_days: 7,
+          start_next_day: false,
+        }),
+      })
+    );
+    expect(mutateAsync.mock.calls[0][0].body).not.toHaveProperty('start_date');
+  });
+  it('suggests the personal goal and allows an explicit Challenge override', () => {
+    show(<ChallengeLobby detail={lobby} />);
+    expect(screen.getByLabelText('Your daily target (steps)')).toHaveValue(
+      8000
+    );
+    fireEvent.change(screen.getByLabelText('Your daily target (steps)'), {
+      target: { value: '9000' },
+    });
+    fireEvent.click(screen.getByText('Save target'));
+    expect(mutateAsync).toHaveBeenCalledWith({
+      action: 'target',
+      id: challenge.id,
+      target: 9000,
+      revision: 0,
+    });
+  });
+  it('locks target inputs after activation while keeping targets visible', () => {
+    show(
+      <ChallengeLobby
+        detail={{
+          ...lobby,
+          challenge: {
+            ...lobby.challenge,
+            lifecycle: 'active',
+            locked_at: '2026-10-04T12:00:00Z',
+          },
+          participants: lobby.participants.map((p) => ({
+            ...p,
+            target_value: 8000,
+          })),
+        }}
+      />
+    );
+    expect(screen.getByText('Locked daily targets')).toBeInTheDocument();
+    expect(screen.queryByText('Save target')).not.toBeInTheDocument();
+  });
+  it('allows creator to withdraw a pending invitation without removing accepted members', () => {
+    show(
+      <ChallengeLobby
+        detail={{
+          ...lobby,
+          participants: lobby.participants.map((p) =>
+            p.user_id === peer ? { ...p, status: 'pending' } : p
+          ),
+        }}
+      />
+    );
+    fireEvent.click(screen.getByText('Withdraw invitation'));
+    expect(mutateAsync).toHaveBeenCalledWith({
+      action: 'withdraw',
+      id: challenge.id,
+      userId: peer,
+    });
+  });
+});
+
+describe('Goal result units', () => {
+  it('shows uncapped points, distinct targets and a genuine tie', () => {
+    show(<ChallengeScores actor={actor} result={goalResults} />);
+    expect(screen.getAllByText('140 pts')).toHaveLength(2);
+    expect(screen.getByText('Daily target: 8,000 steps')).toBeInTheDocument();
+    expect(screen.getByText('Daily target: 16,000 steps')).toBeInTheDocument();
+    expect(screen.getAllByText(/Rank 1.*Tied/)).toHaveLength(2);
+  });
+  it('keeps canonical actuals and percentage in daily history', () => {
+    show(<ChallengeDailyHistory actor={actor} result={goalResults} />);
+    expect(
+      screen.getAllByText(/11,200 steps.*8,000 steps.*140%/).length
+    ).toBeGreaterThan(0);
+    expect(screen.getAllByText('No data recorded').length).toBeGreaterThan(0);
   });
 });

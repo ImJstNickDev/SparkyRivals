@@ -3,6 +3,9 @@ export interface ExpandedGoals {
   protein: number;
   carbs: number;
   fat: number;
+  steps_goal?: number | null;
+  distance_goal_meters?: number | null;
+  active_calories_goal?: number | null;
   water_goal_ml: number;
   saturated_fat: number;
   polyunsaturated_fat: number;
@@ -40,6 +43,9 @@ export interface GoalPreset {
   protein: number;
   carbs: number;
   fat: number;
+  steps_goal?: number | null;
+  distance_goal_meters?: number | null;
+  active_calories_goal?: number | null;
   water_goal_ml: number;
   saturated_fat: number;
   polyunsaturated_fat: number;
