@@ -661,3 +661,45 @@ PostgreSQL container were stopped; both local test listeners were verified close
 Disposable bind data and private evidence were retained. No user-owned data or
 unrelated containers were removed. Final docs build and 27 local link-target checks
 passed; the branch-wide scan of 71 changed files found no secret material.
+
+## Milestone 8A.6 acceptance in progress
+
+M8A and M8A.5 are merged. PR #12 merged normally as
+`8121e261a8e1a19637f047b9b9e0d139738292e3`, including the push-table startup RLS
+recovery fix. Upstream was frozen at `78ea8141f160f6b681c8eb45575126b0049a081c`
+and synchronized only through fork PR #13. The M8A.6 branch starts at synchronized
+main `e2e21f8cd141b622152cf6bc837db2cd97c2e238`.
+
+Current source implements the [Challenge types and lobby contract](CHALLENGE_TYPES.md).
+Acceptance remains in progress; these checks do not establish physical health
+synchronization or Apple Move permission/data availability:
+
+- Server full no-DB CI: 454 files, 5,647 tests passed, 495 DB-gated tests skipped.
+  The final CORS/header and repository checks passed separately: 37 tests.
+- Disposable PostgreSQL 18.3 domain tests: nine files, 139 tests passed.
+  Fresh and upgrade migrations plus the complete RLS matrix: 341 tests passed.
+  Push invitation/lobby and personal-goal input validation: 30 tests passed.
+  The normal startup runner applied migrations and central policies, including
+  recovery after disabling push-table RLS in the disposable database.
+- Mobile full CI: 513 suites, 7,911 tests passed. Additional final goal rendering,
+  bounded v3 snapshots and Move bridge source checks: three suites, 84 tests passed.
+- Frontend full CI: 187 suites, 1,782 tests passed. Final goal rendering checks:
+  46 tests passed. Production web build and VitePress documentation build passed.
+- Server, mobile and frontend validation passed, including the final English
+  catalog cleanup. Ordinary unit/DB tests use no real push transport.
+- Clean Android/iOS prebuild and generated identity validation passed for upstream
+  development, owned development, preview and production. The new phone-only Move
+  module is discovered by Expo Apple autolinking. No new native dependency or
+  credentials were introduced.
+- Pinned Wear Kotlin/JVM harness: 37 tests passed. Real Gradle release compilation
+  succeeded for Android phone **1007** and Wear **1000001007**, including Wear unit
+  tests. Both APKs use `com.imjstnick.sparkyrivals` and the permanent signer SHA-256
+  `3E:B2:F9:50:8D:15:9C:C1:50:14:1A:9A:57:0D:37:71:24:4F:59:10:59:D0:AE:09:E9:61:28:1E:B6:42:D5:2A`.
+  Artifacts are private under `~/.local/share/sparkyrivals/artifacts/milestone-8a6/android-1007/`.
+  Runtime source corresponds to `312ea4d1d`; subsequent changes before that commit
+  were tests, server CORS and web catalog cleanup, outside these Android binaries.
+- No M8A.6 APK installation, EAS iOS compilation, physical Move-goal import or new
+  Challenge device flow has yet been claimed. Linux has not run Xcode.
+
+M8A.7 visual redesign and M8B production deployment remain deferred. No production
+server, NPM, push credentials or upstream repository was mutated.

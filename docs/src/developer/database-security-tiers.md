@@ -238,3 +238,7 @@ scores or participant names are copied into delivery state or remote payloads.
 Invitations remain authoritative when a push provider is unavailable. Remote
 invitations are opt-in; other Challenge reminders continue locally. See
 the repository guide `docs/fork/REMOTE_PUSH.md`.
+
+## M8A.6 Challenge projections
+
+Existing `challenges`, `challenge_participants`, `user_goals` and `goal_presets` keep their security tiers. Participant targets/readiness are self-only and immutable after activation. Parent row locks serialize roster changes. `challenge_daily_metric_points` and extended `challenge_workout_points` expose only accepted members and the selected metric/date range. `canonical_hydration_days` is SECURITY INVOKER and retains diary RLS. `lock_challenge_participation` verifies self-context accepted/pending membership before acquiring the parent lock. Push deny-all/startup recovery remains unchanged.

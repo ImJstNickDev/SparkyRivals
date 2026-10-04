@@ -470,3 +470,7 @@ const androidService = require('../../src/services/healthConnectService.ts');
   never a remote URL. The identity resolver enables Firebase/remote registration
   only for the owned production phone. Do not add FCM to Wear or widget targets.
 - See `../docs/fork/REMOTE_PUSH.md` for credential custody and physical acceptance.
+
+## M8A.6 Challenge domain source map
+
+Challenge type labels live in `utils/challengeLabels.ts`; canonical formatting/contracts in shared. `ChallengeLobby` implements self target/Ready and creator pending withdrawal. `PersonalGoalsScreen` edits the existing dated goal API. `modules/move-goal` reads Apple Activity Summary only on demand; Use and Save are separate explicit actions. No Health Connect generic goal import. Companion snapshot v3 carries metric/mode/unit/lobby through existing transports. See `docs/fork/CHALLENGE_TYPES.md`.

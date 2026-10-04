@@ -182,3 +182,7 @@ compilation/device acceptance must be stated separately from TypeScript/source
 contracts and JVM protocol tests. Previous native acceptance debt is retained.
 No paid build, credentials, store submission, Actions enablement or deployment is
 part of this milestone. Production bind-mounted `dockerdata/` remains unchanged.
+
+## M8A.6 extension
+
+The qualified session boundary described here also supplies workout calories and workout distance. Workout Time sum remains unchanged. Goal modes reuse the same qualifying duration; see [CHALLENGE_TYPES.md](CHALLENGE_TYPES.md). The original M6 exclusion of calorie ranking describes that milestone, not the new explicit Workout Calories type.

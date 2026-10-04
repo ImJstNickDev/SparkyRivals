@@ -135,3 +135,7 @@ scores or participant names are copied into delivery state or remote payloads.
 Invitations remain authoritative when a push provider is unavailable. Remote
 invitations are opt-in; other Challenge reminders continue locally. See
 the repository guide `docs/fork/REMOTE_PUSH.md`.
+
+## Challenge targets and Ready
+
+Private goal-based Challenges let each accepted member choose and confirm their own daily target. Targets are visible to accepted participants and lock when the final roster is Ready. Pending invitations block activation; the creator may withdraw pending invitations, but cannot set another member’s target. Sharing includes only the chosen metric’s daily aggregates, without general diary access.

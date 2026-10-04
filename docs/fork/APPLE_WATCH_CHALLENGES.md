@@ -319,3 +319,7 @@ No workout scoring, Wear OS, backend/RLS change, new account credentials, cloud
 build, publication or deployment occurred. `SparkyFitnessSessionId` and existing
 workout transports remain intact. Production storage policy remains the separate
 server checkout's bind-mounted `dockerdata/`; no Docker changes are needed.
+
+## Companion snapshot v3
+
+M8A.6 adds metric/mode/unit-aware scores and an explicit lobby directing configuration and Ready to iPhone. v1/v2 stay supported. Account clearing, source staleness and the single composed publisher remain. See [CHALLENGE_TYPES.md](CHALLENGE_TYPES.md).

@@ -347,3 +347,7 @@ Before adding a feature or changing auth/permission behavior, read:
   `EXPO_ACCESS_TOKEN` or its generic `_FILE` equivalent. No APNs/FCM credentials
   belong on the backend. Never log request/provider bodies containing tokens.
 - See `../docs/fork/REMOTE_PUSH.md` for lease/revision, privacy and acceptance rules.
+
+## M8A.6 Challenge domain source map
+
+Challenge types use `challengeRepository`, `challengeService`, `challengeLeaderboardService` and `utils/challengeScore.ts`. Goal modes require parent-row locking before target/Ready/roster mutations. SQL guards activate exactly once; targets are self-only and locked after activation. `validateActivityGoals` validates additive normal-goal fields without changing nutrition contracts. See `docs/fork/CHALLENGE_TYPES.md`; test fresh/upgrade migrations and remote invitations into dateless lobbies.

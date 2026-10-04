@@ -392,3 +392,7 @@ reuse native navigation, gestures, cards, and restrained motion. Watch pages mus
 answer who leads and by how much at a glance; details belong on the phone. All
 clients display the same server revision, and animations never imply an unconfirmed
 winner. Reuse existing chart libraries only where a chart helps the user.
+
+## Challenge types and personal goals
+
+[CHALLENGE_TYPES.md](CHALLENGE_TYPES.md) documents M8A.6: metric adapters feed shared exact ranking; immutable participant targets and parent-row-locked Ready activation extend existing Challenge tables. Normal user goals/presets remain the goal store. No new health ingestion or winner cache exists.

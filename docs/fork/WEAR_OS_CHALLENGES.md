@@ -410,3 +410,7 @@ same account and freshness rules. Any future mutation transport needs its own
 consent, durable idempotency and acknowledgement design. Production remains on a
 separate server checkout with bind-mounted `dockerdata/`; Wear introduces no
 Docker state or deployment change.
+
+## Companion snapshot v3
+
+The outer Data Layer envelope/path remains v1. Its nested snapshot now also accepts v3 metrics, scoring modes and lobby state. App, Tile and complication share unit formatting. Lobby scores are stripped and configuration/Ready remains phone-only. See [CHALLENGE_TYPES.md](CHALLENGE_TYPES.md).

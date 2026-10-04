@@ -137,7 +137,7 @@ accessibility acceptance remain explicitly post-M8A/pre-production QA. See
 [release evidence](RELEASE_VALIDATION.md), [BUILDING.md](BUILDING.md) and
 [DEPLOYMENT.md](DEPLOYMENT.md). Source tests do not waive device acceptance.
 
-## 8A.5. Secure remote invitation push — complete, pending review
+## 8A.5. Secure remote invitation push — complete; PR #12 merged
 
 Frozen upstream `9bae67beb0c909e225dc60c6a336c78269c130c9` synchronized through
 fork PR #11 (normal merge `6ff1fa32bdc27d6e7fa0144e49c69eb0c0b2e4ba`).
@@ -149,8 +149,27 @@ and account removal. Enhanced Push Security rejection/success passed. Galaxy Wat
 invitation sync and clearing passed on 1000001006. Latest-source iOS 1010 compiled
 and its signed IPA passed inspection; its installation/launch and broader native
 QA remain explicitly listed in [RELEASE_VALIDATION.md](RELEASE_VALIDATION.md).
-See [REMOTE_PUSH.md](REMOTE_PUSH.md) for architecture. The feature PR remains unmerged.
+See [REMOTE_PUSH.md](REMOTE_PUSH.md) for architecture. PR #12 merged normally at
+`8121e261a8e1a19637f047b9b9e0d139738292e3`, including startup RLS recovery for all three push tables.
 No direct Watch push, remote start/end/lead scheduler, scoring or production work.
+
+## 8A.6. Challenge types, personal goals and Ready lobbies — in progress
+
+See [CHALLENGE_TYPES.md](CHALLENGE_TYPES.md) for the allowed metric/mode matrix,
+canonical units, uncapped goal points, goal-day counts, personal target snapshots
+and asynchronous Ready activation. Immediate current-calendar-day start is the
+default; next-full-day start is optional. No visual redesign is included.
+
+Frozen upstream `78ea8141f160f6b681c8eb45575126b0049a081c` synchronized through fork
+PR #13; main `e2e21f8cd141b622152cf6bc837db2cd97c2e238` is the milestone base.
+Source validation, native compilation and targeted physical acceptance must all be
+reported before completion. M8A.5 credential, privacy and push boundaries remain.
+
+## 8A.7. Challenge UI/UX polish — future
+
+Redesign Dashboard entry, hub, invitations, lobby hierarchy, active results,
+1v1/group leaderboards, history, empty/loading/offline states, creation aesthetics
+and responsive spacing around the M8A.6 domain. Include screenshots and visual QA.
 
 ## 8B. Real production deployment — deferred
 

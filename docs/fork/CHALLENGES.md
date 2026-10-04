@@ -199,3 +199,7 @@ relationship selection, missing-data display and refresh. Only list transport
 metadata changed: numeric `_` cache-busters are validated and stripped before the
 domain query for the existing mobile transport. Scoring, RLS and response authority
 remain unchanged. Watch and Wear clients remain future work.
+
+## Challenge types extension
+
+M8A.6 extends metrics and scoring through additive configuration. See [CHALLENGE_TYPES.md](CHALLENGE_TYPES.md) for Ready lobbies, canonical projections and negotiated v3 results. Historical Steps/Workout Time sum behavior below remains applicable.
