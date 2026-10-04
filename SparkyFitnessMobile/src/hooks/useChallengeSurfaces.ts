@@ -99,7 +99,7 @@ export function useChallengeSurfaces(connected: boolean) {
   }, [supported, widget, notifications, t]);
   useEffect(() => {
     if (!supported || !hydrated) return;
-    const reconcile = (changed = false) => {
+    const reconcile = (devicePushToken?: Notifications.DevicePushToken) => {
       if (
         !remoteInvitationsEligible() ||
         getCompanionChallengeSession().blocked
@@ -116,15 +116,21 @@ export function useChallengeSurfaces(connected: boolean) {
           revision: sessionRevision,
           enabled: true,
         },
-        changed
+        devicePushToken
       );
     };
     void reconcile();
     const foreground = AppState.addEventListener('change', (state) => {
       if (state === 'active') void reconcile();
     });
-    const tokens = Notifications.addPushTokenListener(() => {
-      void reconcile(true);
+    let lastNativeToken: string | undefined;
+    const tokens = Notifications.addPushTokenListener((token) => {
+      // Native registration can repeat the same callback without rotating its
+      // token. Keep this comparison in memory; never log native routing values.
+      const value = JSON.stringify(token);
+      if (value === lastNativeToken) return;
+      lastNativeToken = value;
+      void reconcile(token);
     });
     return () => {
       foreground.remove();

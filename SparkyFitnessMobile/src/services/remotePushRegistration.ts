@@ -48,7 +48,7 @@ export interface PushRegistrationDependencies {
   uuid(): string;
   config(): Promise<ServerConfig | null>;
   permission(): Promise<string>;
-  token(): Promise<string>;
+  token(devicePushToken?: Notifications.DevicePushToken): Promise<string>;
   supported(): boolean;
   platform(): 'ios' | 'android';
   register: typeof registerRemotePush;
@@ -157,7 +157,10 @@ export class RemotePushRegistration {
       .catch(() => this.deps.warn());
     return this.queue;
   }
-  reconcile(input: PushEligibility, tokenChanged = false) {
+  reconcile(
+    input: PushEligibility,
+    devicePushToken?: Notifications.DevicePushToken
+  ) {
     const epoch = this.epoch;
     const session = getCompanionChallengeSession();
     const valid = () =>
@@ -182,7 +185,7 @@ export class RemotePushRegistration {
         if (!valid()) return;
         this.lastConfig = config;
         const token = await withTimeout(
-          this.deps.token(),
+          this.deps.token(devicePushToken),
           10_000,
           'Push token acquisition'
         );
@@ -194,11 +197,7 @@ export class RemotePushRegistration {
           previous.token === token &&
           previous.enabled;
         // Refresh the lease daily on foreground/cache events; no polling loop.
-        if (
-          same &&
-          !tokenChanged &&
-          previous.expires > this.deps.now() + 6 * 86400_000
-        ) {
+        if (same && previous.expires > this.deps.now() + 6 * 86400_000) {
           this.update({
             account: input.account,
             guard: previous.guard,
@@ -277,7 +276,7 @@ export const remotePushRegistration = new RemotePushRegistration({
     (Platform.OS === 'ios' || Platform.OS === 'android') &&
     Constants.expoConfig?.extra?.remotePushEnabled === true,
   platform: () => (Platform.OS === 'ios' ? 'ios' : 'android'),
-  token: async () => {
+  token: async (devicePushToken) => {
     const projectId: unknown = Constants.expoConfig?.extra?.eas?.projectId;
     if (projectId !== '63f08cec-3f87-4cee-89be-bebf970b6262')
       throw new Error('Owned push project required');
@@ -288,7 +287,15 @@ export const remotePushRegistration = new RemotePushRegistration({
         importance: Notifications.AndroidImportance.DEFAULT,
       });
     await Notifications.setNotificationCategoryAsync('challenge', []);
-    return (await Notifications.getExpoPushTokenAsync({ projectId })).data;
+    // iOS emits its token callback when getDevicePushTokenAsync registers with
+    // APNs, including our own acquisition. Reuse the callback's native token so
+    // reconciling that event does not start another native registration cycle.
+    return (
+      await Notifications.getExpoPushTokenAsync({
+        projectId,
+        ...(devicePushToken ? { devicePushToken } : {}),
+      })
+    ).data;
   },
   register: registerRemotePush,
   unregister: unregisterRemotePush,

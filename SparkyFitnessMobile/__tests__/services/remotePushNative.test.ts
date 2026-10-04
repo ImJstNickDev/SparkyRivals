@@ -83,6 +83,34 @@ beforeEach(async () => {
   });
 });
 afterEach(() => jest.restoreAllMocks());
+it('settles an iOS acquisition callback without recursively requesting native tokens', async () => {
+  jest.replaceProperty(Platform, 'OS', 'ios');
+  const native = { type: 'ios' as const, data: 'native-test-value' };
+  let nativeRequests = 0;
+  const getToken = jest.mocked(Notifications.getExpoPushTokenAsync);
+  getToken.mockImplementation(async (options) => {
+    if (!options?.devicePushToken) {
+      nativeRequests++;
+      // Bound a regression so the test fails instead of leaving an endless queue.
+      if (nativeRequests > 3) throw new Error('Native token callback loop');
+      void remotePushRegistration.reconcile(input(), native);
+    }
+    return { type: 'expo', data: 'unit-test-routing-value' };
+  });
+  await remotePushRegistration.reconcile(input());
+  await remotePushRegistration.settled();
+  expect(nativeRequests).toBe(1);
+  expect(getToken).toHaveBeenCalledTimes(2);
+  expect(getToken).toHaveBeenLastCalledWith({
+    projectId: '63f08cec-3f87-4cee-89be-bebf970b6262',
+    devicePushToken: native,
+  });
+  expect(registerRemotePush).toHaveBeenCalledTimes(1);
+  getToken.mockImplementation(async () => ({
+    type: 'expo',
+    data: 'unit-test-routing-value',
+  }));
+});
 it.each(['ios', 'android'])(
   'uses the owned Expo project and secure storage on %s',
   async (platform) => {

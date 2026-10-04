@@ -498,3 +498,19 @@ targets only a separate synthetic test database. Its local acceptance proxy bloc
 health/diary mutations; public signup is disabled. No production infrastructure or
 NPM configuration is involved. Native compilation, installation and token
 registration are separate acceptance boundaries from actual APNs/FCM delivery.
+
+### Physical registration finding and correction
+
+The first iPhone registration exposed a native callback loop in build 1008:
+acquiring an APNs token emitted the same callback used for rotation, which started
+another acquisition and repeatedly renewed the backend binding. No invitation
+push was sent during this attempt. Testing was paused and the temporary public
+tunnel and test services were stopped without deleting data.
+
+The correction exchanges the callback's supplied native token directly with Expo,
+ignores duplicate callbacks and preserves an unchanged Expo token's valid lease.
+Focused regression tests: three suites, 32 tests passed. Mobile validation and
+full CI passed: **509 suites, 7,856 tests**. These checks include the callback loop,
+real token rotation and the existing consent/account guards. New full native
+builds and physical re-verification are required; the preceding artifacts are
+compilation evidence, not accepted remote-push releases.

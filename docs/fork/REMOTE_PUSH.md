@@ -17,6 +17,10 @@ invitation switch and OS permission. Challenge master remains off by default. Th
 headless integration never prompts for permission. Settings use the existing
 permission flow. Foreground, preferences, identity transitions and native token
 changes reconcile registration; there is no extra Challenge polling loop.
+Native token callbacks pass their supplied token to Expo's exchange API. They do
+not request another native registration: iOS also emits this callback for an
+ordinary token acquisition. Duplicate callbacks are ignored, and an unchanged
+Expo token keeps its acknowledged lease instead of writing another registration.
 
 Only the owned production phone identity is push-enabled. Development, preview
 and upstream builds retain local notifications. A server must separately enable

@@ -97,11 +97,21 @@ it('rotates binding guard on token change', async () => {
   await service.reconcile(input());
   const first = jest.mocked(deps.register).mock.calls[0][1];
   jest.mocked(deps.token).mockResolvedValue('changed-unit-test-value');
-  await service.reconcile(input(), true);
+  await service.reconcile(input(), {
+    type: 'ios',
+    data: 'changed-native-test-value',
+  });
   const second = jest.mocked(deps.register).mock.calls[1][1];
   expect(second.account_guard).not.toBe(first.account_guard);
   expect(second.installation_id).toBe(first.installation_id);
   expect(second.revision).toBeGreaterThan(first.revision);
+});
+it('reuses a native callback token and does not renew an unchanged Expo binding', async () => {
+  await service.reconcile(input());
+  const native = { type: 'ios' as const, data: 'native-test-value' };
+  await service.reconcile(input(), native);
+  expect(deps.token).toHaveBeenLastCalledWith(native);
+  expect(deps.register).toHaveBeenCalledTimes(1);
 });
 it.each(['logout', 'permission', 'preferences'])(
   'revokes promptly on %s and clears the local guard before IO',
