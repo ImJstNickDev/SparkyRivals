@@ -83,6 +83,23 @@ struct ChallengeModelChecks {
         check(!WatchPage.visible(order: nil, hidden: ["challenge"], workoutActive: false).contains(.challenge), "page hides")
         check(WatchPage.visible(order: nil, hidden: ["workout"], workoutActive: true).contains(.workout), "active workout preserved")
         check(!WatchPage.visible(order: nil, hidden: WatchPage.allCases.map(\.rawValue), workoutActive: false).isEmpty, "no empty page deck")
+        let defaultPages = WatchPage.visible(order: nil, hidden: nil, workoutActive: false)
+        check(WatchPage.initial(in: defaultPages, needsFirstRunEntry: true, workoutActive: false) == .entry, "missing weight initially selects first check-in")
+        check(defaultPages.contains(.challenge), "missing weight does not remove Challenges")
+        check(WatchPage.initial(in: defaultPages, needsFirstRunEntry: false, workoutActive: false) == .goals, "seeded launch preserves normal order")
+        let reordered = WatchPage.visible(order: ["challenge", "entry"], hidden: nil, workoutActive: false)
+        check(WatchPage.initial(in: reordered, needsFirstRunEntry: true, workoutActive: false) == .entry, "stale weight initially selects Entry without reordering")
+        check(reordered.first == .challenge, "first check-in does not change saved order")
+        check(WatchPage.initial(in: reordered, needsFirstRunEntry: false, workoutActive: false) == .challenge, "normal launch uses saved first page")
+        let entryHidden = WatchPage.visible(order: ["challenge"], hidden: ["entry"], workoutActive: false)
+        check(WatchPage.initial(in: entryHidden, needsFirstRunEntry: true, workoutActive: false) == .challenge, "missing weight respects hidden Entry")
+        let activePages = WatchPage.visible(order: nil, hidden: ["workout"], workoutActive: true)
+        check(WatchPage.initial(in: activePages, needsFirstRunEntry: true, workoutActive: true) == .workout, "active workout overrides first check-in")
+        check(!WatchContext.empty.hasSeed && WatchContext.empty.challengeSnapshot == nil, "unsynced Challenges need no weight")
+        var emptyChallenges = payload
+        emptyChallenges["items"] = []
+        let contextWithoutWeight = ContextPayloadMapper.context(from: ["challengeSnapshot": emptyChallenges], previous: .empty)
+        check(!contextWithoutWeight.hasSeed && contextWithoutWeight.challengeSnapshot?.items.isEmpty == true, "empty Challenges need no weight")
         var workout = payload
         workout["version"] = 2
         var workoutItem = (payload["items"] as! [[String: Any]])[0]

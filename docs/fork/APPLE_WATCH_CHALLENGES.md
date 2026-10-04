@@ -6,9 +6,12 @@ EAS/Xcode compiled and exported production-identity internal build 1005, includi
 the Watch app and Watch widget. All five Apple bundle versions, owned team and
 App Groups were verified in the IPA. The maintainer confirmed physical iPhone
 onboarding and Series 7 installation/first-run launch after provisioning recovery
-and retries. The inherited weight-entry gate precedes all pages, including the
-Challenge unsynced state; authenticated Challenge and complication behavior remain
-unverified. [RELEASE_VALIDATION.md](RELEASE_VALIDATION.md) is the current evidence;
+and retries. Review identified the inherited weight-entry gate as an M8A blocker.
+The revised source keeps first check-in on the normal Entry page, with navigation
+to Challenges available without recording weight. A new full EAS build and physical
+navigation acceptance are required; the earlier build does not contain this fix.
+Authenticated Challenge and complication behavior remain separate pre-production
+QA. [RELEASE_VALIDATION.md](RELEASE_VALIDATION.md) is the current evidence;
 the native limitations below describe the earlier milestones.
 
 ## Challenge polish extension — Milestone 7
@@ -194,7 +197,12 @@ Watch does not advance lifecycle, rank or remaining days using its own clock.
 `challenge` is appended to TypeScript `WATCH_PAGE_KEYS` and Swift `WatchPage`.
 Existing saved orders append new keys normally. Settings → Apple Watch supports
 reordering and hide/show, retains the final-visible-page rule and preserves the
-active-workout page override. Existing weight setup behavior is unchanged.
+active-workout page override. When weight is missing or stale, `WatchPage.initial`
+selects Entry if visible, unless a workout is active. Entry renders First check-in
+inside the same swipeable page deck; it never prevents navigation to Challenges
+or other visible pages. Explicit swipes/deep links take precedence over the initial
+selection, hidden Entry stays hidden, and returning to Entry without saving still
+shows the form. Save retains the original real capture/queued delivery calls.
 
 - One item without additional items opens directly into detail. Multiple items
   use native scrolling/navigation with compact summaries and a has-more hint.

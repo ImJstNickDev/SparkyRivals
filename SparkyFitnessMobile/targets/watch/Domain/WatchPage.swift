@@ -9,6 +9,19 @@ import Foundation
 enum WatchPage: String, CaseIterable {
     case goals, water, entry, trend, workout, challenge
 
+    /// Prefer first check-in when needed, without adding or unhiding any page.
+    /// A running workout keeps its usual priority. Only used until the wearer
+    /// selects a page; missing weight must not override a swipe or deep link.
+    static func initial(
+        in pages: [WatchPage],
+        needsFirstRunEntry: Bool,
+        workoutActive: Bool
+    ) -> WatchPage {
+        if workoutActive, pages.contains(.workout) { return .workout }
+        if needsFirstRunEntry, pages.contains(.entry) { return .entry }
+        return pages.first ?? .goals
+    }
+
     /// The pages to show, in swipe order.
     ///
     /// Names the watch doesn't know, and repeats, are dropped; a page the saved

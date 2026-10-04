@@ -222,6 +222,34 @@ acceptance. Authenticated context, Challenge rendering and complication behavior
 remain unverified on the physical Apple Watch; no UI/source change was made during
 this diagnosis.
 
+#### Review fix: first check-in stays inside the page deck
+
+Review designated the first-run navigation gate as the remaining M8A blocker.
+`ContentView` now always mounts its normal `TabView`. First check-in renders only
+inside the existing Entry page; missing/stale weight selects that page initially
+when visible. Explicit swipes/deep links remain usable, saved order/hiding is
+unchanged and an active workout retains priority. Returning to Entry still shows
+the form until a real check-in is saved. Its capture, persistence, queue and ack
+paths are unchanged; no synthetic weight or bypass check-in is created. The hint
+now explicitly tells the wearer they may swipe to other pages.
+
+Validation of this source fix:
+
+- Focused Watch/settings/context contracts: **5 suites / 40 tests passed**.
+- Full mobile validate passed; CI: **507 suites / 7,802 tests passed**.
+- Clean owned iOS prebuild and all five target identity checks passed.
+- Ten first-run/empty-context assertions were added to the existing Swift model
+  harness. Its local run stops because `swiftc` is unavailable on this Linux host;
+  Jest source contracts do not replace native model execution or physical gestures.
+
+A **new full EAS iOS build**, exported-profile inspection and physical navigation
+acceptance are pending. Re-signing build 1005 would not include this code. Required
+physical checks without fake weight: initial First check-in, swipe away, reach
+Challenges and its unsynced state, then return to the usable Entry form. M8A is not
+marked complete until these pass. Broader authenticated cross-device sync, account
+clearing, health dedupe, every native surface, notifications and accessibility
+remain explicit post-M8A/pre-production QA unless a concrete regression is found.
+
 ## Android compilation
 
 Actual toolchain: JDK 17.0.20.1 explicitly selected, SDK 36, Build Tools 36.0.0,
@@ -343,8 +371,9 @@ and unrelated containers were untouched.
   by the maintainer locally. Never paste Apple passwords/2FA into chat.
 - Internal iPhone onboarding and Apple Watch first-run launch are confirmed by
   the maintainer. Check auth, HealthKit, widgets, notifications, Watch Challenge
-  pages/complications, paired transport and VoiceOver. The inherited weight-entry
-  gate still obstructs initial page navigation without weight context.
+  pages/complications, paired transport and VoiceOver. The first-run navigation
+  fix above still requires a new full build and physical acceptance before M8A
+  completion; the other functional checks are documented pre-production QA debt.
 - Release APK fingerprints, physical phone/Watch installation and initial paired
   Data Layer transfer are verified. Authenticated Challenge results, account-change
   clearing/offline states, Tile/complication visuals, Health Connect continuity,

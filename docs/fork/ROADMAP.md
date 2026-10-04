@@ -125,8 +125,12 @@ installation and first-run launch. The inherited weight-entry gate precedes the
 Challenge page; authenticated Watch behavior remains unverified. Local final
 Compose startup, isolated routing, migration and backup/restore checks passed.
 
-Fuller native surface/account acceptance remains in progress; this milestone is
-not marked complete prematurely. See
+Review identified the Apple Watch first-run navigation gate as the remaining M8A
+blocker. The source fix keeps First check-in inside Entry without blocking other
+pages; a new full EAS build and physical no-fake-weight navigation check are pending.
+M8A remains in progress until those pass. Broader authenticated sync, health,
+native surfaces, notifications and accessibility acceptance are explicitly
+post-M8A/pre-production QA unless a concrete regression is found. See
 [release evidence](RELEASE_VALIDATION.md), [BUILDING.md](BUILDING.md) and
 [DEPLOYMENT.md](DEPLOYMENT.md). Source tests do not waive device acceptance.
 
