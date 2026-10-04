@@ -147,6 +147,8 @@ struct ContentView: View {
             WorkoutView()
         case .challenge:
             ChallengeView()
+        case .nowPlaying:
+            NowPlayingPage()
         }
     }
 
