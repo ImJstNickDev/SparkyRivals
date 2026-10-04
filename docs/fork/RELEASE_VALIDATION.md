@@ -430,8 +430,8 @@ Source work and mocked/disposable integration validation are underway on
 `milestone/remote-push`, based on fork main after upstream sync PR #11.
 [REMOTE_PUSH.md](REMOTE_PUSH.md) records architecture and required real acceptance.
 No remote invitation has yet been demonstrated on either physical phone during
-this milestone. New native builds, Enhanced Push Security live rejection/success,
-notification taps and opt-out/re-enable/account transitions remain pending.
+this milestone. Enhanced Push Security live rejection/success, notification taps
+and opt-out/re-enable/account transitions remain pending.
 M8A's previous native acceptance does not prove remote delivery. M8B remains deferred.
 
 ### M8A.5 source/config checks (2026-10-04)
@@ -440,6 +440,10 @@ M8A's previous native acceptance does not prove remote delivery. M8B remains def
   5,596 tests passed, 467 skipped (26 existing TODO cases).
 - Disposable PostgreSQL 18.3 clean startup through the normal server initializer:
   passed. Serial Challenge/RLS/push integration: six suites, 400 tests passed.
+- Upgrade from the pre-push synchronized main schema through the normal migration
+  runner: passed. Existing Steps Challenge and accepted/pending membership rows
+  remained unchanged; no historical invitation events were backfilled. Repeated
+  startup also passed.
 - Mobile `pnpm run validate`: passed. Full CI: 509 suites, 7,853 tests passed.
   Existing translation completeness reports remain; no unrelated translations changed.
 - Frontend consumer `pnpm run validate`: passed, with existing Knip hints.
@@ -458,5 +462,39 @@ M8A's previous native acceptance does not prove remote delivery. M8B remains def
 - Docs build/link validation and diff checks passed; existing bundle-size warning
   remains. Changed-file secret-pattern scan passed before each signed commit.
 
-Native release builds and physical remote delivery are still pending. These results
-are not evidence of APNs/FCM delivery to a real device.
+### M8A.5 native release artifacts
+
+Both platforms compiled source commit
+`0bd4ca4dc1877ed0b1aa0236a3a8a5261cad4169`.
+
+- Android `:app:assembleRelease`, `:wear:assembleRelease` and
+  `:wear:testReleaseUnitTest`: passed with JDK 17; 34 Wear Gradle tests passed.
+  Existing native API/Gradle deprecation warnings remain. Phone version code
+  **1003** and Wear **1000001003** both use `com.imjstnick.sparkyrivals`.
+- `apksigner` verified exactly one signer on both APKs, matching the permanent
+  certificate `3E:B2:F9:50:8D:15:9C:C1:50:14:1A:9A:57:0D:37:71:24:4F:59:10:59:D0:AE:09:E9:61:28:1E:B6:42:D5:2A`.
+  Bundled phone Expo identity also passed. Generated Firebase resources identify
+  `sparkyrivals-fb`; the phone manifest includes Firebase messaging and the Wear
+  manifest does not.
+- Both APKs were installed as updates on the connected Galaxy A25 and Galaxy Watch
+  without clearing application data. Installed package version codes were read
+  back through ADB. This alone does not prove remote delivery or Data Layer behavior.
+- [EAS full iOS build 1008](https://expo.dev/accounts/imjstnickdev/projects/sparkyrivals/builds/fa2f34bd-2b27-46e0-a54a-1561ea0c737b)
+  finished successfully using the existing production-internal profile and
+  credentials. Build 1007 was reserved by a prior attempt that failed with an EAS
+  service error before upload; its number was not reused.
+- Exported IPA inspection verified all five production bundle identifiers, build
+  1008, team `U5K88Y67DL`, the shared App Group, and matching signed Mach-O
+  entitlements. Only the main phone app has `aps-environment=production`; the four
+  child targets do not. All embedded ad-hoc profiles cover both registered devices.
+  The maintainer confirmed installation and launch on the physical iPhone. No local
+  Xcode compilation occurred on Linux; this was an EAS compilation.
+- Artifacts and non-secret verification manifests are stored privately under
+  `~/.local/share/sparkyrivals/artifacts/milestone-8a5/1003-1000001003/` and
+  `~/.local/share/sparkyrivals/artifacts/milestone-8a5/ios-1008/`.
+
+Physical remote delivery remains pending. The approved temporary HTTPS tunnel
+targets only a separate synthetic test database. Its local acceptance proxy blocks
+health/diary mutations; public signup is disabled. No production infrastructure or
+NPM configuration is involved. Native compilation, installation and token
+registration are separate acceptance boundaries from actual APNs/FCM delivery.

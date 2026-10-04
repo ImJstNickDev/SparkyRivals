@@ -150,7 +150,8 @@ mutation. Routing IDs and guards are not credentials.
    invitation/receipt, then revoke the previous token. Never rotate the DB encryption
    key as a push-token repair.
 7. To stop remote delivery, set the gate false and restart backend. Local clients
-   discover disabled registration on the next eligible reconciliation. Queued
+   discover disabled registration on the next registration/lease renewal (up to
+   one day for an unchanged, locally acknowledged lease). Queued
    deliveries remain bounded by their 24-hour age and eligibility checks. Disabling
    does not recall notifications already accepted by Expo/APNs/FCM.
 
@@ -162,7 +163,7 @@ multiple devices, ineligibility, retries and receipts. Mobile tests exercise sec
 registration, consent, current project identity, local fallback and guarded links.
 Production and non-production prebuilds must remain valid.
 
-Native builds and real push acceptance are **pending**. Do not mark 8A.5 complete
+Native release builds passed; real push acceptance is **pending**. Do not mark 8A.5 complete
 until the release evidence is recorded in [RELEASE_VALIDATION.md](RELEASE_VALIDATION.md).
 Use only a disposable test server/database. Device installation, test-account
 login, permissions and a public tunnel require maintainer interaction. Record
