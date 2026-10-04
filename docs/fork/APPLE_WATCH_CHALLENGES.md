@@ -8,8 +8,9 @@ App Groups were verified in the IPA. The maintainer confirmed physical iPhone
 onboarding and Series 7 installation/first-run launch after provisioning recovery
 and retries. Review identified the inherited weight-entry gate as an M8A blocker.
 The revised source keeps first check-in on the normal Entry page, with navigation
-to Challenges available without recording weight. A new full EAS build and physical
-navigation acceptance are required; the earlier build does not contain this fix.
+to Challenges available without recording weight. Full EAS build 1006 and exported
+identity/profile checks passed; physical navigation acceptance is pending. The
+earlier build 1005 does not contain this fix.
 Authenticated Challenge and complication behavior remain separate pre-production
 QA. [RELEASE_VALIDATION.md](RELEASE_VALIDATION.md) is the current evidence;
 the native limitations below describe the earlier milestones.

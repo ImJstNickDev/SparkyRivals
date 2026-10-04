@@ -127,8 +127,9 @@ Compose startup, isolated routing, migration and backup/restore checks passed.
 
 Review identified the Apple Watch first-run navigation gate as the remaining M8A
 blocker. The source fix keeps First check-in inside Entry without blocking other
-pages; a new full EAS build and physical no-fake-weight navigation check are pending.
-M8A remains in progress until those pass. Broader authenticated sync, health,
+pages. Full EAS build 1006 and exported identity/profile checks passed; the physical
+no-fake-weight navigation check is pending. M8A remains in progress until it passes.
+Broader authenticated sync, health,
 native surfaces, notifications and accessibility acceptance are explicitly
 post-M8A/pre-production QA unless a concrete regression is found. See
 [release evidence](RELEASE_VALIDATION.md), [BUILDING.md](BUILDING.md) and

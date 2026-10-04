@@ -242,13 +242,30 @@ Validation of this source fix:
   harness. Its local run stops because `swiftc` is unavailable on this Linux host;
   Jest source contracts do not replace native model execution or physical gestures.
 
-A **new full EAS iOS build**, exported-profile inspection and physical navigation
-acceptance are pending. Re-signing build 1005 would not include this code. Required
-physical checks without fake weight: initial First check-in, swipe away, reach
-Challenges and its unsynced state, then return to the usable Entry form. M8A is not
-marked complete until these pass. Broader authenticated cross-device sync, account
-clearing, health dedupe, every native surface, notifications and accessibility
-remain explicit post-M8A/pre-production QA unless a concrete regression is found.
+New **full EAS iOS build 1006** completed successfully from signed source commit
+`d9a481cc534e1abbe99fd8e71d56d87741c4220d`:
+[e8530efb-f4fd-4c3a-a690-da5a7a84b66a](https://expo.dev/accounts/imjstnickdev/projects/sparkyrivals/builds/e8530efb-f4fd-4c3a-a690-da5a7a84b66a).
+This compiled the changed native source; it was not a re-sign of build 1005.
+The non-interactive command used `--freeze-credentials`, reusing existing managed
+credentials without another Apple login or device/profile modification.
+
+Exported IPA inspection passed: all five bundle versions are **1006**, production
+bundle IDs/team/App Group/schemes match, every profile includes both registered
+devices, and all profiles use the same Distribution Certificate as build 1005.
+The Watch executable contains the new swipe instruction, omits the old first-run
+copy and does not contain the DEBUG screenshot-seed launch key. Private artifact
+and verification report:
+`~/.local/share/sparkyrivals/artifacts/milestone-8a/ios-1006/`.
+IPA SHA-256: `55b72829668b3dd66fc724edd20a2c400f8bb4400454126f94f7b421d4960b3c`.
+
+Physical installation/navigation acceptance of **1006** is pending maintainer
+interaction. Required checks without fake weight: initial First check-in, swipe
+away, reach Challenges and its unsynced state, then return to the usable Entry
+form. Do not claim an actual Save unless the maintainer records a genuine
+measurement. M8A remains in progress and PR #10 remains draft until this acceptance
+passes. Broader authenticated cross-device sync, account clearing, health dedupe,
+every native surface, notifications and accessibility remain explicit
+post-M8A/pre-production QA unless a concrete regression is found.
 
 ## Android compilation
 
@@ -372,7 +389,7 @@ and unrelated containers were untouched.
 - Internal iPhone onboarding and Apple Watch first-run launch are confirmed by
   the maintainer. Check auth, HealthKit, widgets, notifications, Watch Challenge
   pages/complications, paired transport and VoiceOver. The first-run navigation
-  fix above still requires a new full build and physical acceptance before M8A
+  fix above has a verified new full build and still requires physical acceptance before M8A
   completion; the other functional checks are documented pre-production QA debt.
 - Release APK fingerprints, physical phone/Watch installation and initial paired
   Data Layer transfer are verified. Authenticated Challenge results, account-change
