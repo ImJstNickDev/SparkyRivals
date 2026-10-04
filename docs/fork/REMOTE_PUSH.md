@@ -1,7 +1,9 @@
 # Remote Challenge invitations
 
-Milestone 8A.5 is in implementation and acceptance. M8A is merged; M8B remains
-explicitly deferred. No real production server or proxy is changed here.
+Milestone 8A.5 is implemented and physically accepted for review, with the exact
+build versions and remaining pre-production QA in
+[RELEASE_VALIDATION.md](RELEASE_VALIDATION.md). M8A is merged; M8B remains deferred.
+No real production server or proxy is changed here.
 
 ## Delivery and consent
 
@@ -175,10 +177,18 @@ multiple devices, ineligibility, retries and receipts. Mobile tests exercise sec
 registration, consent, current project identity, local fallback and guarded links.
 Production and non-production prebuilds must remain valid.
 
-Native release builds passed; real push acceptance is **pending**. Do not mark 8A.5 complete
-until the release evidence is recorded in [RELEASE_VALIDATION.md](RELEASE_VALIDATION.md).
-Use only a disposable test server/database. Device installation, test-account
-login, permissions and a public tunnel require maintainer interaction. Record
+Native release builds passed. Physical Android 1006 and iOS 1009 verified generic
+background delivery, correct guarded taps, no local duplicate, opt-out/re-enable
+and account removal. Enhanced Push Security rejected an unauthenticated request
+and accepted the implemented authenticated sender. Galaxy Watch 1000001006
+received invitations and cleared them after phone account removal. iOS 1010
+compiled and passed IPA inspection; its installation/launch remains recorded QA
+debt. See [RELEASE_VALIDATION.md](RELEASE_VALIDATION.md) for source commits, tests
+and the exact boundaries.
+
+For future acceptance, use only a disposable test server/database. Device
+installation, test-account login, permissions and a public tunnel require
+maintainer interaction. Record
 background delivery on iPhone and Android, generic content, tap destination, no
 local duplicate, disable/re-enable, logout/account barriers, and a private
 unauthenticated Expo rejection followed by authenticated success. Never print

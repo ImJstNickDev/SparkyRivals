@@ -137,14 +137,19 @@ accessibility acceptance remain explicitly post-M8A/pre-production QA. See
 [release evidence](RELEASE_VALIDATION.md), [BUILDING.md](BUILDING.md) and
 [DEPLOYMENT.md](DEPLOYMENT.md). Source tests do not waive device acceptance.
 
-## 8A.5. Secure remote invitation push — implementation/acceptance in progress
+## 8A.5. Secure remote invitation push — complete, pending review
 
 Frozen upstream `9bae67beb0c909e225dc60c6a336c78269c130c9` synchronized through
 fork PR #11 (normal merge `6ff1fa32bdc27d6e7fa0144e49c69eb0c0b2e4ba`).
 The milestone branch is `milestone/remote-push`. Scope is opt-in phone registration,
 private durable invitation delivery through authenticated Expo Push, local fallback
-and production-only Firebase client config. Native/physical push acceptance is
-pending; this milestone is **not yet complete**. See [REMOTE_PUSH.md](REMOTE_PUSH.md).
+and production-only Firebase client config. Android 1006 and iOS 1009 passed real
+background invitation delivery, guarded taps, local deduplication, disable/re-enable
+and account removal. Enhanced Push Security rejection/success passed. Galaxy Watch
+invitation sync and clearing passed on 1000001006. Latest-source iOS 1010 compiled
+and its signed IPA passed inspection; its installation/launch and broader native
+QA remain explicitly listed in [RELEASE_VALIDATION.md](RELEASE_VALIDATION.md).
+See [REMOTE_PUSH.md](REMOTE_PUSH.md) for architecture. The feature PR remains unmerged.
 No direct Watch push, remote start/end/lead scheduler, scoring or production work.
 
 ## 8B. Real production deployment — deferred

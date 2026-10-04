@@ -424,14 +424,18 @@ and unrelated containers were untouched.
 - Follow [deployment handoff](DEPLOYMENT.md) for separate server bootstrap,
   NPM/TLS, backups/restores and production E2E. No production deployment occurred.
 
-## M8A.5 remote push acceptance — pending
+## M8A.5 remote push acceptance — complete with recorded QA follow-ups
 
-Source work and mocked/disposable integration validation are underway on
+Source work and mocked/disposable integration validation passed on
 `milestone/remote-push`, based on fork main after upstream sync PR #11.
 [REMOTE_PUSH.md](REMOTE_PUSH.md) records architecture and required real acceptance.
-No remote invitation has yet been demonstrated on either physical phone during
-this milestone. Enhanced Push Security live rejection/success, notification taps
-and opt-out/re-enable/account transitions remain pending.
+Physical iPhone and Android background delivery, guarded notification taps and
+absence of duplicate local invitations have been demonstrated. Enhanced Push
+Security rejected an unauthenticated send and accepted the authenticated backend
+send. Both phones passed opt-out, re-enable and account-removal/stale-tap checks.
+Galaxy Watch invitation sync and account clearing passed. Physical iOS evidence
+is explicitly tied to build 1009; build 1010's install/launch check is deferred to
+pre-production QA because the shared setup extraction preserves the iOS behavior.
 M8A's previous native acceptance does not prove remote delivery. M8B remains deferred.
 
 ### M8A.5 source/config checks (2026-10-04)
@@ -493,8 +497,8 @@ Both platforms compiled source commit
   `~/.local/share/sparkyrivals/artifacts/milestone-8a5/1003-1000001003/` and
   `~/.local/share/sparkyrivals/artifacts/milestone-8a5/ios-1008/`.
 
-Physical remote delivery remains pending. The approved temporary HTTPS tunnel
-targets only a separate synthetic test database. Its local acceptance proxy blocks
+At this initial-build stage, physical remote delivery remained pending. The
+approved temporary HTTPS tunnel targets only a separate synthetic test database. Its local acceptance proxy blocks
 health/diary mutations; public signup is disabled. No production infrastructure or
 NPM configuration is involved. Native compilation, installation and token
 registration are separate acceptance boundaries from actual APNs/FCM delivery.
@@ -512,5 +516,148 @@ ignores duplicate callbacks and preserves an unchanged Expo token's valid lease.
 Focused regression tests: three suites, 32 tests passed. Mobile validation and
 full CI passed: **509 suites, 7,856 tests**. These checks include the callback loop,
 real token rotation and the existing consent/account guards. New full native
-builds and physical re-verification are required; the preceding artifacts are
+builds and physical re-verification followed; the preceding artifacts remain
 compilation evidence, not accepted remote-push releases.
+
+### Callback correction builds and physical push verification
+
+Source `6ad4859a2a6b23bc46f65ddc51c6ae837bdeb4b4` compiled as Android phone
+**1004**, Wear **1000001004**, and
+[EAS full iOS build 1009](https://expo.dev/accounts/imjstnickdev/projects/sparkyrivals/builds/2751e06e-a08d-46f6-a0f2-5680b454c6ee).
+
+- Android clean prebuild/native identity validation, phone/Wear release compilation,
+  and 34 Wear Gradle tests passed. Both APKs have the production package and the
+  same permanent certificate documented above. Both were installed as updates
+  without clearing data; installed version codes were verified through ADB.
+- EAS compiled all five Apple targets with the existing credentials. Exported IPA
+  inspection verified build 1009 on every target, production identities, team,
+  App Group, registered devices and signed entitlements. APNs remains phone-only.
+  The maintainer confirmed iPhone installation and launch. No local Xcode build ran.
+- The physical iPhone registration remained stable across foreground observations;
+  the repeated-registration loop no longer occurred.
+- On 2026-10-04, Expo rejected a private request without Bearer authentication
+  with HTTP **403 / UNAUTHORIZED**. The normal authenticated backend invitation
+  mutation then returned HTTP 201 and the scheduled sender obtained an Expo ticket.
+  The normal delayed receipt worker subsequently marked that delivery successful.
+  No routing token or access token was printed or placed in this record.
+- With the iPhone app backgrounded, the maintainer confirmed one generic invitation
+  notification, a tap opening the correct invitation, and no subsequent local
+  duplicate. The invitation remained pending; the notification did not accept it.
+- Disabling only New invitations revoked the server binding and removed its token
+  ciphertext. A second invitation created no delivery and the maintainer confirmed
+  no notification. Re-enabling registered a new guard and a third invitation
+  produced one remote notification. Removing the temporary server connection
+  revoked the binding again; tapping that previously received notification opened
+  the neutral Server screen without navigating into the old account's invitation.
+- Android's visible Challenge/invitation switches and OS notification permission
+  were enabled, but registration failed before reaching the server. The subsequent
+  Android category correction and physical evidence are recorded below.
+
+Commit `d02e502361f02d993d5fd9da9fe6a7d08cd12545` adds only fixed registration
+stage/allowlisted error-code diagnostics, never provider messages or response bodies.
+Focused tests passed (two suites, 27 tests), mobile validation passed, and full
+mobile CI passed (**509 suites, 7,860 tests**). Further physical Android diagnosis,
+Android opt-out/re-enable and account-transition acceptance were still pending.
+
+### Android category incompatibility
+
+Production Android build **1005** from `d02e502361f02d993d5fd9da9fe6a7d08cd12545`
+was compiled, signature-verified and installed without clearing app data. It located
+the failure inside token setup. Inspection of the installed Expo Android module
+confirmed that `setNotificationCategoryAsync('challenge', [])` throws because
+Android requires at least one category action. The same call also blocked the
+existing local Challenge scheduling path; iOS permits action-free categories.
+
+Commit `a19089cd6871b517a61a63673f917e9e370a1fc2` shares platform setup between
+the two paths: Android uses its existing `challenges` channel; iOS retains the
+`challenge` category. No dummy actions, credential changes or dependency upgrades
+were added. Tests now reproduce the native Android rejection and check both
+local/remote invitation selection paths. Focused tests: four suites, 50 tests
+passed. Mobile validation and full CI passed: **509 suites, 7,863 tests**. The full
+run emitted an open-worker teardown warning despite its successful exit; native
+delivery remains a separate acceptance check.
+
+Android phone/Wear **1006 / 1000001006** compiled from this source and passed
+clean production prebuild/native identity checks, 34 Wear Gradle tests and APK
+identity/signature verification. Firebase messaging and project `sparkyrivals-fb`
+are present only in the phone APK; Wear has Watch hardware targeting and no FCM
+messaging service. Both APKs were installed as updates and their version codes
+read back through ADB. Artifacts are privately archived under
+`~/.local/share/sparkyrivals/artifacts/milestone-8a5/1006-1000001006/`.
+After the maintainer opened build 1006, the Android installation registered
+successfully with an enabled, encrypted server binding and no registration errors.
+With the app backgrounded, the maintainer confirmed one generic notification for
+a new invitation, a tap opening the correct invitation and no duplicate local
+alert. The invitation was left pending. This used Expo with the existing EAS FCM
+V1 credential, without Firebase Console or credential changes.
+
+[Full EAS iOS build 1010](https://expo.dev/accounts/imjstnickdev/projects/sparkyrivals/builds/ec0a6cf7-c2f4-429b-ba78-e5b1427c692c)
+finished from the same source with existing credentials. Exported IPA inspection
+verified all five bundle IDs at build 1010, team, App Group, two provisioned devices
+and signed Mach-O entitlements; APNs is still main-phone only. The artifact is
+privately archived under `~/.local/share/sparkyrivals/artifacts/milestone-8a5/ios-1010/`.
+The maintainer requested avoiding a duplicate full iPhone acceptance cycle. The
+shared helper preserves the existing iOS category call; there are no iOS protocol,
+credential or native-target changes from the physically tested build 1009.
+Build 1010's installation/launch remains explicit pre-production QA debt, not a
+claimed physical pass.
+
+Disabling Android New invitations revoked the registry binding and removed token
+ciphertext. A subsequent pending invitation created no delivery; the maintainer
+confirmed no notification. Re-enabling established an eligible encrypted binding.
+The maintainer confirmed one new notification after re-enabling. Removing the
+temporary test server connection then disabled the registration and removed token
+ciphertext. Tapping that retained notification did not open the old invitation.
+
+The Galaxy Watch on **1000001006** opened successfully and received all three
+pending test invitations through the existing Data Layer snapshot after a phone
+refresh. Selecting an invitation showed its metadata and **Accept on phone**,
+without scores or a Watch mutation. Removing the phone test-server connection
+cleared all three invitations from the Watch, as confirmed by the maintainer. This
+confirms the invitation snapshot and account-clear paths; it does not establish
+exhaustive Tile/complication or health/workout acceptance.
+
+### Final acceptance boundaries and pre-production QA
+
+Milestone 8A.5 implementation and physical remote-invitation acceptance are complete
+for review. The actual tested phone versions are **Android 1006** and **iOS 1009**;
+latest-source iOS **1010** passed EAS compilation and signed-artifact inspection.
+The latest full mobile CI result is **509 suites / 7,863 tests passed**. Server,
+DB, migration, identity/prebuild and Compose results above remain applicable:
+subsequent fixes affected mobile registration/setup and documentation only.
+No dependency upgrades were needed.
+
+The following remain explicit pre-production QA, not claimed results:
+
+- Install/launch iOS 1010 and its Apple Watch app. Do not repeat the complete iOS
+  push cycle solely because the Android channel helper was extracted; its iOS call
+  and payload/credential contracts are unchanged and covered by regression tests.
+- Broader authenticated Challenge scores, HealthKit/Health Connect duplicate
+  protection, every widget/Tile/complication, VoiceOver/TalkBack and exhaustive
+  native visual QA from M8A remain outstanding. Wear invitation sync/clear is
+  verified; that does not establish workout or health acceptance.
+- The real delivery tests used backgrounded apps. OS force-stop, long offline
+  expiry, direct account-to-account/server switching, OS-permission revocation and
+  native token rotation have automated coverage where applicable, but were not
+  separately reproduced on physical devices. Account removal, consent toggles,
+  guarded taps and local invitation deduplication were physically verified.
+- Local start/end/ending/lead and unrelated notification regressions passed the
+  mobile suite; their full real-time device schedules were not replayed here.
+- Provider transient failures and DeviceNotRegistered are covered by injected
+  transports; no real routing token was deliberately invalidated. Helm rendering
+  was not run because Helm is unavailable on this host.
+
+Both test-phone registrations are now disabled and their encrypted routing tokens
+removed from the active registry. No real health data, participant scores or names
+were included in pushes. No production deployment, NPM mutation, store submission,
+credential rotation or upstream write occurred. M8B remains deferred.
+
+The normal delayed worker obtained successful Expo receipts for **all four actual
+pushes: two iOS and two Android**, without accelerating its 15-minute receipt wait
+or resending a test notification. The two opt-out invitations created no delivery.
+Provider receipts and the maintainer's on-device confirmations are separate evidence.
+At 17:36 UTC on 2026-10-04, the owned temporary tunnel, acceptance proxy, server and
+PostgreSQL container were stopped; both local test listeners were verified closed.
+Disposable bind data and private evidence were retained. No user-owned data or
+unrelated containers were removed. Final docs build and 27 local link-target checks
+passed; the branch-wide scan of 71 changed files found no secret material.

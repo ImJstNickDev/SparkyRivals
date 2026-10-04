@@ -66,10 +66,11 @@ and nginx connection settings. Production callbacks include `sparkyrivals`;
 server allowlisting continues constructing fixed `scheme://oauth-callback` URLs.
 Add dev/preview schemes only if those clients should use this deployment.
 
-No new application runtime environment variable was introduced: the existing
-[environment reference](../src/install/environment-variables.md), EnvGenerator,
-upstream Compose and Helm interfaces still apply. Build-only EAS/Apple/Android
-signing values are deliberately excluded from runtime templates/containers.
+Milestone 8A reused the existing application runtime environment interfaces.
+Milestone 8A.5 adds the optional remote-push gate and external Expo secret described
+below; the [environment reference](../src/install/environment-variables.md),
+EnvGenerator, upstream Compose and Helm interfaces document those additions.
+Build-only EAS/Apple/Android signing values remain excluded from runtime containers.
 
 ## Initialization and upgrades
 
