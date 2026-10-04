@@ -21,6 +21,14 @@ Native token callbacks pass their supplied token to Expo's exchange API. They do
 not request another native registration: iOS also emits this callback for an
 ordinary token acquisition. Duplicate callbacks are ignored, and an unchanged
 Expo token keeps its acknowledged lease instead of writing another registration.
+Registration diagnostics include only the failed stage and an allowlisted error
+code (or a generic unavailable/timeout result). Provider error messages, response
+bodies, tokens and account identifiers are never passed to the app log.
+Local and remote paths share `challengeNotificationSetup`: Android creates the
+`challenges` channel, while iOS registers the action-free `challenge` category.
+Android's Expo category API requires at least one action and is not used for these
+read-only alerts. Channel/category identifiers and guarded notification taps stay
+unchanged.
 
 Only the owned production phone identity is push-enabled. Development, preview
 and upstream builds retain local notifications. A server must separately enable

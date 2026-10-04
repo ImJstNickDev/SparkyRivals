@@ -61,6 +61,13 @@ beforeEach(async () => {
   invalidateCompanionChallengeSession(false);
   await remotePushRegistration.settled();
   jest.clearAllMocks();
+  jest
+    .mocked(Notifications.setNotificationCategoryAsync)
+    .mockImplementation(async (identifier, actions) => {
+      if (Platform.OS === 'android' && actions.length === 0)
+        throw new Error('Android categories require at least one action');
+      return { identifier, actions };
+    });
   jest.mocked(getActiveServerConfig).mockResolvedValue({
     id: 'config',
     url: 'https://example.test',
@@ -125,11 +132,27 @@ it.each(['ios', 'android'])(
       expect.any(String),
       { keychainAccessible: SecureStore.AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY }
     );
-    if (platform === 'android')
+    if (platform === 'android') {
       expect(Notifications.setNotificationChannelAsync).toHaveBeenCalledWith(
         'challenges',
         expect.any(Object)
       );
+      expect(Notifications.setNotificationCategoryAsync).not.toHaveBeenCalled();
+      expect(
+        jest.mocked(Notifications.setNotificationChannelAsync).mock
+          .invocationCallOrder[0]
+      ).toBeLessThan(
+        jest.mocked(Notifications.getExpoPushTokenAsync).mock
+          .invocationCallOrder[0]
+      );
+    } else {
+      expect(Notifications.setNotificationCategoryAsync).toHaveBeenCalledWith(
+        'challenge',
+        []
+      );
+      expect(Notifications.setNotificationChannelAsync).not.toHaveBeenCalled();
+    }
+    expect(registerRemotePush).toHaveBeenCalledTimes(1);
   }
 );
 it.each(['master', 'challenge', 'invitation'])(

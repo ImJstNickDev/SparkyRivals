@@ -5,6 +5,7 @@ import { Platform } from 'react-native';
 import type { TFunction } from 'i18next';
 import { z } from 'zod';
 import { getNotificationPermissionStatus } from './notifications';
+import { prepareChallengeNotificationDelivery } from './challengeNotificationSetup';
 import { getCompanionChallengeSession } from './companionChallengeSession';
 import { getActiveServerConfigId } from './storage';
 import { getChallengeSurfaceUrl } from '../utils/challengeSurfaceLinks';
@@ -109,12 +110,7 @@ export class ChallengeNotificationReconciler {
             );
         await dismissOtherAccounts(account);
         if (!valid()) return;
-        if (Platform.OS === 'android')
-          await Notifications.setNotificationChannelAsync('challenges', {
-            name: t('challenges.title', { defaultValue: 'Challenges' }),
-            importance: Notifications.AndroidImportance.DEFAULT,
-          });
-        await Notifications.setNotificationCategoryAsync('challenge', []);
+        await prepareChallengeNotificationDelivery(t);
         const messages: Record<ChallengeAlertKind, string> = {
           invitation: t('challenges.notifications.invitationBody', {
             defaultValue:

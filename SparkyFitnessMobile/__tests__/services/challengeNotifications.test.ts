@@ -1,6 +1,7 @@
 import { remotePushRegistration } from '../../src/services/remotePushRegistration';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
+import { Platform } from 'react-native';
 import { ChallengeNotificationReconciler } from '../../src/services/challengeNotifications';
 import {
   CHALLENGE_NOTIFICATION_DEFAULTS,
@@ -69,7 +70,15 @@ beforeEach(async () => {
   jest.mocked(getNotificationPermissionStatus).mockResolvedValue('granted');
   api.getAllScheduledNotificationsAsync.mockResolvedValue([]);
   api.getPresentedNotificationsAsync.mockResolvedValue([]);
+  api.setNotificationCategoryAsync.mockImplementation(
+    async (identifier, actions) => {
+      if (Platform.OS === 'android' && actions.length === 0)
+        throw new Error('Android categories require at least one action');
+      return { identifier, actions };
+    }
+  );
 });
+afterEach(() => jest.restoreAllMocks());
 const run = (service: ChallengeNotificationReconciler, value = input()) =>
   service.reconcile(
     value,
@@ -93,6 +102,33 @@ it('persists account-scoped invitation dedupe across reconcilers', async () => {
   expect(
     api.scheduleNotificationAsync.mock.calls.filter(([a]) => a.trigger === null)
   ).toHaveLength(1);
+  expect(error).not.toHaveBeenCalled();
+});
+it('schedules Android local invitations and reminders without an empty action category', async () => {
+  jest.replaceProperty(Platform, 'OS', 'android');
+  const error = jest.fn();
+  const service = new ChallengeNotificationReconciler(error);
+  await run(service, {
+    ...input(),
+    challenges: [{ ...challenge, lifecycle: 'upcoming' as const }],
+  });
+  expect(api.scheduleNotificationAsync).toHaveBeenCalled();
+  await run(service, {
+    ...input(),
+    challenges: [{ ...challenge, my_membership: 'pending' as const }],
+  });
+  expect(api.setNotificationChannelAsync).toHaveBeenCalledWith(
+    'challenges',
+    expect.objectContaining({
+      importance: Notifications.AndroidImportance.DEFAULT,
+    })
+  );
+  expect(api.setNotificationCategoryAsync).not.toHaveBeenCalled();
+  const invitations = api.scheduleNotificationAsync.mock.calls.filter(([a]) =>
+    a.identifier?.endsWith(':invitation')
+  );
+  expect(invitations).toHaveLength(1);
+  expect(invitations[0][0].trigger).toEqual({ channelId: 'challenges' });
   expect(error).not.toHaveBeenCalled();
 });
 it('denied OS permission never schedules or asks for permission', async () => {
@@ -184,9 +220,15 @@ it('same OS schedule is not recreated; failure is reported without changing quer
   expect(error).toHaveBeenCalledTimes(1);
 });
 
-it.each([true, false])(
-  'remote registration %s selects exactly one invitation alert source',
-  async (registered) => {
+it.each([
+  ['ios', true],
+  ['ios', false],
+  ['android', true],
+  ['android', false],
+] as const)(
+  '%s remote registration %s selects exactly one invitation alert source',
+  async (platform, registered) => {
+    jest.replaceProperty(Platform, 'OS', platform);
     const service = new ChallengeNotificationReconciler(jest.fn());
     await run(service);
     api.scheduleNotificationAsync.mockClear();
@@ -197,15 +239,15 @@ it.each([true, false])(
     };
     await run(service, pending);
     expect(
-      api.scheduleNotificationAsync.mock.calls.filter(
-        ([n]) => n.trigger === null
+      api.scheduleNotificationAsync.mock.calls.filter(([n]) =>
+        n.identifier?.endsWith(':invitation')
       )
     ).toHaveLength(registered ? 0 : 1);
     jest.mocked(remotePushRegistration.isActive).mockReturnValue(false);
     await run(service, pending);
     expect(
-      api.scheduleNotificationAsync.mock.calls.filter(
-        ([n]) => n.trigger === null
+      api.scheduleNotificationAsync.mock.calls.filter(([n]) =>
+        n.identifier?.endsWith(':invitation')
       )
     ).toHaveLength(registered ? 0 : 1);
   }

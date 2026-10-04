@@ -19,6 +19,7 @@ import {
 } from './remotePushIdentity';
 import { addLog } from './LogService';
 import { useAppPreferencesStore } from '../stores/appPreferencesStore';
+import { prepareChallengeNotificationDelivery } from './challengeNotificationSetup';
 
 const KEY = 'sparkyrivals.remote-push.v1';
 const schema = z.object({
@@ -316,12 +317,7 @@ export const remotePushRegistration = new RemotePushRegistration({
     if (projectId !== '63f08cec-3f87-4cee-89be-bebf970b6262')
       throw new Error('Owned push project required');
     // Android requires a channel before obtaining a native push token.
-    if (Platform.OS === 'android')
-      await Notifications.setNotificationChannelAsync('challenges', {
-        name: translation.t('challenges.title', { defaultValue: 'Challenges' }),
-        importance: Notifications.AndroidImportance.DEFAULT,
-      });
-    await Notifications.setNotificationCategoryAsync('challenge', []);
+    await prepareChallengeNotificationDelivery(translation.t.bind(translation));
     // iOS emits its token callback when getDevicePushTokenAsync registers with
     // APNs, including our own acquisition. Reuse the callback's native token so
     // reconciling that event does not start another native registration cycle.

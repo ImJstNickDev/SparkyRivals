@@ -463,6 +463,9 @@ const androidService = require('../../src/services/healthConnectService.ts');
   needs global/Challenge/invitation consent and OS permission. Never prompt in the
   headless hook. Local invitation planning waits for registration and retains its
   fallback; start/end/ending/lead remain local.
+- `challengeNotificationSetup` prepares the existing Android channel or iOS
+  category for both local and remote invitations. Never register an empty-action
+  category on Android: Expo rejects it before token acquisition or scheduling.
 - `challengeSurfaceLinking` accepts validated metadata and current-account guard,
   never a remote URL. The identity resolver enables Firebase/remote registration
   only for the owned production phone. Do not add FCM to Wear or widget targets.
