@@ -1,6 +1,6 @@
 # AGENTS.md
 
-_Last updated: 2026-10-04_
+_Last updated: 2026-10-05_
 
 SparkyFitness Server is the backend API package for the SparkyFitness monorepo. Use this file as the primary guide for work inside `SparkyFitnessServer/`.
 
@@ -351,3 +351,8 @@ Before adding a feature or changing auth/permission behavior, read:
 ## M8A.6 Challenge domain source map
 
 Challenge types use `challengeRepository`, `challengeService`, `challengeLeaderboardService` and `utils/challengeScore.ts`. Goal modes require parent-row locking before target/Ready/roster mutations. SQL guards activate exactly once; targets are self-only and locked after activation. `validateActivityGoals` validates additive normal-goal fields without changing nutrition contracts. See `docs/fork/CHALLENGE_TYPES.md`; test fresh/upgrade migrations and remote invitations into dateless lobbies.
+
+Connection labels use `familyAccessRepository` and the narrow
+`family_access_display_names` startup SQL projection. Only relationship parties
+in self context receive the two display names; never broaden profile or diary
+RLS to make the Challenge invitation picker display names.

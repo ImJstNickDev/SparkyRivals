@@ -241,4 +241,12 @@ the repository guide `docs/fork/REMOTE_PUSH.md`.
 
 ## M8A.6 Challenge projections
 
+`family_access_display_names(relationship_id)` is a narrow SECURITY DEFINER
+projection for connection labels. It returns only the owner/contact display names
+when the authenticated caller is a party to that relationship in self context.
+Outsiders and switched contexts receive no rows. Ordinary `profiles` and diary
+policies remain unchanged, including connections with no health permissions.
+The function is installed by the normal startup RLS script; no new table or
+profile-readable policy is introduced.
+
 Existing `challenges`, `challenge_participants`, `user_goals` and `goal_presets` keep their security tiers. Participant targets/readiness are self-only and immutable after activation. Parent row locks serialize roster changes. `challenge_daily_metric_points` and extended `challenge_workout_points` expose only accepted members and the selected metric/date range. `canonical_hydration_days` is SECURITY INVOKER and retains diary RLS. `lock_challenge_participation` verifies self-context accepted/pending membership before acquiring the parent lock. Push deny-all/startup recovery remains unchanged.

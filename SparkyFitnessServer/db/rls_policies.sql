@@ -138,6 +138,21 @@ AS $function$
   SELECT NULLIF(current_setting('app.authenticated_user_id', true), '')::uuid;
 $function$;
 
+-- Connection labels do not require access to a contact's private profile.
+-- Project only the two names for a relationship belonging to the self-context
+-- caller. Neither a guessed relationship ID nor a switched context grants access.
+CREATE OR REPLACE FUNCTION public.family_access_display_names(p_access_id uuid)
+RETURNS TABLE(owner_full_name text, family_full_name text)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = pg_catalog, public AS $$
+  SELECT p_owner.full_name, p_family.full_name
+  FROM public.family_access fa
+  LEFT JOIN public.profiles p_owner ON p_owner.id = fa.owner_user_id
+  LEFT JOIN public.profiles p_family ON p_family.id = fa.family_user_id
+  WHERE fa.id = p_access_id
+    AND public.current_user_id() = public.authenticated_user_id()
+    AND public.authenticated_user_id() IN (fa.owner_user_id, fa.family_user_id);
+$$;
+
 
  CREATE OR REPLACE FUNCTION public.get_accessible_users(p_user_id UUID)
     RETURNS TABLE(
