@@ -201,6 +201,11 @@ Keep the upstream license, attribution, history, functionality, and package guid
 - SparkyRivals production uses a separate server checkout and host bind mounts
   under repository-root `dockerdata/` (git-ignored), never named volumes or `/srv`.
   Follow `docs/fork/DEPLOYMENT.md` for paths, ownership, backup and restore.
+- Release engineering uses `docs/fork/BUILDING.md`, root `compose.yaml`,
+  `scripts/bootstrap-production.py` and `scripts/validate-production-local.py`.
+  Keep production server/NPM actions separate from laptop acceptance. Stop for
+  interactive Apple authentication, signing secrets or physical-device actions;
+  never collect passwords/codes in chat or put mobile signing in server runtime.
 - Challenges and Wear OS begin only in
   their explicitly requested milestones; follow `docs/fork/ROADMAP.md`.
 

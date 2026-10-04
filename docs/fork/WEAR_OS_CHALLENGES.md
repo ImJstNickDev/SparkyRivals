@@ -1,5 +1,14 @@
 # Wear OS Challenges — Milestone 5
 
+## Release acceptance update — Milestone 8A
+
+The phone and Wear production releases compiled and passed the permanent-certificate
+check; 34 Wear Gradle JVM tests passed. Both apps installed/launched on physical
+Samsung devices, and an initial app-scoped Data Layer transfer was observed.
+Authenticated results and full Tile/complication/device acceptance remain separate.
+[RELEASE_VALIDATION.md](RELEASE_VALIDATION.md) is the current evidence; the native
+limitations below describe the earlier milestones.
+
 ## Challenge polish extension — Milestone 7
 
 [CHALLENGE_POLISH.md](CHALLENGE_POLISH.md) documents the implemented Rematch,

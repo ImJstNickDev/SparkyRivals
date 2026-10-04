@@ -32,26 +32,28 @@ Milestone 0 is complete. [Own the Build](OWN_THE_BUILD.md) implements generic ow
 identities, secure callback configuration, release signing guards and reproducible
 native generation. See [BUILDING.md](BUILDING.md) for actual configuration and
 [BUILD_VALIDATION.md](BUILD_VALIDATION.md) for evidence and untested boundaries.
-Accounts, permanent signing credentials and signed/device build acceptance remain
-manual setup. Milestone 1 merged as PR #1 (`14ff6ea3096138fd9f6ef12daf0188007dd09e3c`).
+Owned accounts, permanent signing, native builds and initial device acceptance are
+now recorded in [Milestone 8A release evidence](RELEASE_VALIDATION.md), together
+with residual pre-production QA. Milestone 1 merged as PR #1 (`14ff6ea3096138fd9f6ef12daf0188007dd09e3c`).
 Milestone 2 merged as PR #2 (`eff06b7b6e522145e037f4ce08a7e5d732a4fbb1`).
 The controlled upstream [sync PR #3](https://github.com/ImJstNickDev/SparkyRivals/pull/3)
 merged at `747280650d58fcfde1617a12eab04b829eb3bff2`. Milestone 3
 [web and mobile Challenges](CHALLENGE_UI.md) merged as PR #4 at
 `b333a116724e8c0899a8a036ae1a1ad29e4d2d42`. Milestone 4 implements the
 [read-only Apple Watch Challenge page](APPLE_WATCH_CHALLENGES.md), merged as PR #5
-at `e52c89b1314927309d42a351da8f509f44970ec5`. Native Apple compile/device/visual
-acceptance is still pending. Milestone 5 implements the
+at `e52c89b1314927309d42a351da8f509f44970ec5`. Later Apple native build and initial
+device acceptance are recorded in Milestone 8A. Milestone 5 implements the
 [Wear OS/Galaxy Watch companion](WEAR_OS_CHALLENGES.md), with durable Data Layer
 state and prebuild-safe native sources. PR #6 merged at
-`a132e3f8ca6fd8a449cf17b8c5b7ee3d9b66713d`; Android/Compose compilation and paired
-hardware acceptance remain outstanding. Milestone 6 adds
+`a132e3f8ca6fd8a449cf17b8c5b7ee3d9b66713d`; Milestone 8A subsequently verified
+Android/Wear release builds and initial paired hardware transport. Milestone 6 adds
 [Workout Time Challenges](WORKOUT_CHALLENGES.md) across server and clients, merged
 as PR #7 at `e2fee2726ebae4a751da7c992da694efaeb0713e`. See [validation evidence](WORKOUT_VALIDATION.md).
 
 GitHub Actions remain **disabled**. Inherited publishing/mutation jobs are now
 guarded off in forks; validation enablement is documented, not performed. No store
-submission, deployment, paid/cloud build, or upstream account operation occurred.
+submission, production deployment or upstream write occurred. Owned EAS native
+builds were authorized and completed during Milestone 8A.
 
 Production will use a separate server checkout. Persistent state belongs in
 repository-root `dockerdata/` through host bind mounts; see the mandatory
@@ -94,6 +96,7 @@ product direction. See [ARCHITECTURE.md](ARCHITECTURE.md#future-client-experienc
 - [Own the Build implementation status](OWN_THE_BUILD.md)
 - [Owned build guide and credential recovery](BUILDING.md)
 - [Milestone 1 validation](BUILD_VALIDATION.md)
+- [Milestone 8A release and device acceptance](RELEASE_VALIDATION.md)
 - [Production deployment/storage policy](DEPLOYMENT.md)
 
 Read the root and applicable package `AGENTS.md` before editing. The root guide has
@@ -111,5 +114,14 @@ so `docs/fork` is deliberately outside the upstream documentation website.
 
 [Challenge polish](CHALLENGE_POLISH.md) adds editable Rematch, local notifications,
 phone widgets and read-only watch surfaces. [Validation](POLISH_VALIDATION.md)
-separates Linux evidence from outstanding native/device acceptance. PR #7 is merged;
-Milestone 7 remains on its review branch until explicitly approved for merge.
+separates its original Linux evidence from later native/device acceptance.
+Milestone 7 merged normally as PR #8.
+
+### Milestone 8A
+
+Release engineering and local production-stack acceptance are complete.
+[PR #10](https://github.com/ImJstNickDev/SparkyRivals/pull/10) is ready for review
+and remains unmerged. The first-run Watch navigation fix passed physical acceptance
+in full EAS build 1006 without entering weight. Broader functional QA remains listed
+in [RELEASE_VALIDATION.md](RELEASE_VALIDATION.md). Milestone 8B production deployment
+is deferred and requires separate authorization.

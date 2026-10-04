@@ -126,6 +126,30 @@ beforeEach(async () => {
 describe('useAppStartup', () => {
   const shouldYieldObserverSync = jest.fn(() => false);
 
+  it('waits for language bootstrap before creating native notification channels', async () => {
+    const { rerender } = renderHook(
+      ({ ready }) => useAppStartup({ shouldYieldObserverSync, ready }),
+      { initialProps: { ready: false } }
+    );
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(initNotifications).not.toHaveBeenCalled();
+    expect(mockConfigureBackgroundSync).not.toHaveBeenCalled();
+    rerender({ ready: true });
+    await waitFor(() => expect(initNotifications).toHaveBeenCalledTimes(1));
+    expect(mockConfigureBackgroundSync).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not initialize native services if unmounted before bootstrap', () => {
+    const { unmount } = renderHook(() =>
+      useAppStartup({ shouldYieldObserverSync, ready: false })
+    );
+    unmount();
+    expect(initNotifications).not.toHaveBeenCalled();
+    expect(mockConfigureBackgroundSync).not.toHaveBeenCalled();
+  });
+
   it('bootstraps the timezone before configuring background sync, then starts observers', async () => {
     const order: string[] = [];
     mockEnsureTimezoneBootstrapped.mockImplementation(async () => {

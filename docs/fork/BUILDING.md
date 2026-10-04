@@ -1,13 +1,14 @@
 # Building SparkyRivals
 
-Milestone 1 implementation, validated on Linux on 2026-10-03. Start in
+Owned build implementation, updated during Milestone 8A on 2026-10-03. Start in
 `SparkyFitnessMobile/` after a root `pnpm install --frozen-lockfile`. Use the pinned
 pnpm version and Node 24 (validated: 24.20.0). Native projects are generated and
 ignored; never make durable edits inside `ios/` or `android/`.
 
 See [validation evidence](BUILD_VALIDATION.md), [current identifiers](IDENTIFIERS.md),
 and upstream [mobile development guide](../../SparkyFitnessMobile/README.md).
-No build in this milestone was submitted, published, or run on a cloud builder.
+No store submission or publication is configured. Native build and device acceptance
+results are recorded separately; configuration validation alone is not acceptance.
 
 ## Identity and profiles
 
@@ -23,7 +24,10 @@ production identity. **Custom preview is isolated.**
 | `sparkyrivals-production`  | SparkyRivals         | `com.imjstnick.sparkyrivals`         | `sparkyrivals`         | `sparkyrivals-watch`         |
 
 All three use slug `sparkyrivals`. `sparkyrivals-base` holds common EAS configuration;
-select one of its three child profiles for builds. `pnpm build:profile <profile>
+select a child profile for builds. `sparkyrivals-production-internal` extends
+production with internal distribution, a bundled release client (no development
+client), and EAS-managed iOS credentials. It retains the production package, bundle,
+schemes and App Group; it does not submit to a store. `pnpm build:profile <profile>
 <command> [args...]` applies inherited profile variables to local commands too.
 The ordinary `development`, `preview`, `production` EAS profiles retain upstream
 identity defaults. Never select them to distribute SparkyRivals.
@@ -34,11 +38,13 @@ Custom inputs describe **production roots**, not already-suffixed variant IDs:
   `EXPO_ANDROID_PACKAGE`, `EXPO_IOS_BUNDLE_IDENTIFIER`, `EXPO_APP_SCHEME`.
 - `EXPO_WATCH_SCHEME` optionally supplies a root Watch scheme; the variant is
   inserted before its `-watch` suffix. Otherwise it derives from the phone scheme.
-- The owned EAS account/project require `EXPO_OWNER` and `EXPO_EAS_PROJECT_ID`.
+- The owned profiles supply `EXPO_OWNER=imjstnickdev` and
+  `EXPO_EAS_PROJECT_ID=63f08cec-3f87-4cee-89be-bebf970b6262`.
   The known upstream UUID, upstream bundle roots/schemes, malformed inputs and
   incomplete custom configuration are rejected. No replacement UUID is invented.
 - Apple team: `EXPO_DEV_APPLE_TEAM_ID` for development;
-  `EXPO_PROD_APPLE_TEAM_ID` for preview/production. Empty means unprovisioned,
+  `EXPO_PROD_APPLE_TEAM_ID` for preview/production. Both owned-profile values are
+  `U5K88Y67DL`. In generic custom mode, empty means unprovisioned,
   never a fallback to another developer's team. Supplied IDs must have 10 letters/digits.
 - App Group normally derives as `group.<resolved-phone-bundle>.shared`.
   `IOS_APP_GROUP_DEV`, `IOS_APP_GROUP_PREVIEW`, `IOS_APP_GROUP_PROD` may override it
@@ -92,28 +98,46 @@ be compiled with signing disabled.
 
 ## Expo / EAS ownership setup
 
-Verified state: EAS CLI 24.10.0 reported **Not logged in**. No account owner or owned
-project UUID is known; no project or credentials were created or modified.
-GitHub identity does not determine Expo ownership.
+EAS archives this monorepo from its Git root. Root `.easignore` mirrors the root
+and package Git exclusions, including `/dockerdata`, generated mobile native
+projects and local signing credentials. EAS replaces **all** `.gitignore` rules
+when that file exists, so keep the exclusions synchronized. It also avoids EAS
+scanning protected PostgreSQL data for nested ignore files. Never loosen database
+permissions to prepare a mobile archive. Verify locally with `eas build:inspect
+--platform ios --profile sparkyrivals-production-internal --stage archive
+--output <private-temporary-directory>` through `pnpm build:profile`.
 
-1. Log in deliberately with an owned Expo account; verify `eas whoami`.
-2. Set `EXPO_OWNER` to that actual account/organization. With
-   `APP_CONFIG_ONLY=1`, run `pnpm build:profile sparkyrivals-production eas init`
-   to create/select the **sparkyrivals** project under that owner. Inspect the
-   proposed owner/name before confirming. Never select upstream's project.
-3. Record the **actual** returned UUID as `EXPO_EAS_PROJECT_ID`. Dynamic config
-   may prevent CLI auto-editing: keep owner/UUID in ignored `.env.local` or the
-   build environment, and in the corresponding EAS environment for remote builds.
-   Do not change `app.json`'s upstream defaults to link this derivative.
-4. Unset `APP_CONFIG_ONLY`, resolve `expo config --type public` through the profile,
-   and verify owner, project UUID, all bundle IDs and variant before any build.
-5. Configure owned credentials and version counters separately. No submission
-   profile exists. A future store submission needs an explicitly reviewed owned
-   App Store Connect app ID / Google Play configuration; none is supplied here.
+Verified during Milestone 8A with EAS CLI 24.10.0:
 
-Use an explicit EAS CLI version in reproducible CI. The profile wrapper works with
-an installed `eas` or `pnpm dlx eas-cli@24.10.0`. Local env files are ignored.
-Never put signing secrets in `extra`, `EXPO_PUBLIC_*`, tracked env files or logs.
+- Authenticated account: `imjstnick`, with owner access to organization `imjstnickdev`.
+- Project: `@imjstnickdev/sparkyrivals`.
+- Project UUID: `63f08cec-3f87-4cee-89be-bebf970b6262`.
+- Apple team: `U5K88Y67DL` (maintainer-provided active paid membership).
+
+The non-secret ownership values live in `eas.json`'s existing `sparkyrivals-base`
+profile environment. The generic resolver remains `app.identifiers.js`; the
+upstream profiles retain upstream defaults. The local profile wrapper uses the
+same inheritance as EAS, so these values need no private local override.
+`extra.eas.projectId` and `ios.appleTeamId` resolve through the existing config.
+
+For an internal iPhone/Watch acceptance build, use:
+
+```sh
+pnpm build:profile sparkyrivals-production-internal pnpm dlx eas-cli@24.10.0 project:info
+pnpm build:profile sparkyrivals-production-internal pnpm dlx eas-cli@24.10.0 build \
+  --platform ios --profile sparkyrivals-production-internal
+```
+
+This requests an EAS native build and can consume account build resources. It
+never submits to App Store Connect. The maintainer has registered an iPhone for
+internal distribution. Let EAS manage certificates/profiles for the generated
+phone, widget, Live Activity, Watch and Watch-widget targets. Do not pre-create
+portal resources. Stop at interactive Apple login/2FA and have the maintainer
+complete the command locally; never collect passwords or codes in chat.
+
+Build-only ownership/signing settings do not belong in Docker/Helm server runtime
+configuration. Never put signing secrets in `extra`, `EXPO_PUBLIC_*`, tracked env
+files or logs. There is still no store submission profile/destination.
 
 ## Android signing and build numbers
 
@@ -125,10 +149,14 @@ debug signing. Gradle reads these existing names as properties or environment:
 - `MYAPP_RELEASE_KEY_ALIAS`, `MYAPP_RELEASE_STORE_PASSWORD`,
   `MYAPP_RELEASE_KEY_PASSWORD`: private signing configuration.
 
-Prefer a credential manager or private Gradle properties over command-line
-passwords. No permanent keystore was generated in this milestone. Provision it
-before distributing an APK/AAB, restrict its permissions, and back up the key,
-alias, passwords, certificate fingerprints and recovery procedure securely.
+Prefer a credential manager or mode-0600 `~/.gradle/gradle.properties` over
+command-line passwords. The maintainer has already generated the permanent PKCS12
+key at `~/.local/share/sparkyrivals/signing/sparkyrivals-release.p12`, alias
+`sparkyrivals-release`. Do not recreate/rotate it or create a second Wear key.
+Expected SHA-256 certificate fingerprint:
+`3E:B2:F9:50:8D:15:9C:C1:50:14:1A:9A:57:0D:37:71:24:4F:59:10:59:D0:AE:09:E9:61:28:1E:B6:42:D5:2A`.
+Back up the key, alias, passwords and fingerprint in secure off-host custody.
+Never put passwords in chat, command arguments, tracked files or Expo config.
 The same application ID requires signing continuity for future upgrades.
 
 The guard inspects the **final selected signing config** when release tasks are
@@ -138,11 +166,11 @@ standard debug alias. An unexpected upstream Gradle layout fails prebuild clearl
 EAS can supply remote credentials or its local `credentials.json` workflow; both
 use its normal signing injection. Credentials files/directories are ignored.
 See [EAS Android signing injection](https://docs.expo.dev/build-reference/android-builds/#configuring-gradle).
-This integration was inspected and generated locally; actual signed Gradle/EAS
-execution remains to be tested with the owned key and native toolchain.
+The native acceptance record must distinguish generated signing wiring from
+actual APK verification using this permanent key.
 
 For local/CI distribution, allocate a monotonically increasing `EXPO_BUILD_NUMBER`
-(1–2100000000) for each binary, then prebuild with it. It sets Android `versionCode`
+(2–999999999 when Wear is enabled) for each phone binary, then prebuild with it. It sets Android `versionCode`
 and iOS `buildNumber`; Apple child versions follow the host config. Owned local
 Android release tasks reject the default 1. Example allocation for testing is 100;
 do not repeatedly distribute that number. EAS uses `appVersionSource=remote` and
@@ -150,24 +178,68 @@ do not repeatedly distribute that number. EAS uses `appVersionSource=remote` and
 local releases before changing build systems. The application marketing version
 continues following the existing upstream version tooling.
 
-After account/key setup, prebuild through the intended profile **without**
-`APP_CONFIG_ONLY`, then `cd android && ./gradlew :app:assembleRelease` or
-`:app:bundleRelease`. Debug validation uses `:app:assembleDebug`. This host still
-lacks the required Android SDK/JDK 17 setup, so these commands were not executed.
-Use SDK 36 and the NDK/Gradle versions selected by the generated project.
+On owned EAS iOS builds, the resolver consumes the worker-provided
+`EAS_BUILD_IOS_BUILD_NUMBER` before prebuild. That remote allocation takes
+precedence over a local `EXPO_BUILD_NUMBER` and sets every Apple child target's
+version as well as the host. Do not configure that worker variable manually or
+pass it to server containers. Local and Android builds retain their existing
+number allocation. Inspect the finished IPA: all five `CFBundleVersion` values
+must match; a successful archive alone does not prove extension version parity.
+
+Use the production pair helper, with newly allocated numbers:
+
+```sh
+EXPO_BUILD_NUMBER=<allocated-phone-code> EXPO_WEAR_BUILD_NUMBER=<allocated-wear-code> \
+  bash scripts/build-owned-android.sh
+```
+
+It cleans/regenerates Android, validates native metadata, compiles phone and Wear
+release APKs, runs Wear JVM tests and verifies both package/version/certificate
+identities. The phone APK's bundled Expo config must also match owned production
+EAS identity. **Keep `build:profile` active during Gradle, not only prebuild**:
+Expo Constants and Metro reevaluate dynamic config during compilation. The release
+guard rejects a runtime/generated package mismatch before building.
+
+For incremental native builds after a correct prebuild:
+
+```sh
+EXPO_BUILD_NUMBER=<allocated-phone-code> EXPO_WEAR_BUILD_NUMBER=<allocated-wear-code> \
+JAVA_HOME=/usr/lib/jvm/java-17-openjdk ANDROID_HOME=/opt/android-sdk NODE_ENV=production \
+  pnpm build:profile sparkyrivals-production-internal bash -c \
+  'cd android && ./gradlew :app:assembleRelease :wear:assembleRelease :wear:testDebugUnitTest --max-workers=4 -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=1g -Djava.util.concurrent.ForkJoinPool.common.parallelism=4"'
+```
+
+The Arch laptop now has JDK 17.0.20.1 at the path above; do not change default Java.
+SDK 36, Build Tools 36.0.0, NDK 27.1.12297006, AGP 8.12.0, Kotlin 2.1.20 and
+Gradle 9.3.1 are used. The local helper bounds workers/common-pool packaging
+parallelism and selects a 4 GB heap / 1 GB metaspace per command; the default
+2 GB heap exhausted memory while packaging the multi-ABI phone APK. No global
+Java/Gradle setting is changed. Existing third-party modules also require Build Tools 35.0.0
+and CMake 3.22.1. Install missing components with the current `android sdk` CLI,
+not new scripts built around deprecated sdkmanager. `/opt/android-sdk` group access
+requires a login/session with the `android-sdk` supplemental group.
+
+Final APKs are generated at `android/app/build/outputs/apk/release/app-release.apk`
+and `android/wear/build/outputs/apk/release/wear-release.apk`. Prebuild clean deletes
+these outputs; archive approved artifacts privately outside generated folders.
+Use Python 3.11+ with `scripts/verify-android-release.py --phone <apk> --wear <apk> --phone-code <n>
+--wear-code <n>` to run `apksigner verify --print-certs`, aapt metadata checks and
+bundled config checks without loading signing passwords. Actual device testing
+still requires explicit user interaction.
 
 ## Apple registration and provisioning
 
-No Apple Developer session/team/membership was verified. Both team environment
-variables were unset. Linux prebuild warnings about the missing team are expected.
+The maintainer confirmed active paid Apple Developer membership and an iPhone
+registered through EAS. The owned profiles supply team `U5K88Y67DL`. Generated
+identity/entitlement validation is distinct from issued provisioning profiles and
+actual native/device acceptance; record those results separately.
 
 For each variant you intend to install/distribute:
 
-1. Obtain/verify an owned Apple Developer team with the required capability and
-   distribution access. Set the appropriate team variable. Do not copy a team ID
-   from an upstream contributor's Xcode configuration.
-2. Register **all five explicit App IDs** listed above and the variant App Group;
-   assign the group to all five targets. Keep the Watch companion relationship.
+1. Use the owned profile and verify `ios.appleTeamId = U5K88Y67DL`.
+2. Let EAS manage **all five explicit App IDs** listed above and the variant App
+   Group. Inspect its generated extension metadata before provisioning; assign the
+   group to all five targets and keep the Watch companion relationship.
 3. Provision phone HealthKit/background delivery, time-sensitive notifications,
    and the notifications entitlement; provision Watch HealthKit with background
    workout processing. Preserve purpose strings and existing background modes.
@@ -182,9 +254,53 @@ For each variant you intend to install/distribute:
    background sync, complications/widget links, Live Activities and browser auth
    on devices. Back up signing recovery material securely or use owned EAS custody.
 
+For ad-hoc Watch installation, verify the **Watch's own UDID** is registered and
+included in both embedded Watch app/widget profiles. Registering only the paired
+iPhone is insufficient. The original build 1005 compiled/exported successfully
+but its Watch profiles contained only the iPhone UDID. An interactive EAS re-sign
+corrected that omission; see [release evidence](RELEASE_VALIDATION.md).
+Inspect profile device membership privately before requesting another install;
+never commit device IDs. A non-interactive build that merely reuses the same
+profiles does not add the missing device. Follow Apple's
+[registered-device distribution guidance](https://developer.apple.com/documentation/xcode/distributing-your-app-to-registered-devices)
+and stop for device registration or Apple authentication before refreshing profiles.
+
+EAS CLI 24.10.0's manual **Input** registration has no Watch device class; choose
+**Unknown** for the Watch. Its non-interactive ad-hoc refresh filters iOS devices
+to iPhone/iPad and excludes this entry, so use interactive provisioning and select
+both devices explicitly for the targets. Reuse the existing Distribution Certificate.
+If EAS reports that Apple could not provision a selected device, stop rather than
+export another artifact without it.
+
+After registration, an existing successful internal build can be re-signed without
+recompiling. Run the following locally, completing any Apple authentication yourself:
+
+```sh
+pnpm build:profile sparkyrivals-production-internal pnpm dlx eas-cli@24.10.0 build:resign \
+  --platform ios --id YOUR_SUCCESSFUL_INTERNAL_BUILD_ID \
+  --target-profile sparkyrivals-production-internal --no-wait
+```
+
+Choose devices again when the old profile lacks the Watch, and select iPhone plus
+Watch at each target prompt. Decline optional push setup for this milestone.
+Inspect the exported profiles before installation, then install the re-signed IPA
+over the existing iPhone app before retrying its embedded Watch app. A successful
+cloud re-sign does not itself prove Watch installation or launch.
+
+If the Watch install spinner stops without installing, capture the paired iPhone's
+`appconduitd`/`installd` logs during one retry before changing credentials again.
+`ACXErrorDomain Code=8` with underlying `Socket open timed out` identifies a failed
+transfer connection; it does not identify a signing failure. See the current
+[device evidence](RELEASE_VALIDATION.md#apple-watch-installation-diagnosis-and-profile-recovery-2026-10-04)
+and [related Apple report](https://developer.apple.com/forums/thread/827053).
+Keep raw logs private. Request user interaction for Bluetooth reconnection or OS
+updates, and record the actual result; do not reset pairing/data or rotate keys
+as speculative fixes.
+
 The inherited manual `ios-build.yml` now selects a profile and discovers generated
 workspace/launch IDs. It compiles unsigned simulators, not device provisioning.
-EAS/Xcode native or device builds were not started here.
+See [release acceptance](RELEASE_VALIDATION.md) for the current EAS build result
+and remaining device checks. No local Xcode compilation occurs on Linux.
 
 ## Deep links and authentication
 
@@ -254,7 +370,8 @@ copy tracked `targets/wear/` into generated `android/wear/`; default upstream
 builds omit it. Phone and Wear share applicationId and the final selected phone
 signing config, including Debug. No separate Wear signing key may be introduced.
 Wear Release rejects debug/absent credentials, inspection mode and an implicit
-Wear build number. EAS ownership and permanent signing setup above remain open.
+Wear build number. Owned EAS identity and permanent key custody are now configured;
+actual signed artifacts/device transport require the acceptance checks above.
 
 With Wear enabled, allocate phone `EXPO_BUILD_NUMBER` below 1000000000 and Wear
 `EXPO_WEAR_BUILD_NUMBER` from 1000000000 through 2100000000. Wear release requires
@@ -277,8 +394,8 @@ configured. The watch feature is required and standalone is false.
 
 [WEAR_OS_CHALLENGES.md](WEAR_OS_CHALLENGES.md) contains exact prebuild/test commands,
 source maps, limits, recovery and the physical Galaxy Watch checklist. This Linux
-host ran native protocol JVM tests and metadata checks, but no Gradle APK build,
-Compose instrumentation, emulator or physical-watch acceptance.
+host has now compiled the Wear debug APK and run 34 Gradle JVM tests.
+Compose instrumentation, emulator and physical-watch acceptance remain separate.
 
 ## Milestone 7 native surface validation
 

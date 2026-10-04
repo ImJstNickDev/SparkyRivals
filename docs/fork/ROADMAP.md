@@ -99,7 +99,7 @@ calories/points/combined score. See [WORKOUT_CHALLENGES.md](WORKOUT_CHALLENGES.m
 and [WORKOUT_VALIDATION.md](WORKOUT_VALIDATION.md). Native compile/device debt from
 Milestones 4/5 remains explicit; no workout logging was added to Wear.
 
-## 7. Challenge polish and native surfaces — implemented; review/native acceptance pending
+## 7. Challenge polish and native surfaces — merged as PR #8; native acceptance pending
 
 Editable web/mobile Rematch, local phone notification reconciliation/preferences,
 iOS/Android Challenge widgets, an Apple Watch complication and Wear Tile/complication
@@ -107,9 +107,39 @@ reuse existing authoritative data and account-clearing transports. See
 [CHALLENGE_POLISH.md](CHALLENGE_POLISH.md) and [POLISH_VALIDATION.md](POLISH_VALIDATION.md).
 Remote push, recurrence, goals, streak engines and new scoring remain deferred.
 
-## 8. Productionization — not started
+## 8A. Release engineering and local production preparation — complete; PR #10 ready for review
 
-Complete the explicit native/device acceptance checklist, account-owned credential
-and distribution setup, and a separately authorized server deployment plan. No
-native compile/device debt is waived by Linux tests. Preserve the separate server
-checkout and repository-root `dockerdata/` bind mounts in [DEPLOYMENT.md](DEPLOYMENT.md).
+PR #8 merged normally at `02d6ab39a98e912c8c60052575fa95950da1d7be`.
+Frozen upstream `e132d4b0192cf474728920e17cbcdbc9f5058d1c` was validated and
+merged through fork PR #9; milestone base is
+`5891bf15d134744117d90505bbe3029fb104d08c`.
+
+Owned EAS identity and Apple team are integrated, including production-identity
+internal distribution. Android phone/Wear releases compiled and passed permanent
+certificate verification; both installed and launched on physical Samsung devices.
+An initial paired Data Layer transfer was observed. EAS compiled/exported the
+five-target internal iOS build 1005 with matching versions; the maintainer installed
+it on the registered iPhone and confirmed onboarding. After Watch registration,
+re-signing and installation retries, the maintainer confirmed physical Series 7
+installation and first-run launch. Review then identified and fixed the inherited
+weight-entry navigation gate. Authenticated Watch behavior remains unverified. Local final
+Compose startup, isolated routing, migration and backup/restore checks passed.
+
+Review identified the Apple Watch first-run navigation gate as the remaining M8A
+blocker. The source fix keeps First check-in inside Entry without blocking other
+pages. Full EAS build 1006 and exported identity/profile checks passed. On
+2026-10-04 the maintainer confirmed physical Series 7 first-run display, swiping to
+Challenges, the unsynced state and return to the usable Entry form without entering
+or saving weight. M8A release-engineering acceptance is complete; PR #10 is ready
+for review and remains unmerged. An actual check-in Save/ack, broader authenticated
+sync, account clearing, health dedupe, native surfaces, notifications and
+accessibility acceptance remain explicitly post-M8A/pre-production QA. See
+[release evidence](RELEASE_VALIDATION.md), [BUILDING.md](BUILDING.md) and
+[DEPLOYMENT.md](DEPLOYMENT.md). Source tests do not waive device acceptance.
+
+## 8B. Real production deployment — deferred
+
+Requires separate authorization for the server checkout, actual hostname/runtime
+secrets, existing `prod-frontend`, NPM/TLS, migrations/startup, backups/restores and
+production E2E. No production server or NPM changes occur in 8A. Persistent state
+remains repository-root `dockerdata/` with bind mounts only.

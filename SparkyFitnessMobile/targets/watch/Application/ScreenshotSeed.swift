@@ -49,9 +49,8 @@ enum ScreenshotSeed {
     /// Seeds both stores. Safe to call once, from `ContentView.onAppear`.
     ///
     /// The check-in context matters even for a workout screenshot: without a
-    /// seed weight `needsFirstRunEntry` is true and `ContentView` shows the
-    /// first-run gate instead of the tabs, so every screenshot would be of
-    /// that one screen.
+    /// seed weight `needsFirstRunEntry` is true and `ContentView` initially
+    /// selects Entry. The screenshot launch override selects its requested page.
     @MainActor
     static func apply() {
         var context = SampleDay.context

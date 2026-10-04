@@ -8,6 +8,7 @@ def phone = project(':app').extensions.getByName('android')
 android {
     namespace 'com.sparkyrivals.wear'
     compileSdk rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
     defaultConfig {
         applicationId '{{APPLICATION_ID}}'
         minSdk 30

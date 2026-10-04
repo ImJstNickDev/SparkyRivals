@@ -1,5 +1,23 @@
 # Apple Watch Challenges — Milestone 4
 
+## Release acceptance update — Milestone 8A
+
+EAS/Xcode compiled and exported production-identity internal build 1005, including
+the Watch app and Watch widget. All five Apple bundle versions, owned team and
+App Groups were verified in the IPA. The maintainer confirmed physical iPhone
+onboarding and Series 7 installation/first-run launch after provisioning recovery
+and retries. Review identified the inherited weight-entry gate as an M8A blocker.
+The revised source keeps first check-in on the normal Entry page, with navigation
+to Challenges available without recording weight. Full EAS build 1006 and exported
+identity/profile checks passed. The maintainer confirmed physical first-run display,
+swiping to Challenges, its unsynced state and return to the usable Entry form without
+entering or saving weight. M8A's navigation blocker is closed; an actual real-weight
+Save/server acknowledgment remains pre-production QA. The earlier build 1005 does
+not contain this fix.
+Authenticated Challenge and complication behavior remain separate pre-production
+QA. [RELEASE_VALIDATION.md](RELEASE_VALIDATION.md) is the current evidence;
+the native limitations below describe the earlier milestones.
+
 ## Challenge polish extension — Milestone 7
 
 [CHALLENGE_POLISH.md](CHALLENGE_POLISH.md) documents the implemented Rematch,
@@ -183,7 +201,12 @@ Watch does not advance lifecycle, rank or remaining days using its own clock.
 `challenge` is appended to TypeScript `WATCH_PAGE_KEYS` and Swift `WatchPage`.
 Existing saved orders append new keys normally. Settings → Apple Watch supports
 reordering and hide/show, retains the final-visible-page rule and preserves the
-active-workout page override. Existing weight setup behavior is unchanged.
+active-workout page override. When weight is missing or stale, `WatchPage.initial`
+selects Entry if visible, unless a workout is active. Entry renders First check-in
+inside the same swipeable page deck; it never prevents navigation to Challenges
+or other visible pages. Explicit swipes/deep links take precedence over the initial
+selection, hidden Entry stays hidden, and returning to Entry without saving still
+shows the form. Save retains the original real capture/queued delivery calls.
 
 - One item without additional items opens directly into detail. Multiple items
   use native scrolling/navigation with compact summaries and a has-more hint.

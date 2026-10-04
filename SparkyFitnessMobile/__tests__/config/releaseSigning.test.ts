@@ -64,3 +64,13 @@ it('fails closed if an upstream template no longer matches', () => {
     )
   ).toThrow('Unsupported');
 });
+
+it('checks the resolver identity again during owned Gradle release tasks', () => {
+  const result = configureReleaseSigning(template, false, true);
+  expect(result).toContain("require('./app.identifiers').resolveAppIdentity()");
+  expect(result).toContain(
+    'runtimeIdentity != android.defaultConfig.applicationId'
+  );
+  expect(result).toContain("i.mode === 'custom' && !i.configOnly");
+  expect(result).toContain('Run Gradle through the same build:profile');
+});

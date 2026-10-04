@@ -161,17 +161,27 @@ function resolveAppIdentity(env = process.env) {
     }
   }
 
+  // EAS allocates the remote version before prebuild. Feed it to every Apple
+  // target instead of relying on the later host Info.plist version update.
+  const buildNumberKey =
+    custom &&
+    env.EAS_BUILD === 'true' &&
+    env.EAS_BUILD_PLATFORM === 'ios' &&
+    env.EAS_BUILD_IOS_BUILD_NUMBER !== undefined
+      ? 'EAS_BUILD_IOS_BUILD_NUMBER'
+      : 'EXPO_BUILD_NUMBER';
+  const buildNumberInput = env[buildNumberKey];
   let buildNumber;
-  if (env.EXPO_BUILD_NUMBER !== undefined) {
+  if (buildNumberInput !== undefined) {
     if (
-      !/^[1-9][0-9]*$/.test(env.EXPO_BUILD_NUMBER) ||
-      Number(env.EXPO_BUILD_NUMBER) > 2100000000
+      !/^[1-9][0-9]*$/.test(buildNumberInput) ||
+      Number(buildNumberInput) > 2100000000
     ) {
       throw new Error(
-        'EXPO_BUILD_NUMBER must be an integer from 1 to 2100000000'
+        `${buildNumberKey} must be an integer from 1 to 2100000000`
       );
     }
-    buildNumber = Number(env.EXPO_BUILD_NUMBER);
+    buildNumber = Number(buildNumberInput);
   }
 
   if (env.EXPO_WEAR_ENABLED && !['0', '1'].includes(env.EXPO_WEAR_ENABLED)) {

@@ -14,6 +14,16 @@ docker/postgresql
 .git
 .gitignore
 .env
+.env.*
+!docker/.env.example
+!docker/.env.simple.example
+dockerdata/
+**/*.p12
+**/*.p8
+**/*.pfx
+**/*.jks
+**/*.keystore
+**/credentials.json
 supabase/.temp/
 .DS_Store
 npm-debug.log
@@ -45,8 +55,8 @@ WIP
 
 # Mobile App Exclusions
 SparkyFitnessMobile/node_modules
-SparkyFitnessMobile/android/build
-SparkyFitnessMobile/ios/build
+SparkyFitnessMobile/android
+SparkyFitnessMobile/ios
 SparkyFitnessMobile/web-build
 SparkyFitnessMobile/.expo
 

@@ -1,8 +1,9 @@
 import SwiftUI
 
-/// Router for the watch app. First run is a one-time gate; after that, Goals,
-/// Water, Entry, Trend, Workout and Challenge are pages the wearer swipes between —
-/// swiping is the only way to move between them, there is no button. Which of
+/// Router for the watch app. Goals, Water, Entry, Trend, Workout and Challenge
+/// are pages the wearer swipes between. First check-in lives on Entry, so
+/// missing weight never blocks the other pages.
+/// Swiping moves between pages. Which of
 /// them show, and in what order, is the phone's Settings → Apple Watch choice
 /// (`WatchContext.visiblePages`).
 struct ContentView: View {
@@ -17,7 +18,7 @@ struct ContentView: View {
     @Environment(\.scenePhase) private var scenePhase
 
     /// Latches true the moment first-run completes this session, so a
-    /// mid-session context update from the phone can't flicker the gate back
+    /// mid-session context update from the phone can't flicker the entry form back
     /// on. `page` follows the same "nil until something explicit happens"
     /// pattern so a fresh launch still lands on the right page.
     @State private var didFirstRun = false
@@ -29,32 +30,21 @@ struct ContentView: View {
     }
 
     var body: some View {
-        Group {
-            if !didFirstRun && store.needsFirstRunEntry {
-                FirstRunEntryView { weight, bodyFat in
-                    let checkIn = store.capture(weightKg: weight, bodyFatPercentage: bodyFat)
-                    store.markState(session.send(checkIn), for: checkIn)
-                    didFirstRun = true
-                    page = shown(.trend)
-                }
-            } else {
-                // A `.page`-style TabView lays its children out in body order,
-                // so the order of `pages` is the swipe order.
-                TabView(selection: Binding(get: { selectedPage }, set: { page = $0 })) {
-                    ForEach(pages, id: \.self) { page in
-                        view(for: page)
-                            .tag(page)
-                    }
-                }
-                .tabViewStyle(.page(indexDisplayMode: .automatic))
-                // Rebuilt, not diffed, when the phone reorders or hides pages.
-                // A page-style TabView keeps its own index of the selected
-                // child; moving the child under it (reordering Water while it
-                // is on screen) left that index pointing past the new layout
-                // and crashed the app.
-                .id(pages)
+        // A `.page`-style TabView lays its children out in body order,
+        // so the order of `pages` is the swipe order, including first check-in.
+        TabView(selection: Binding(get: { selectedPage }, set: { page = $0 })) {
+            ForEach(pages, id: \.self) { page in
+                view(for: page)
+                    .tag(page)
             }
         }
+        .tabViewStyle(.page(indexDisplayMode: .automatic))
+        // Rebuilt, not diffed, when the phone reorders or hides pages.
+        // A page-style TabView keeps its own index of the selected
+        // child; moving the child under it (reordering Water while it
+        // is on screen) left that index pointing past the new layout
+        // and crashed the app.
+        .id(pages)
         .onAppear {
             store.pruneStaleDayData()
             // Cheap, local, and works with the phone out of range — unlike
@@ -113,9 +103,8 @@ struct ContentView: View {
             guard let link = WatchDeepLink(url: url),
                   let requested = shown(destination(for: link))
             else { return }
-            // Deliberately does not touch `didFirstRun`: if there is no seed
-            // weight yet, that one-time entry is still owed, and the requested
-            // page is simply waiting behind it rather than being skipped.
+            // Navigation never completes first check-in or creates a measurement.
+            // Entry still presents the form when the wearer returns to it.
             page = requested
         }
     }
@@ -142,7 +131,16 @@ struct ContentView: View {
         case .water:
             WaterIntakeView()
         case .entry:
-            CheckInEntryView { self.page = shown(.trend) ?? self.page }
+            if !didFirstRun && store.needsFirstRunEntry {
+                FirstRunEntryView { weight, bodyFat in
+                    let checkIn = store.capture(weightKg: weight, bodyFatPercentage: bodyFat)
+                    store.markState(session.send(checkIn), for: checkIn)
+                    didFirstRun = true
+                    self.page = shown(.trend)
+                }
+            } else {
+                CheckInEntryView { self.page = shown(.trend) ?? self.page }
+            }
         case .trend:
             TrendView()
         case .workout:
@@ -167,13 +165,14 @@ struct ContentView: View {
         shown(page) ?? initialPage
     }
 
-    /// Landing page on a normal (non-first-run) launch: the workout while one
-    /// is running (always shown then, even if turned off), otherwise the first
-    /// page in the wearer's order, so the page they put first is the one the
-    /// app opens on.
+    /// First check-in is an initial selection, never a navigation gate.
+    /// Explicit swipes/deep links above take precedence over this default.
     private var initialPage: WatchPage {
-        if workout.isActive { return .workout }
-        return pages.first ?? .goals
+        WatchPage.initial(
+            in: pages,
+            needsFirstRunEntry: !didFirstRun && store.needsFirstRunEntry,
+            workoutActive: workout.isActive
+        )
     }
 }
 
@@ -200,7 +199,7 @@ struct FirstRunEntryView: View {
                 Text("First check-in")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                Text("Type today's numbers once — after this the Digital Crown starts from your last value.")
+                Text("Enter your weight, or swipe to explore other pages.")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
