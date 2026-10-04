@@ -1,3 +1,8 @@
+import type {
+  ChallengeMetric,
+  ChallengeScoringMode,
+  ChallengeScoreUnit,
+} from '@workspace/shared';
 /** Compact property-list wire contract. Omit unknown values; never send null,
  * credentials, daily history or a locally calculated score/rank. */
 export interface CompanionChallengeRow {
@@ -22,14 +27,15 @@ export interface CompanionChallengeRow {
   eligibleDays: number;
 }
 export interface CompanionChallengeItem {
-  metric?: 'steps' | 'workout_time';
-  scoreUnit?: 'steps' | 'seconds';
+  metric?: ChallengeMetric;
+  scoringMode?: ChallengeScoringMode;
+  scoreUnit?: ChallengeScoreUnit;
   id: string;
   name: string;
-  lifecycle: 'upcoming' | 'active' | 'completed';
+  lifecycle: 'upcoming' | 'active' | 'completed' | 'lobby';
   membership: 'pending' | 'accepted';
-  startDate: string;
-  endDate: string;
+  startDate?: string;
+  endDate?: string;
   timezone: string;
   currentDay?: number;
   totalDays: number;
@@ -40,7 +46,7 @@ export interface CompanionChallengeItem {
   rows: CompanionChallengeRow[];
 }
 export interface CompanionChallengeSnapshot {
-  version: 1 | 2;
+  version: 1 | 2 | 3;
   /** Local config id + authenticated user id, never server URL/token. */
   accountKey: string;
   state: 'unavailable' | 'ready';

@@ -11,10 +11,10 @@ struct ChallengeScoresView: View {
                 // two five/six-digit scores into half a watch display.
                 VStack(spacing: 2) {
                     Text("You").font(.caption).foregroundStyle(.secondary)
-                    Text(item.isWorkoutTime ? ChallengeDurationFormat.string(own.total) : ChallengeFormat.steps(own.total))
+                    Text(item.formattedScore(own.total))
                         .font(.system(.largeTitle, design: .rounded, weight: .bold))
                         .monospacedDigit().lineLimit(1).minimumScaleFactor(0.65)
-                    Text(item.isWorkoutTime ? "Workout time" : "steps").font(.caption2).foregroundStyle(.secondary)
+                    Text(item.metricLabel).font(.caption2).foregroundStyle(.secondary)
                     Text(ChallengeFormat.rank(own)).font(.caption2)
                     if let count = own.workoutCount { Text("\(count) workouts").font(.caption2) }
                 }
@@ -100,7 +100,7 @@ struct ChallengeScoresView: View {
                 if point.eligible && point.present {
                     Text(ChallengeFormat.score(point.value, item: item)).font(.caption).monospacedDigit()
                 } else {
-                    Text(point.eligible ? (item.isWorkoutTime ? "No workout recorded" : "No step data") : "Not started").font(.caption)
+                    Text(point.eligible ? item.noData : "Not started").font(.caption)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)

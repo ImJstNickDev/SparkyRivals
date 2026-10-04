@@ -10,6 +10,7 @@ import {
   peer,
   results,
   workoutResults,
+  goalResults,
 } from '../helpers/challenges';
 import type { ChallengeResponse } from '@workspace/shared';
 
@@ -193,44 +194,47 @@ it('keeps at most two recent completed challenges and advertises additional page
   ).toHaveLength(2);
   expect(build({ hasMore: true }).hasMore).toBe(true);
 });
-it('bounds worst-case UTF-8 payload and contains only property-list-safe values', () => {
-  const challenges = Array.from({ length: 8 }, (_, i) => ({
-    ...challenge,
-    id: String(i),
-    name: '🚶'.repeat(1000),
-  }));
-  const snapshot = build({
-    challenges,
-    results: new Map(
-      challenges.map((c) => [
-        c.id,
-        {
-          data: {
-            ...results,
-            challenge: c,
-            entries: Array.from({ length: 100 }, (_, i) => ({
-              ...results.entries[0],
-              user_id: i === 99 ? actor : `user-${i}`,
-              display_name: '🚶'.repeat(1000),
-              rank: i + 1,
-            })),
+it.each([results, goalResults])(
+  'bounds worst-case UTF-8 payload for legacy and v3 contracts',
+  (fixture) => {
+    const challenges = Array.from({ length: 8 }, (_, i) => ({
+      ...fixture.challenge,
+      id: String(i),
+      name: '🚶'.repeat(1000),
+    }));
+    const snapshot = build({
+      challenges,
+      results: new Map(
+        challenges.map((c) => [
+          c.id,
+          {
+            data: {
+              ...fixture,
+              challenge: c,
+              entries: Array.from({ length: 100 }, (_, i) => ({
+                ...fixture.entries[0],
+                user_id: i === 99 ? actor : `user-${i}`,
+                display_name: '🚶'.repeat(1000),
+                rank: i + 1,
+              })),
+            },
+            dataUpdatedAt: 1000,
           },
-          dataUpdatedAt: 1000,
-        },
-      ])
-    ),
-  });
-  const check = (v: unknown): void => {
-    expect(v).not.toBeNull();
-    expect(v).not.toBeUndefined();
-    if (typeof v === 'object') Object.values(v!).forEach(check);
-    else expect(['string', 'number', 'boolean']).toContain(typeof v);
-  };
-  check(snapshot);
-  expect(Buffer.byteLength(JSON.stringify(snapshot), 'utf8')).toBeLessThan(
-    32_000
-  );
-});
+        ])
+      ),
+    });
+    const check = (v: unknown): void => {
+      expect(v).not.toBeNull();
+      expect(v).not.toBeUndefined();
+      if (typeof v === 'object') Object.values(v!).forEach(check);
+      else expect(['string', 'number', 'boolean']).toContain(typeof v);
+    };
+    check(snapshot);
+    expect(Buffer.byteLength(JSON.stringify(snapshot), 'utf8')).toBeLessThan(
+      32_000
+    );
+  }
+);
 
 it('shares the exact wire fixture with the native mapper tests', () => {
   expect(build()).toEqual(nativeFixture);
@@ -319,4 +323,44 @@ it('bounds workout payload below 32 KB with eight 100-person Challenges', () => 
   expect(snapshot.items[0].rows.map((r) => r.rank)).toEqual([1, 2, 3, 100]);
   const bytes = Buffer.byteLength(JSON.stringify(snapshot), 'utf8');
   expect(bytes).toBeLessThan(32000);
+});
+
+it('projects fixed-point goal points with explicit units and keeps server ties', () => {
+  const state = build({
+    challenges: [goalResults.challenge],
+    results: new Map([
+      [challenge.id, { data: goalResults, dataUpdatedAt: 1000 }],
+    ]),
+  });
+  expect(state.version).toBe(3);
+  expect(state.items[0]).toMatchObject({
+    metric: 'steps',
+    scoringMode: 'goal_progress',
+    scoreUnit: 'points',
+    leadMargin: 0,
+  });
+  expect(
+    state.items[0].rows.every(
+      (row) => row.total === 140 && row.tied && row.rank === 1
+    )
+  ).toBe(true);
+  expect(JSON.stringify(state)).not.toContain('daily');
+});
+it('shows a lobby without provisional dates or cached scores', () => {
+  const lobby = {
+    ...goalResults.challenge,
+    lifecycle: 'lobby' as const,
+    locked_at: null,
+    start_date: null,
+    end_date: null,
+  };
+  const state = build({ challenges: [lobby] });
+  expect(state.version).toBe(3);
+  expect(state.items[0]).toMatchObject({ lifecycle: 'lobby', rows: [] });
+  expect(state.items[0]).not.toHaveProperty('startDate');
+  expect(state.items[0]).not.toHaveProperty('endDate');
+});
+it('refuses cached results whose scoring mode disagrees with the current Challenge', () => {
+  const state = build({ challenges: [goalResults.challenge] });
+  expect(state.items[0].rows).toEqual([]);
 });

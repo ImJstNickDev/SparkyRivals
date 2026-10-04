@@ -45,7 +45,7 @@ it('adds an optional persisted field and clears it through the adapter on absent
     'previous.challengeSnapshot'
   );
   const mapper = watch('Adapters/ChallengePayloadMapper.swift');
-  expect(mapper).toContain('[1, 2].contains(version)');
+  expect(mapper).toContain('[1, 2, 3].contains(version)');
   expect(mapper).toContain('payload["state"] as? String == "ready"');
   expect(mapper).toContain('else { return nil }');
 });
@@ -108,7 +108,8 @@ it('renders supplied scores/ranks without HealthKit, HTTP or local ranking code'
   expect(scores).toContain('own.gapToLeader');
   expect(scores).toContain('item.leadMargin');
   expect(scores).toContain('point.eligible && point.present');
-  expect(scores).toContain('No step data');
+  expect(scores).toContain('item.noData');
+  expect(watch('Domain/ChallengeModels.swift')).toContain('No step data');
   expect(scores).toContain(
     'ChallengeFormat.dayLabel(point.date, timezone: item.timezone)'
   );
@@ -169,13 +170,13 @@ it('keeps all screenshot states DEBUG-only and wired to the existing manual capt
 
 it('maps workout units through typed models and preserves legacy Steps defaults', () => {
   const mapper = watch('Adapters/ChallengePayloadMapper.swift');
-  expect(mapper).toContain('[1, 2].contains(version)');
+  expect(mapper).toContain('[1, 2, 3].contains(version)');
   for (const key of ['metric', 'scoreUnit', 'workoutCount', 'daysWithData'])
     expect(mapper).toContain(`["${key}"]`);
   expect(watch('Domain/ChallengeModels.swift')).toContain(
     'DateComponentsFormatter'
   );
-  expect(watch('Presentation/ChallengeScoresView.swift')).toContain(
+  expect(watch('Domain/ChallengeModels.swift')).toContain(
     'No workout recorded'
   );
   for (const state of [

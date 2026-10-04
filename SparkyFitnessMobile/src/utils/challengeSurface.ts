@@ -1,4 +1,8 @@
-import { formatChallengeDuration } from '@workspace/shared';
+import {
+  formatChallengeDuration,
+  formatChallengeValue,
+  challengeTypeLabel,
+} from '@workspace/shared';
 import type { TFunction } from 'i18next';
 import type {
   CompanionChallengeItem,
@@ -15,15 +19,17 @@ export function selectPrimaryChallengeSurface(
       ? 0
       : c.membership === 'pending'
         ? 1
-        : c.lifecycle === 'upcoming'
+        : c.lifecycle === 'lobby'
           ? 2
-          : 3;
+          : c.lifecycle === 'upcoming'
+            ? 3
+            : 4;
   return [...items].sort(
     (a, b) =>
       priority(a) - priority(b) ||
       (a.lifecycle === 'upcoming' && b.lifecycle === 'upcoming'
-        ? a.startDate.localeCompare(b.startDate)
-        : b.endDate.localeCompare(a.endDate)) ||
+        ? (a.startDate ?? '').localeCompare(b.startDate ?? '')
+        : (b.endDate ?? '').localeCompare(a.endDate ?? '')) ||
       a.id.localeCompare(b.id)
   )[0];
 }
@@ -46,23 +52,28 @@ export function buildChallengeWidget(
       : t('challenges.surfaces.notSynced', {
           defaultValue: 'Open the app to sync Challenges.',
         });
-  const metric =
-    item?.metric === 'workout_time'
+  const metric = item?.scoringMode
+    ? challengeTypeLabel(item.metric ?? 'steps', item.scoringMode)
+    : item?.metric === 'workout_time'
       ? t('challenges.workoutTime', { defaultValue: 'Workout time' })
       : t('challenges.stepsMetric', { defaultValue: 'Steps' });
   const score = (value: number) =>
-    item?.metric === 'workout_time'
-      ? formatChallengeDuration(value, locale)
-      : t('challenges.surfaces.steps', {
-          defaultValue: '{{value}} steps',
-          value: new Intl.NumberFormat(locale).format(value),
-        });
+    item?.scoringMode
+      ? formatChallengeValue(value, item.scoreUnit ?? 'steps', locale)
+      : item?.metric === 'workout_time'
+        ? formatChallengeDuration(value, locale)
+        : t('challenges.surfaces.steps', {
+            defaultValue: '{{value}} steps',
+            value: new Intl.NumberFormat(locale).format(value),
+          });
   const own = item?.rows.find((r) => r.isSelf);
   const leader =
     item?.rows.find((r) => r.leader && !r.isSelf) ??
     item?.rows.find((r) => !r.isSelf);
   const canScore =
-    item?.membership === 'accepted' && item.lifecycle !== 'upcoming' && !!own;
+    item?.membership === 'accepted' &&
+    ['active', 'completed'].includes(item.lifecycle) &&
+    !!own;
   const gap = !canScore
     ? ''
     : own.leader
@@ -86,31 +97,36 @@ export function buildChallengeWidget(
       ? t('challenges.surfaces.invitation', {
           defaultValue: 'Invitation · Review in the app',
         })
-      : item.lifecycle === 'upcoming'
-        ? t('challenges.surfaces.upcoming', {
-            defaultValue: 'Starts {{date}}',
-            date: new Intl.DateTimeFormat(locale, {
-              month: 'short',
-              day: 'numeric',
-              year: 'numeric',
-              timeZone: 'UTC',
-            }).format(new Date(`${item.startDate}T12:00:00Z`)),
+      : item.lifecycle === 'lobby'
+        ? t('challenges.surfaces.lobby', {
+            defaultValue: 'Waiting for players · Ready in the app',
           })
-        : item.lifecycle === 'completed'
-          ? t('challenges.surfaces.completed', {
-              defaultValue: 'Completed · Reconciled results',
+        : item.lifecycle === 'upcoming'
+          ? t('challenges.surfaces.upcoming', {
+              defaultValue: 'Starts {{date}}',
+              date: new Intl.DateTimeFormat(locale, {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+                timeZone: 'UTC',
+              }).format(new Date(`${item.startDate}T12:00:00Z`)),
             })
-          : t('challenges.surfaces.remaining', {
-              defaultValue: '{{number}} days remaining',
-              defaultValue_one: '{{number}} day remaining',
-              count: item.daysRemaining ?? 0,
-              number: new Intl.NumberFormat(locale).format(
-                item.daysRemaining ?? 0
-              ),
-            });
-  const missing =
-    item?.metric === 'workout_time'
-      ? t('challenges.noWorkout', { defaultValue: 'No workout recorded' })
+          : item.lifecycle === 'completed'
+            ? t('challenges.surfaces.completed', {
+                defaultValue: 'Completed · Reconciled results',
+              })
+            : t('challenges.surfaces.remaining', {
+                defaultValue: '{{number}} days remaining',
+                defaultValue_one: '{{number}} day remaining',
+                count: item.daysRemaining ?? 0,
+                number: new Intl.NumberFormat(locale).format(
+                  item.daysRemaining ?? 0
+                ),
+              });
+  const missing = item?.metric?.startsWith('workout_')
+    ? t('challenges.noWorkout', { defaultValue: 'No workout recorded' })
+    : item?.metric && item.metric !== 'steps'
+      ? t('challenges.noMetricData', { defaultValue: 'No data recorded' })
       : t('challenges.noData', { defaultValue: 'No step data' });
   const present = (own?.daysWithData ?? own?.daysWithSteps ?? 0) > 0;
   return {
@@ -122,15 +138,7 @@ export function buildChallengeWidget(
     title,
     metric,
     status,
-    score: canScore
-      ? present
-        ? score(own.total)
-        : item.metric === 'workout_time'
-          ? t('challenges.noWorkout', {
-              defaultValue: 'No workout recorded',
-            })
-          : t('challenges.noData', { defaultValue: 'No step data' })
-      : '',
+    score: canScore ? (present ? score(own.total) : missing) : '',
     rank:
       canScore && own.rank !== undefined
         ? t('challenges.surfaces.rank', {

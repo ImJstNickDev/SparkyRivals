@@ -13,6 +13,7 @@ import {
   challenge,
   results,
   workoutResults,
+  goalResults,
 } from '../helpers/challenges';
 import {
   getChallengeSurfaceUrl,
@@ -118,4 +119,47 @@ it('formats one remaining day and calendar labels without shifting buckets', () 
   expect(buildChallengeWidget(state, i18n.t, 'en').status).toBe(
     'Starts Mar 29, 2026'
   );
+});
+
+it.each([
+  ['steps', 'goal_progress', 'points', 140, '140 pts'],
+  ['distance', 'sum', 'meters', 12400, '12.4 km'],
+  ['active_calories', 'sum', 'kcal', 320, '320 kcal'],
+  ['hydration', 'goal_days', 'goal_days', 2, '2 goal days'],
+] as const)(
+  'formats %s/%s explicitly on phone widgets',
+  (metric, scoring_mode, scoreUnit, total, expected) => {
+    const state = snapshot();
+    state.version = 3;
+    state.items[0] = {
+      ...state.items[0],
+      metric,
+      scoringMode: scoring_mode,
+      scoreUnit,
+      rows: state.items[0].rows.map((row) => ({ ...row, total })),
+    };
+    expect(buildChallengeWidget(state, i18n.t, 'en').score).toBe(expected);
+  }
+);
+it('lobby selection has no score and retains source freshness/account guard', () => {
+  const challenge = {
+    ...goalResults.challenge,
+    lifecycle: 'lobby' as const,
+    start_date: null,
+    end_date: null,
+    locked_at: null,
+  };
+  const state = buildCompanionChallenges({
+    actor,
+    accountKey: 'config:' + actor,
+    challenges: [challenge],
+    listUpdatedAt: 1000,
+    hasMore: false,
+    results: new Map(),
+  });
+  const widget = buildChallengeWidget(state, i18n.t, 'en');
+  expect(widget.score).toBe('');
+  expect(widget.status).toContain('Waiting for players');
+  expect(widget.generatedAt).toBe(1000);
+  expect(widget.url).toContain('account=');
 });

@@ -18,6 +18,38 @@ class ChallengeProtocolTest {
         assertTrue(snapshot.items[0].rows[0].today!!.present)
         assertFalse(snapshot.items[0].rows[1].today!!.present)
     }
+    @Test fun goalPointsPreserveFractionsAndServerTies() {
+        val json=fixture().put("version",3)
+        val item=json.getJSONArray("items").getJSONObject(0).put("metric","steps").put("scoringMode","goal_progress").put("scoreUnit","points")
+        item.getJSONArray("rows").getJSONObject(0).put("total",140.123456).put("tied",true)
+        val state=ChallengeProtocol.snapshot(json.toString())
+        assertEquals("points",state.items[0].scoreUnit)
+        assertEquals(140.123456,state.items[0].rows[0].total.toDouble(),0.00000001)
+        assertTrue(state.items[0].rows[0].tied)
+        assertEquals(state,ChallengeProtocol.snapshot(state.json().toString()))
+    }
+    @Test fun lobbyHasNoDatesScoresOrWatchMutations() {
+        val json=fixture().put("version",3)
+        val item=json.getJSONArray("items").getJSONObject(0).put("metric","hydration").put("scoringMode","goal_days").put("scoreUnit","goal_days").put("lifecycle","lobby")
+        item.remove("startDate");item.remove("endDate")
+        val state=ChallengeProtocol.snapshot(json.toString())
+        assertTrue(state.items[0].rows.isEmpty())
+        assertEquals("",state.items[0].startDate)
+        assertNull(challengeSurface(state,1000).own)
+        assertEquals(state,ChallengeProtocol.snapshot(state.json().toString()))
+    }
+    @Test fun modernCanonicalUnitsAndInvalidPairsAreChecked() {
+        for((metric,unit) in listOf("distance" to "meters","active_calories" to "kcal","workout_calories" to "kcal","workout_distance" to "meters")) {
+            val json=fixture().put("version",3)
+            val item=json.getJSONArray("items").getJSONObject(0).put("metric",metric).put("scoringMode","sum").put("scoreUnit",unit)
+            assertEquals(unit,ChallengeProtocol.snapshot(json.toString()).items[0].scoreUnit)
+            item.put("scoreUnit","seconds")
+            invalid { ChallengeProtocol.snapshot(json.toString()) }
+        }
+        val json=fixture().put("version",3)
+        json.getJSONArray("items").getJSONObject(0).put("metric","hydration").put("scoringMode","sum").put("scoreUnit","milliliters")
+        invalid { ChallengeProtocol.snapshot(json.toString()) }
+    }
     @Test fun envelopeRoundTrip() { assertEquals(envelope(), ChallengeProtocol.decode(envelope().encode())) }
     @Test fun emptyAndTombstoneAreDifferent() {
         assertEquals("ready", snapshot().copy(items = emptyList()).state)
@@ -33,7 +65,7 @@ class ChallengeProtocolTest {
     }
     @Test fun completedIsReconciledWithoutMaximum() {
         val first = envelope().copy(snapshot = snapshot().copy(items = snapshot().items.map { it.copy(lifecycle = "completed") }))
-        val next = first.copy(sequence = 2, snapshot = first.snapshot.copy(items = first.snapshot.items.map { it.copy(rows = it.rows.map { it.copy(total = 2) }) }))
+        val next = first.copy(sequence = 2, snapshot = first.snapshot.copy(items = first.snapshot.items.map { it.copy(rows = it.rows.map { it.copy(total = 2L) }) }))
         val receipt = ChallengeReceipt().receive("phone", first).receive("phone", next)
         assertEquals(2L, receipt.snapshot.items[0].rows[0].total)
     }
@@ -79,7 +111,7 @@ class ChallengeProtocolTest {
     }
     @Test fun unknownVersionsAndMalformedPayloadFailSafely() {
         invalid { ChallengeProtocol.decode(JSONObject(envelope().encode()).put("version", 2).toString()) }
-        invalid { ChallengeProtocol.snapshot(fixture().put("version", 3).toString()) }
+        invalid { ChallengeProtocol.snapshot(fixture().put("version", 4).toString()) }
         invalid { ChallengeProtocol.decode("{") }
         invalid { ChallengeProtocol.decode(JSONObject(envelope().encode()).put("sequence", "-1").toString()) }
         invalid { ChallengeProtocol.decode(JSONObject(envelope().encode()).put("publisherId", "wrong").toString()) }
