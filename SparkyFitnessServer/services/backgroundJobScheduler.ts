@@ -1,4 +1,5 @@
 import cron from 'node-cron';
+import { scheduleRemotePush } from './remotePushScheduler.js';
 import { scheduleBackupsOnStartup } from './backupScheduler.js';
 import { scheduleOpenFoodFactsAutoSyncOnStartup } from './openFoodFactsAutoSyncScheduler.js';
 import { startProviderSyncSchedulers } from './providerSyncScheduler.js';
@@ -46,4 +47,5 @@ export async function scheduleBackgroundJobs(): Promise<void> {
   scheduleSessionCleanup();
   startProviderSyncSchedulers();
   scheduleDemoMidnightReset();
+  scheduleRemotePush();
 }

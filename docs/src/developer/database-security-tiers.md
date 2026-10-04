@@ -221,3 +221,20 @@ and synthetic Active Calories entries do not count. Results reconcile when canon
 workouts change, including after a Challenge ends. Ambiguous unmarked legacy workouts
 are conservatively omitted. See the repository's `docs/fork/WORKOUT_CHALLENGES.md`
 for precise qualification, duration rounding and compatibility details.
+
+## Remote Challenge invitation delivery (SparkyRivals)
+
+| Table                | Purpose                                                                                         | Security                                                                               |
+| -------------------- | ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `push_installations` | Encrypted routing tokens, random installation/account guard, revision and expiring opt-in lease | Tier 1 system-private; self-only registration/revocation RPCs; no ordinary token reads |
+| `push_events`        | Unique new pending invitation event per Challenge/invitee                                       | Tier 1 system-only; no delegated read/write                                            |
+| `push_deliveries`    | Per-installation attempts, Expo tickets/receipts and sanitized delivery outcome                 | Tier 1 system-only; no delegated read/write                                            |
+
+RLS denies direct reads/writes even to an owner; fixed-search-path SECURITY DEFINER
+functions authenticate a self-context actor for token ownership transfer/revocation.
+The background worker alone reads routing state. Family & Friends permissions and
+Challenge scoring/membership do not grant access to these tables. No health data,
+scores or participant names are copied into delivery state or remote payloads.
+Invitations remain authoritative when a push provider is unavailable. Remote
+invitations are opt-in; other Challenge reminders continue locally. See
+the repository guide `docs/fork/REMOTE_PUSH.md`.

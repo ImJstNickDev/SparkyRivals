@@ -167,6 +167,9 @@ describe.runIf(RUN)('RLS permission matrix', () => {
     | 'custom';
 
   const DOMAIN: Record<string, Domain> = {
+    push_installations: 'custom',
+    push_events: 'custom',
+    push_deliveries: 'custom',
     challenges: 'custom',
     challenge_participants: 'custom',
     // owner-only (no delegation)
@@ -321,6 +324,14 @@ describe.runIf(RUN)('RLS permission matrix', () => {
     Object.keys(DOMAIN).filter((t) => d.includes(DOMAIN[t]));
 
   describe('policy wiring (pg_policies)', () => {
+    it.each(['push_installations', 'push_events', 'push_deliveries'])(
+      'keeps %s system-private even under ordinary table grants',
+      async (table) => {
+        expect(await policies(table)).toEqual([
+          { policyname: 'deny_all_policy', qual: 'false', with_check: 'false' },
+        ]);
+      }
+    );
     it('every RLS-enabled table is classified in DOMAIN (completeness guard)', async () => {
       const sys = await getSystemClient();
       let enabled: string[];
