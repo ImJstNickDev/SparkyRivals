@@ -31,13 +31,14 @@
  * instead of failing to connect. Set SKIP_RLS_MATRIX=1 to force-skip even when
  * a database is up.
  */
-import pg from 'pg';
+import pg, { type PoolClient } from 'pg';
 import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import exerciseDb from '../models/exercise.js';
 import exerciseEntryDb from '../models/exerciseEntry.js';
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { getClient, getSystemClient, endPool } from '../db/poolManager.js';
+import { applyRlsPolicies } from '../utils/applyRlsPolicies.js';
 
 // Probe the app role RLS actually needs, with a short timeout, using a
 // standalone client. Returns false on any failure so the suite skips rather
@@ -324,6 +325,55 @@ describe.runIf(RUN)('RLS permission matrix', () => {
     Object.keys(DOMAIN).filter((t) => d.includes(DOMAIN[t]));
 
   describe('policy wiring (pg_policies)', () => {
+    it.each(['push_installations', 'push_events', 'push_deliveries'])(
+      'startup restores RLS and deny-all protection on %s',
+      async (table) => {
+        const sys: PoolClient = await getSystemClient();
+        try {
+          // Keep the simulated damage and policy reapplication transaction-local.
+          // Rollback also restores the original state when an assertion fails.
+          await sys.query('BEGIN');
+          await sys.query(
+            `ALTER TABLE public.${table} DISABLE ROW LEVEL SECURITY`
+          );
+          const disabled = await sys.query<{ relrowsecurity: boolean }>(
+            'SELECT relrowsecurity FROM pg_class WHERE oid = $1::regclass',
+            [`public.${table}`]
+          );
+          expect(disabled.rows).toEqual([{ relrowsecurity: false }]);
+
+          await applyRlsPolicies(sys);
+
+          const restored = await sys.query<{
+            relrowsecurity: boolean;
+            policyname: string;
+            qual: string | null;
+            with_check: string | null;
+          }>(
+            `SELECT c.relrowsecurity, p.policyname, p.qual, p.with_check
+               FROM pg_class c
+               JOIN pg_namespace n ON n.oid = c.relnamespace
+               JOIN pg_policies p ON p.schemaname = n.nspname AND p.tablename = c.relname
+              WHERE c.oid = $1::regclass`,
+            [`public.${table}`]
+          );
+          expect(restored.rows).toEqual([
+            {
+              relrowsecurity: true,
+              policyname: 'deny_all_policy',
+              qual: 'false',
+              with_check: 'false',
+            },
+          ]);
+        } finally {
+          try {
+            await sys.query('ROLLBACK');
+          } finally {
+            sys.release();
+          }
+        }
+      }
+    );
     it.each(['push_installations', 'push_events', 'push_deliveries'])(
       'keeps %s system-private even under ordinary table grants',
       async (table) => {
