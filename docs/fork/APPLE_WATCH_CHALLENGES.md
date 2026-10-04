@@ -4,8 +4,11 @@
 
 EAS/Xcode compiled and exported production-identity internal build 1005, including
 the Watch app and Watch widget. All five Apple bundle versions, owned team and
-App Groups were verified in the IPA. Physical iPhone/paired Apple Watch acceptance
-is separate. [RELEASE_VALIDATION.md](RELEASE_VALIDATION.md) is the current evidence;
+App Groups were verified in the IPA. The maintainer confirmed physical iPhone
+onboarding and Series 7 installation/first-run launch after provisioning recovery
+and retries. The inherited weight-entry gate precedes all pages, including the
+Challenge unsynced state; authenticated Challenge and complication behavior remain
+unverified. [RELEASE_VALIDATION.md](RELEASE_VALIDATION.md) is the current evidence;
 the native limitations below describe the earlier milestones.
 
 ## Challenge polish extension — Milestone 7

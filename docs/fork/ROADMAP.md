@@ -119,8 +119,11 @@ internal distribution. Android phone/Wear releases compiled and passed permanent
 certificate verification; both installed and launched on physical Samsung devices.
 An initial paired Data Layer transfer was observed. EAS compiled/exported the
 five-target internal iOS build 1005 with matching versions; the maintainer installed
-it on the registered iPhone and confirmed onboarding. Local final Compose startup,
-isolated routing, migration and backup/restore checks passed.
+it on the registered iPhone and confirmed onboarding. After Watch registration,
+re-signing and installation retries, the maintainer confirmed physical Series 7
+installation and first-run launch. The inherited weight-entry gate precedes the
+Challenge page; authenticated Watch behavior remains unverified. Local final
+Compose startup, isolated routing, migration and backup/restore checks passed.
 
 Fuller native surface/account acceptance remains in progress; this milestone is
 not marked complete prematurely. See

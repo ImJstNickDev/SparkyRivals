@@ -128,8 +128,8 @@ connection reunion and a second install attempt from 00:30:48 to 00:31:52. It fa
 with the same two error codes and timeout before transfer. At that point, no OS
 update had been performed. No app data, pairing, certificate or provisioning
 resources were reset. Raw logs
-remain private under `/tmp/sparkyrivals-8a/`. Physical Watch installation and launch
-remain outstanding; corrected profile membership alone is not a device-test result.
+remain private under `/tmp/sparkyrivals-8a/`. At that point physical Watch installation
+and launch remained outstanding; corrected profiles alone were not a device-test result.
 
 The maintainer also successfully installed Flightradar on the same Watch. This
 rules out a blanket inability to install apps, but is not a controlled comparison
@@ -167,9 +167,8 @@ watchOS 26.1, the next installation attempt made further progress:
 The previous socket-opening timeout did not recur in this attempt, but physical
 installation still failed. The logs do not explain why the established connection
 closed and do not prove Watch-side signature acceptance. No replacement build or
-credential change was made for this retry. The maintainer has been asked to update
-the Watch to its offered watchOS 26.6 before another captured attempt. That update
-and the next installation result are pending. The private capture is
+credential change was made for this retry. A watchOS 26.6 update was proposed,
+but the following attempts took place without that update. The private capture is
 `/tmp/sparkyrivals-8a/watch-install-ios-26.7.1-5LcITr.log`.
 
 #### Subsequent storage-labelled refusal
@@ -192,10 +191,36 @@ a **37,632-byte placeholder**; at 01:34:15 it received `Got install done`, expli
 followed by `Finished placeholder install ... enqueueing actual install`. This is
 not a completed app installation. The actual app phase (`p = N`) returned the same
 remote error 12 at 01:34:44. Another attempt at 01:35:15 was also refused with the
-same error. The normal restart therefore did not resolve full-app installation. A watchOS
-26.6 update/retry remains outstanding; the underlying installer capacity check is
-still unexplained. Private capture:
+same error. That captured restart/retry did not resolve full-app installation;
+the underlying installer capacity check remains unexplained. Private capture:
 `/tmp/sparkyrivals-8a/watch-install-storage-jDO0IT.log`.
+
+#### Physical installation and first launch confirmed
+
+After another normal Watch restart, the maintainer reported that the app was
+installed and opened to **First check-in**, with weight and optional body-fat
+fields. This establishes user-observed installation and launch on the Series 7,
+beyond the placeholder seen in the earlier capture. The successful attempt was
+not captured in USB logs. No subsequent watchOS update, replacement build,
+certificate rotation or data deletion was reported. The earlier failure's root
+cause remains unproven.
+
+Source/history inspection confirms this first-run screen and its explanatory copy
+come from upstream commit `43e2d43338`. `ContentView` puts this screen before every
+page whenever `CheckInStore.needsFirstRunEntry` detects missing/stale weight context;
+it does not test server authentication or phone reachability. Saving captures a
+real local check-in and queues delivery, so entering invented health values is not
+an acceptance workaround. The Challenge page's **Challenges not synced yet** state
+exists, but is behind this inherited gate. Initial navigation without a weight
+record is therefore an identified UX limitation, not evidence of authentication
+or successful Challenge synchronization.
+
+Screenshot seeding is guarded by `#if DEBUG` and an explicit launch variable.
+The distributed build 1005 Watch executable contains the first-run copy and does
+not contain the screenshot-seed launch key. No demo data was enabled during this
+acceptance. Authenticated context, Challenge rendering and complication behavior
+remain unverified on the physical Apple Watch; no UI/source change was made during
+this diagnosis.
 
 ## Android compilation
 
@@ -316,8 +341,10 @@ and unrelated containers were untouched.
 
 - Apple EAS credential/provisioning authentication, if requested, must be completed
   by the maintainer locally. Never paste Apple passwords/2FA into chat.
-- Install and launch the internal iPhone build; check auth, HealthKit, widgets,
-  notifications, Watch app/complications, paired transport and VoiceOver.
+- Internal iPhone onboarding and Apple Watch first-run launch are confirmed by
+  the maintainer. Check auth, HealthKit, widgets, notifications, Watch Challenge
+  pages/complications, paired transport and VoiceOver. The inherited weight-entry
+  gate still obstructs initial page navigation without weight context.
 - Release APK fingerprints, physical phone/Watch installation and initial paired
   Data Layer transfer are verified. Authenticated Challenge results, account-change
   clearing/offline states, Tile/complication visuals, Health Connect continuity,
