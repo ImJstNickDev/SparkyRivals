@@ -1,3 +1,4 @@
+import { validateActivityGoals } from '../middleware/validateActivityGoals.js';
 import express from 'express';
 import { authenticate } from '../middleware/authMiddleware.js';
 import checkPermissionMiddleware from '../middleware/checkPermissionMiddleware.js';
@@ -142,25 +143,30 @@ router.get(
  *       200:
  *         description: Timeline managed successfully.
  */
-router.post('/manage-timeline', authenticate, async (req, res, next) => {
-  const authenticatedUserId = req.userId;
-  const goalData = req.body;
-  if (!goalData.p_start_date) {
-    return res.status(400).json({ error: 'Start date is required.' });
-  }
-  try {
-    const result = await goalService.manageGoalTimeline(
-      authenticatedUserId,
-      goalData
-    );
-    res.status(200).json(result);
-  } catch (error) {
-    // @ts-expect-error TS(2571): Object is of type 'unknown'.
-    if (error.message.startsWith('Forbidden')) {
-      // @ts-expect-error TS(2571): Object is of type 'unknown'.
-      return res.status(403).json({ error: error.message });
+router.post(
+  '/manage-timeline',
+  authenticate,
+  validateActivityGoals('p_'),
+  async (req, res, next) => {
+    const authenticatedUserId = req.userId;
+    const goalData = req.body;
+    if (!goalData.p_start_date) {
+      return res.status(400).json({ error: 'Start date is required.' });
     }
-    next(error);
+    try {
+      const result = await goalService.manageGoalTimeline(
+        authenticatedUserId,
+        goalData
+      );
+      res.status(200).json(result);
+    } catch (error) {
+      // @ts-expect-error TS(2571): Object is of type 'unknown'.
+      if (error.message.startsWith('Forbidden')) {
+        // @ts-expect-error TS(2571): Object is of type 'unknown'.
+        return res.status(403).json({ error: error.message });
+      }
+      next(error);
+    }
   }
-});
+);
 export default router;

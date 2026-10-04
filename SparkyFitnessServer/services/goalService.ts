@@ -1,3 +1,4 @@
+import { challengeTargetSchema } from '@workspace/shared';
 import goalRepository from '../models/goalRepository.js';
 import weeklyGoalPlanRepository from '../models/weeklyGoalPlanRepository.js';
 import userRepository from '../models/userRepository.js';
@@ -467,8 +468,16 @@ async function getUserGoals(
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function manageGoalTimeline(authenticatedUserId: string, goalData: any) {
+interface GoalTimelineInput extends Record<`p_${string}`, unknown> {
+  p_start_date: string;
+  p_cascade?: boolean;
+  custom_meal_percentages?: unknown;
+  custom_nutrients?: Record<string, unknown>;
+}
+async function manageGoalTimeline(
+  authenticatedUserId: string,
+  goalData: GoalTimelineInput
+) {
   try {
     const {
       p_start_date,
@@ -544,8 +553,7 @@ async function manageGoalTimeline(authenticatedUserId: string, goalData: any) {
       );
     }
     // Helper to convert NaN to 0 for numeric fields, or null if specified
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const cleanNumber = (value: any, allow_null = false) => {
+    const cleanNumber = (value: unknown, allow_null = false) => {
       log(
         'debug',
         `cleanNumber: Input value: ${value}, type: ${typeof value}, allow_null: ${allow_null}`
@@ -570,13 +578,13 @@ async function manageGoalTimeline(authenticatedUserId: string, goalData: any) {
     };
     const activeCustomNutrients =
       await customNutrientService.getCustomNutrients(authenticatedUserId);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const activeNames = new Set(activeCustomNutrients.map((n: any) => n.name));
-    const filteredCustomNutrients = {};
+    const activeNames = new Set(
+      activeCustomNutrients.map((n: { name: string }) => n.name)
+    );
+    const filteredCustomNutrients: Record<string, unknown> = {};
     if (custom_nutrients && typeof custom_nutrients === 'object') {
       Object.entries(custom_nutrients).forEach(([name, value]) => {
         if (activeNames.has(name)) {
-          // @ts-expect-error TS(7053): Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
           filteredCustomNutrients[name] = value;
         } else {
           log(
@@ -586,7 +594,27 @@ async function manageGoalTimeline(authenticatedUserId: string, goalData: any) {
         }
       });
     }
+    const existing = (await getUserGoals(
+      authenticatedUserId,
+      p_start_date,
+      undefined,
+      false
+    )) as Record<string, unknown>;
+    const activityGoal = (
+      field: 'steps_goal' | 'distance_goal_meters' | 'active_calories_goal'
+    ): number | null => {
+      const input = goalData[`p_${field}`];
+      if (input === undefined)
+        return existing[field] === null || existing[field] === undefined
+          ? null
+          : Number(existing[field]);
+      if (input === null || input === '') return null;
+      return challengeTargetSchema.parse(Number(input));
+    };
     const goalPayload = {
+      steps_goal: activityGoal('steps_goal'),
+      distance_goal_meters: activityGoal('distance_goal_meters'),
+      active_calories_goal: activityGoal('active_calories_goal'),
       user_id: authenticatedUserId,
       goal_date: p_start_date,
       calories: cleanNumber(p_calories),

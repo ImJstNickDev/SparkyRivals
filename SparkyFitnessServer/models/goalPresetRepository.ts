@@ -1,7 +1,7 @@
+import type { GoalPresetsInitializer } from '@workspace/shared';
 import { getClient } from '../db/poolManager.js';
 import { log } from '../config/logging.js';
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function createGoalPreset(presetData: any) {
+async function createGoalPreset(presetData: GoalPresetsInitializer) {
   const client = await getClient(presetData.user_id); // User-specific operation
   try {
     log('debug', 'createGoalPreset: Received presetData:', {
@@ -22,9 +22,9 @@ async function createGoalPreset(presetData: any) {
         protein_percentage, carbs_percentage, fat_percentage,
         breakfast_percentage, lunch_percentage, dinner_percentage, snacks_percentage,
         custom_nutrients, custom_meal_percentages,
-        caffeine_mg, alcohol_g
+        caffeine_mg, alcohol_g, steps_goal, distance_goal_meters, active_calories_goal
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36)
       RETURNING *`,
       [
         presetData.user_id,
@@ -60,6 +60,9 @@ async function createGoalPreset(presetData: any) {
         presetData.custom_meal_percentages || {},
         presetData.caffeine_mg,
         presetData.alcohol_g,
+        presetData.steps_goal,
+        presetData.distance_goal_meters,
+        presetData.active_calories_goal,
       ]
     );
     return result.rows[0];
@@ -67,8 +70,7 @@ async function createGoalPreset(presetData: any) {
     client.release();
   }
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function getGoalPresetsByUserId(userId: any) {
+async function getGoalPresetsByUserId(userId: string) {
   const client = await getClient(userId); // User-specific operation
   try {
     const result = await client.query(
@@ -80,8 +82,7 @@ async function getGoalPresetsByUserId(userId: any) {
     client.release();
   }
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function getGoalPresetById(presetId: any, userId: any) {
+async function getGoalPresetById(presetId: string, userId: string) {
   const client = await getClient(userId); // User-specific operation
   try {
     const result = await client.query(
@@ -93,8 +94,10 @@ async function getGoalPresetById(presetId: any, userId: any) {
     client.release();
   }
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function updateGoalPreset(presetId: any, presetData: any) {
+async function updateGoalPreset(
+  presetId: string,
+  presetData: GoalPresetsInitializer
+) {
   const client = await getClient(presetData.user_id); // User-specific operation
   try {
     log('debug', 'updateGoalPreset: Received presetData:', {
@@ -116,6 +119,9 @@ async function updateGoalPreset(presetId: any, presetData: any) {
         breakfast_percentage = $25, lunch_percentage = $26, dinner_percentage = $27, snacks_percentage = $28,
         custom_nutrients = $29, custom_meal_percentages = $30,
         caffeine_mg = $31, alcohol_g = $32,
+        steps_goal = CASE WHEN $35 THEN $36 ELSE steps_goal END,
+        distance_goal_meters = CASE WHEN $37 THEN $38 ELSE distance_goal_meters END,
+        active_calories_goal = CASE WHEN $39 THEN $40 ELSE active_calories_goal END,
         updated_at = now()
       WHERE id = $33 AND user_id = $34
       RETURNING *`,
@@ -154,6 +160,12 @@ async function updateGoalPreset(presetId: any, presetData: any) {
         presetData.alcohol_g,
         presetId,
         presetData.user_id,
+        presetData.steps_goal !== undefined,
+        presetData.steps_goal,
+        presetData.distance_goal_meters !== undefined,
+        presetData.distance_goal_meters,
+        presetData.active_calories_goal !== undefined,
+        presetData.active_calories_goal,
       ]
     );
     return result.rows[0];
@@ -161,8 +173,7 @@ async function updateGoalPreset(presetId: any, presetData: any) {
     client.release();
   }
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function deleteGoalPreset(presetId: any, userId: any) {
+async function deleteGoalPreset(presetId: string, userId: string) {
   const client = await getClient(userId); // User-specific operation
   try {
     const result = await client.query(

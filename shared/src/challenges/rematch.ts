@@ -28,11 +28,21 @@ export function prepareChallengeRematch(
   return {
     name: challenge.name,
     metric: challenge.metric,
+    scoring_mode: challenge.scoring_mode,
+    ...(challenge.scoring_mode !== "sum"
+      ? {
+          duration_days:
+            challenge.duration_days ?? challenge.progress.total_days,
+          start_next_day: challenge.start_next_day ?? false,
+        }
+      : {}),
     timezone: challenge.timezone,
     start_date: start,
     end_date: addDays(
       start,
-      daysBetween(challenge.start_date, challenge.end_date),
+      challenge.start_date && challenge.end_date
+        ? daysBetween(challenge.start_date, challenge.end_date)
+        : challenge.progress.total_days - 1,
     ),
     participant_ids: selected,
     omitted: previous.length - selected.length,
