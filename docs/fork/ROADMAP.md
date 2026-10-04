@@ -107,7 +107,7 @@ reuse existing authoritative data and account-clearing transports. See
 [CHALLENGE_POLISH.md](CHALLENGE_POLISH.md) and [POLISH_VALIDATION.md](POLISH_VALIDATION.md).
 Remote push, recurrence, goals, streak engines and new scoring remain deferred.
 
-## 8A. Release engineering and local production preparation — in progress
+## 8A. Release engineering and local production preparation — complete; PR #10 ready for review
 
 PR #8 merged normally at `02d6ab39a98e912c8c60052575fa95950da1d7be`.
 Frozen upstream `e132d4b0192cf474728920e17cbcdbc9f5058d1c` was validated and
@@ -121,17 +121,19 @@ An initial paired Data Layer transfer was observed. EAS compiled/exported the
 five-target internal iOS build 1005 with matching versions; the maintainer installed
 it on the registered iPhone and confirmed onboarding. After Watch registration,
 re-signing and installation retries, the maintainer confirmed physical Series 7
-installation and first-run launch. The inherited weight-entry gate precedes the
-Challenge page; authenticated Watch behavior remains unverified. Local final
+installation and first-run launch. Review then identified and fixed the inherited
+weight-entry navigation gate. Authenticated Watch behavior remains unverified. Local final
 Compose startup, isolated routing, migration and backup/restore checks passed.
 
 Review identified the Apple Watch first-run navigation gate as the remaining M8A
 blocker. The source fix keeps First check-in inside Entry without blocking other
-pages. Full EAS build 1006 and exported identity/profile checks passed; the physical
-no-fake-weight navigation check is pending. M8A remains in progress until it passes.
-Broader authenticated sync, health,
-native surfaces, notifications and accessibility acceptance are explicitly
-post-M8A/pre-production QA unless a concrete regression is found. See
+pages. Full EAS build 1006 and exported identity/profile checks passed. On
+2026-10-04 the maintainer confirmed physical Series 7 first-run display, swiping to
+Challenges, the unsynced state and return to the usable Entry form without entering
+or saving weight. M8A release-engineering acceptance is complete; PR #10 is ready
+for review and remains unmerged. An actual check-in Save/ack, broader authenticated
+sync, account clearing, health dedupe, native surfaces, notifications and
+accessibility acceptance remain explicitly post-M8A/pre-production QA. See
 [release evidence](RELEASE_VALIDATION.md), [BUILDING.md](BUILDING.md) and
 [DEPLOYMENT.md](DEPLOYMENT.md). Source tests do not waive device acceptance.
 

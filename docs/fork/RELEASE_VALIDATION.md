@@ -1,7 +1,9 @@
 # Milestone 8A release acceptance
 
-Work in progress on the development laptop. This record distinguishes source,
-configuration, real binary and physical-device evidence. Milestone 8B is not run.
+Milestone 8A release-engineering acceptance completed on the development laptop
+on 2026-10-04. This record distinguishes source, configuration, real binary and
+physical-device evidence. Broader functional QA remains explicitly listed below;
+Milestone 8B is deferred and has not run. PR #10 is ready for review, not merged.
 
 ## Repository baseline
 
@@ -258,13 +260,31 @@ and verification report:
 `~/.local/share/sparkyrivals/artifacts/milestone-8a/ios-1006/`.
 IPA SHA-256: `55b72829668b3dd66fc724edd20a2c400f8bb4400454126f94f7b421d4960b3c`.
 
-Physical installation/navigation acceptance of **1006** is pending maintainer
-interaction. Required checks without fake weight: initial First check-in, swipe
-away, reach Challenges and its unsynced state, then return to the usable Entry
-form. Do not claim an actual Save unless the maintainer records a genuine
-measurement. M8A remains in progress and PR #10 remains draft until this acceptance
-passes. Broader authenticated cross-device sync, account clearing, health dedupe,
-every native surface, notifications and accessibility remain explicit
+Physical installation/navigation acceptance of **1006 passed on 2026-10-04**.
+After the maintainer reported installation appearing stuck, a new private USB log
+capture recorded successful placeholder installation followed by the actual app
+phase (`p = N`). At 03:08:59 Europe/Rome, 1,195,281 compressed bytes had transferred;
+at **03:09:01** the actual app received `Got install done`. A read-only lookup also
+confirmed iPhone bundle version **1006**, version 1.7.3 and a validated profile.
+The private capture is `/tmp/sparkyrivals-8a/watch-install-1006-NvWGYW.log`.
+It was stopped after completion. This successful attempt does not establish the
+cause of earlier installation delays or storage-labelled failures.
+
+The maintainer then confirmed on the physical Series 7, without entering or saving
+weight:
+
+1. First check-in appears with the new swipe instruction.
+2. Horizontal navigation away from it works.
+3. Challenges is reachable.
+4. **Challenges not synced yet** renders.
+5. Returning to First check-in leaves its fields usable.
+
+No fake measurement or screenshot seed was used. An actual real-weight Save/server
+ack was not performed in this acceptance; the original capture/send/persist paths
+remain unchanged and covered by source contracts. The reviewer-designated M8A
+blocker is closed. M8A is complete and PR #10 is ready for review, without merging.
+Broader authenticated cross-device sync, account clearing, health dedupe, every
+native surface, notifications and accessibility remain explicit
 post-M8A/pre-production QA unless a concrete regression is found.
 
 ## Android compilation
@@ -382,15 +402,19 @@ and unrelated containers were untouched.
   private. Existing directories are never recursively chmod/chowned.
 - Bootstrap unit tests: **7 passed**. APK verification unit tests: **6 passed**.
 
-## Remaining human/native boundaries
+## Residual post-M8A/pre-production QA and human boundaries
 
 - Apple EAS credential/provisioning authentication, if requested, must be completed
   by the maintainer locally. Never paste Apple passwords/2FA into chat.
-- Internal iPhone onboarding and Apple Watch first-run launch are confirmed by
-  the maintainer. Check auth, HealthKit, widgets, notifications, Watch Challenge
-  pages/complications, paired transport and VoiceOver. The first-run navigation
-  fix above has a verified new full build and still requires physical acceptance before M8A
-  completion; the other functional checks are documented pre-production QA debt.
+- Internal iPhone onboarding and physical Apple Watch 1006 first-run/unsynced
+  navigation are confirmed. Check real check-in Save/server acknowledgment, auth,
+  HealthKit/Health Connect duplicate protection, authenticated Challenge transport,
+  account/server switch/logout and stale/offline clearing on every native surface.
+- Verify iOS/Android widgets, Apple complications, Wear Tile/complication visuals
+  and interactions, actual local notification delivery/deep links and VoiceOver/
+  TalkBack. Initial launch and service registration do not establish these results.
+- Run the extended Swift model harness on a Mac; this host has no `swiftc`.
+  Full EAS Xcode compilation passed, but did not execute that standalone harness.
 - Release APK fingerprints, physical phone/Watch installation and initial paired
   Data Layer transfer are verified. Authenticated Challenge results, account-change
   clearing/offline states, Tile/complication visuals, Health Connect continuity,

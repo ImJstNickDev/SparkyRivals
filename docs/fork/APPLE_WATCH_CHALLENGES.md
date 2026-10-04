@@ -9,8 +9,11 @@ onboarding and Series 7 installation/first-run launch after provisioning recover
 and retries. Review identified the inherited weight-entry gate as an M8A blocker.
 The revised source keeps first check-in on the normal Entry page, with navigation
 to Challenges available without recording weight. Full EAS build 1006 and exported
-identity/profile checks passed; physical navigation acceptance is pending. The
-earlier build 1005 does not contain this fix.
+identity/profile checks passed. The maintainer confirmed physical first-run display,
+swiping to Challenges, its unsynced state and return to the usable Entry form without
+entering or saving weight. M8A's navigation blocker is closed; an actual real-weight
+Save/server acknowledgment remains pre-production QA. The earlier build 1005 does
+not contain this fix.
 Authenticated Challenge and complication behavior remain separate pre-production
 QA. [RELEASE_VALIDATION.md](RELEASE_VALIDATION.md) is the current evidence;
 the native limitations below describe the earlier milestones.
