@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "843569133162",
+    "project_id": "sparkyrivals-fb",
+    "storage_bucket": "sparkyrivals-fb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:843569133162:android:6b7c60e7a07ff0b9b7fc13",
+        "android_client_info": {
+          "package_name": "com.imjstnick.sparkyrivals"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB24CaX4jYbn6-qqDviR_4lGlfGf1-2ukI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

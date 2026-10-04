@@ -83,3 +83,10 @@ dossier sans titre/
 
 # SparkyRivals production bind-mounted state (separate server checkout).
 /dockerdata/
+
+# Private push delivery credentials (Firebase client config is deliberately tracked).
+*firebase-adminsdk*.json
+fcm-v1-service-account.json
+expo-access-token
+expo_access_token
+*.p8
