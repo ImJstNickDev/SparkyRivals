@@ -210,6 +210,14 @@ function resolveAppIdentity(env = process.env) {
     );
   }
   const wearBuildNumber = Number(env.EXPO_WEAR_BUILD_NUMBER || '1000000001');
+  // Only the owned production phone has APNs/FCM configured. Other identities
+  // remain local-notification-only and never apply the production Firebase file.
+  const remotePushEnabled =
+    custom &&
+    variant === 'production' &&
+    androidPackage === 'com.imjstnick.sparkyrivals' &&
+    iosBundleIdentifier === 'com.imjstnick.sparkyrivals' &&
+    easProjectId === '63f08cec-3f87-4cee-89be-bebf970b6262';
   const watchBundleIdentifier = `${iosBundleIdentifier}.watchkitapp`;
   return {
     mode,
@@ -222,6 +230,10 @@ function resolveAppIdentity(env = process.env) {
     scheme,
     watchScheme,
     androidPackage,
+    remotePushEnabled,
+    googleServicesFile: remotePushEnabled
+      ? './firebase/google-services.production.json'
+      : undefined,
     wearEnabled,
     wearApplicationId: androidPackage,
     wearBuildNumber,

@@ -76,11 +76,24 @@ if (platform !== 'android') {
       (item) => item.CFBundleURLSchemes
     );
     if (bundle === id.iosBundleIdentifier) {
+      if (id.remotePushEnabled)
+        assert.ok(
+          ['development', 'production'].includes(
+            entitlements['aps-environment']
+          ),
+          'Main phone requires APNs entitlement'
+        );
       assert.ok(schemes.includes(id.scheme));
       assert.equal(entitlements['com.apple.developer.healthkit'], true);
       if (id.mode === 'custom' && !id.isDev)
         assert.ok(!schemes.some((scheme) => scheme.startsWith('exp+')));
     }
+    if (bundle !== id.iosBundleIdentifier)
+      assert.equal(
+        entitlements['aps-environment'],
+        undefined,
+        'No remote push entitlement on child targets'
+      );
     if (bundle === id.widgetBundleIdentifier)
       assert.equal(info.APP_URL_SCHEME, id.scheme);
     if (bundle === id.watchBundleIdentifier) {
@@ -131,6 +144,23 @@ if (platform !== 'android') {
 }
 if (platform !== 'ios') {
   const gradle = read('android/app/build.gradle');
+  const firebaseFile = join(root, 'android/app/google-services.json');
+  assert.equal(
+    existsSync(firebaseFile),
+    id.remotePushEnabled,
+    'Firebase config only belongs in the production phone'
+  );
+  if (id.remotePushEnabled) {
+    const firebase = JSON.parse(readFileSync(firebaseFile, 'utf8'));
+    assert.equal(firebase.project_info.project_id, 'sparkyrivals-fb');
+    assert.deepEqual(
+      firebase.client.map(
+        (client) => client.client_info.android_client_info.package_name
+      ),
+      [id.androidPackage]
+    );
+    assert.ok(gradle.includes('com.google.gms.google-services'));
+  } else assert.ok(!gradle.includes('com.google.gms.google-services'));
   assert.ok(gradle.includes(`applicationId '${id.androidPackage}'`));
   assert.ok(gradle.includes(`namespace '${id.androidPackage}'`));
   assert.match(
@@ -181,6 +211,8 @@ if (platform !== 'ios') {
   if (id.wearEnabled) {
     assert.match(settings, /include ':wear'/);
     const wearGradle = read('android/wear/build.gradle');
+    assert.ok(!wearGradle.includes('com.google.gms.google-services'));
+    assert.ok(!existsSync(join(root, 'android/wear/google-services.json')));
     assert.ok(wearGradle.includes(`applicationId '${id.androidPackage}'`));
     assert.ok(wearGradle.includes(`versionCode ${id.wearBuildNumber}`));
     assert.ok(wearGradle.includes('phone.buildTypes.debug.signingConfig'));

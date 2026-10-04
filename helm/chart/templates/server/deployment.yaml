@@ -101,6 +101,13 @@ spec:
             {{- toYaml . | nindent 12 }}
             {{- end }}
           env:
+            {{- if .Values.server.remotePush.enabled }}
+            - name: EXPO_ACCESS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "server.remotePush.existingSecret is required when remote push is enabled" .Values.server.remotePush.existingSecret }}
+                  key: {{ .Values.server.remotePush.accessTokenKey }}
+            {{- end }}
             # --- App secrets ---
             - name: SPARKY_FITNESS_API_ENCRYPTION_KEY
               valueFrom:

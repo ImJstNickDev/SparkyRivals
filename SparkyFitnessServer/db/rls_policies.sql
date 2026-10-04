@@ -52,6 +52,9 @@ BEGIN
     'openfoodfacts_product_read_rate_limit',
     'openfoodfacts_sync_queue',
     'profiles',
+    'push_installations',
+    'push_events',
+    'push_deliveries',
     'rate_limit',
     'sparky_chat_history',
     'admin_activity_logs',
@@ -1183,4 +1186,80 @@ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = pg_catalog, public AS $$
   FROM members m LEFT JOIN public.profiles p ON p.id = m.user_id
   LEFT JOIN daily d ON d.user_id = m.user_id
   ORDER BY m.user_id, d.day;
+$$;
+
+-- Remote push is private delivery infrastructure. No ordinary/delegated SQL
+-- access, even to one's own routing tokens. Self-scoped RPCs below are the only
+-- application entrypoints; scheduled delivery uses the system worker client.
+CREATE POLICY deny_all_policy ON public.push_installations FOR ALL USING (false) WITH CHECK (false);
+CREATE POLICY deny_all_policy ON public.push_events FOR ALL USING (false) WITH CHECK (false);
+CREATE POLICY deny_all_policy ON public.push_deliveries FOR ALL USING (false) WITH CHECK (false);
+
+CREATE OR REPLACE FUNCTION public.register_push_installation(
+  p_installation uuid, p_platform text, p_hash text, p_ciphertext text,
+  p_iv text, p_tag text, p_guard uuid, p_revision bigint
+) RETURNS timestamptz
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public AS $$
+DECLARE actor uuid; old public.push_installations; expiry timestamptz;
+BEGIN
+  actor := public.challenge_actor();
+  IF actor IS NULL THEN RAISE EXCEPTION 'Self context required' USING ERRCODE='42501'; END IF;
+  -- Serialize token/installation transfer across accounts. No arbitrary user id.
+  IF p_installation IS NULL OR p_guard IS NULL OR p_revision IS NULL OR p_revision NOT BETWEEN 1 AND 9007199254740991
+     OR p_platform IS NULL OR p_platform NOT IN ('ios','android') OR p_hash IS NULL OR p_hash !~ '^[0-9a-f]{64}$'
+     OR p_ciphertext IS NULL OR length(p_ciphertext) NOT BETWEEN 1 AND 2048
+     OR p_iv IS NULL OR length(p_iv) NOT BETWEEN 1 AND 128 OR p_tag IS NULL OR length(p_tag) NOT BETWEEN 1 AND 128 THEN
+    RAISE EXCEPTION 'Invalid push binding' USING ERRCODE='23514';
+  END IF;
+  PERFORM pg_advisory_xact_lock(82451, 1);
+  SELECT * INTO old FROM public.push_installations WHERE installation_id=p_installation FOR UPDATE;
+  IF old.user_id IS DISTINCT FROM actor AND (SELECT count(*) FROM public.push_installations WHERE user_id=actor) >= 100 THEN
+    RAISE EXCEPTION 'Installation history limit reached' USING ERRCODE='23514';
+  END IF;
+  IF FOUND AND p_revision <= old.revision THEN
+    -- Equal request retries are safe only for the exact existing binding.
+    IF p_revision=old.revision AND old.user_id=actor AND old.account_guard=p_guard
+       AND old.token_hash=p_hash AND old.enabled THEN RETURN old.expires_at; END IF;
+    RETURN NULL;
+  END IF;
+  IF (SELECT count(*) FROM public.push_installations WHERE user_id=actor AND enabled AND expires_at>now()
+      AND installation_id<>p_installation) >= 20 THEN
+    RAISE EXCEPTION 'Device limit reached' USING ERRCODE='23514';
+  END IF;
+  UPDATE public.push_installations SET enabled=false, token_hash=NULL,
+    token_ciphertext=NULL, token_iv=NULL, token_tag=NULL, updated_at=now()
+    WHERE token_hash=p_hash AND installation_id<>p_installation;
+  expiry := now() + interval '7 days';
+  INSERT INTO public.push_installations(installation_id,user_id,platform,token_hash,token_ciphertext,token_iv,token_tag,account_guard,revision,expires_at)
+    VALUES(p_installation,actor,p_platform,p_hash,p_ciphertext,p_iv,p_tag,p_guard,p_revision,expiry)
+    ON CONFLICT(installation_id) DO UPDATE SET user_id=actor,platform=p_platform,
+      token_hash=p_hash,token_ciphertext=p_ciphertext,token_iv=p_iv,token_tag=p_tag,
+      account_guard=p_guard,revision=p_revision,enabled=true,updated_at=now(),expires_at=expiry;
+  RETURN expiry;
+END;
+$$;
+CREATE OR REPLACE FUNCTION public.revoke_push_installation(p_installation uuid, p_guard uuid, p_revision bigint)
+RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public AS $$
+DECLARE actor uuid;
+BEGIN
+  actor := public.challenge_actor();
+  IF actor IS NULL THEN RAISE EXCEPTION 'Self context required' USING ERRCODE='42501'; END IF;
+  IF p_installation IS NULL OR p_guard IS NULL OR p_revision IS NULL OR p_revision NOT BETWEEN 1 AND 9007199254740991 THEN
+    RAISE EXCEPTION 'Invalid push revocation' USING ERRCODE='23514';
+  END IF;
+  PERFORM pg_advisory_xact_lock(82451, 1);
+  -- A DELETE can arrive before a timed-out PUT finishes on another replica.
+  -- Keep a token-free revision tombstone even when that PUT has not inserted yet.
+  IF NOT EXISTS (SELECT 1 FROM public.push_installations WHERE installation_id=p_installation) THEN
+    IF (SELECT count(*) FROM public.push_installations WHERE user_id=actor) >= 100 THEN
+      RAISE EXCEPTION 'Installation history limit reached' USING ERRCODE='23514';
+    END IF;
+    INSERT INTO public.push_installations(installation_id,user_id,account_guard,revision,enabled,expires_at)
+      VALUES(p_installation,actor,p_guard,p_revision,false,now());
+    RETURN;
+  END IF;
+  UPDATE public.push_installations SET enabled=false, revision=p_revision,
+    token_hash=NULL,token_ciphertext=NULL,token_iv=NULL,token_tag=NULL,updated_at=now()
+    WHERE installation_id=p_installation AND user_id=actor AND account_guard=p_guard AND revision < p_revision;
+END;
 $$;

@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { remotePushConfig } from './remotePushConfig.js';
 import { log } from '../config/logging.js';
 
 /**
@@ -66,6 +67,7 @@ const PLACEHOLDER_FATAL: Record<string, string> = {
 const PLACEHOLDER_WARN = ['SPARKY_FITNESS_DB_PASSWORD'];
 
 function runPreflightChecks() {
+  remotePushConfig();
   // Connection details that docker-compose already supplies, so they only ever
   // fall back here on a bare-metal or external-database install. Defaulting
   // rather than refusing keeps a Compose deployment working with nothing but

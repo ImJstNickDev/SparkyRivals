@@ -1,6 +1,6 @@
 # AGENTS.md
 
-*Last updated: 2026-10-03*
+*Last updated: 2026-10-04*
 
 `@workspace/shared` is a source-first TypeScript workspace library package for schemas, constants, and timezone/day helpers consumed by SparkyFitnessServer, SparkyFitnessFrontend, and SparkyFitnessMobile.
 
@@ -51,3 +51,10 @@
 - `src/challenges/rematch.ts` prepares a calendar-safe editable creation draft,
   intersecting former accepted members with current invite eligibility. It never
   creates a Challenge or transfers consent; see `../docs/fork/CHALLENGE_POLISH.md`.
+
+## Remote push contracts
+
+`Push.api.zod.ts` contains strict self-registration/revocation and minimal remote
+invitation metadata. `PushInstallations`, `PushEvents` and `PushDeliveries` mirror
+system-private infrastructure tables; they are not token read APIs. Never add
+scores, health records, participant identity or remote URLs to notification data.

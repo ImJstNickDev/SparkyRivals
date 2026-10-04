@@ -1,6 +1,6 @@
 # AGENTS.md
 
-_Last updated: 2026-10-03_
+_Last updated: 2026-10-04_
 
 SparkyFitness Server is the backend API package for the SparkyFitness monorepo. Use this file as the primary guide for work inside `SparkyFitnessServer/`.
 
@@ -332,3 +332,18 @@ Before adding a feature or changing auth/permission behavior, read:
 - Workout Time projection: `db/rls_policies.sql:challenge_workout_points` supplies
   the common leaderboard service with canonical daily seconds/counts. Read
   `../docs/fork/WORKOUT_CHALLENGES.md` for qualification, consent and rounding.
+
+## Remote invitation push source map
+
+- `routes/v2/pushRoutes.ts`, `services/pushRegistrationService.ts` and
+  `models/pushRegistrationRepository.ts` implement self-only encrypted installation
+  registration/revocation. `Push.api.zod.ts` is the strict shared contract.
+- `20261004060000_remote_push.sql` captures pending invitation inserts atomically;
+  `rls_policies.sql` denies ordinary registry/outbox access and limits self RPCs.
+- `remotePushScheduler`, `remotePushService`, `pushDeliveryRepository` and
+  `expoPushTransport` own the gated advisory-locked worker, tickets and receipts.
+  Transport URLs are fixed; use injected mocks in tests, never live Expo.
+- `SPARKY_FITNESS_REMOTE_PUSH_ENABLED` defaults false. Enabled startup requires
+  `EXPO_ACCESS_TOKEN` or its generic `_FILE` equivalent. No APNs/FCM credentials
+  belong on the backend. Never log request/provider bodies containing tokens.
+- See `../docs/fork/REMOTE_PUSH.md` for lease/revision, privacy and acceptance rules.

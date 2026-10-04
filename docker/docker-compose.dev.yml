@@ -48,6 +48,9 @@ services:
       # Uncomment the line below and comment the line above to use a file-based secret
       # SPARKY_FITNESS_API_ENCRYPTION_KEY_FILE: /run/secrets/sparkyfitness_api_key
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-}
+      SPARKY_FITNESS_REMOTE_PUSH_ENABLED: ${SPARKY_FITNESS_REMOTE_PUSH_ENABLED:-false}
+      EXPO_ACCESS_TOKEN: ${EXPO_ACCESS_TOKEN:-}
+      # File-backed deployments may pass EXPO_ACCESS_TOKEN_FILE and mount the secret.
       # Uncomment the line below and comment the line above to use a file-based secret
       # BETTER_AUTH_SECRET_FILE: /run/secrets/sparkyfitness_better_auth_secret
 

@@ -32,6 +32,12 @@ it.each(['development', 'preview', 'production'])(
     );
     const identity = JSON.parse(result);
     expect(identity.variant).toBe(variant);
+    expect(identity.remotePushEnabled).toBe(variant === 'production');
+    expect(identity.googleServicesFile).toBe(
+      variant === 'production'
+        ? './firebase/google-services.production.json'
+        : undefined
+    );
     expect(identity.androidPackage).toBe(
       `com.imjstnick.sparkyrivals${variant === 'production' ? '' : variant === 'development' ? '.dev' : '.preview'}`
     );
@@ -82,6 +88,8 @@ it('keeps owned account configuration out of default upstream profiles', () => {
   for (const profile of ['development', 'preview', 'production'] as const) {
     const identity = resolveAppIdentity(profiles.build[profile].env);
     expect(identity.mode).toBe('upstream');
+    expect(identity.remotePushEnabled).toBe(false);
+    expect(identity.googleServicesFile).toBeUndefined();
     expect(identity.owner).toBeUndefined();
     expect(identity.appleTeamId).toBe('');
     expect(identity.easProjectId).toBe('498a86c5-344f-4d2c-9033-dfd720e4a383');
@@ -158,4 +166,27 @@ it('loads ignored local build settings without overriding explicit process value
   } finally {
     fs.rmSync(temp, { recursive: true, force: true });
   }
+});
+
+it('ships only ordinary Firebase client configuration matching the production phone', () => {
+  const text = fs.readFileSync(
+    path.join(root, 'firebase/google-services.production.json'),
+    'utf8'
+  );
+  const client = JSON.parse(text);
+  expect(client.project_info.project_id).toBe('sparkyrivals-fb');
+  expect(
+    client.client.map(
+      (c: { client_info: { android_client_info: { package_name: string } } }) =>
+        c.client_info.android_client_info.package_name
+    )
+  ).toEqual(['com.imjstnick.sparkyrivals']);
+  expect(text).not.toMatch(/private_key|service_account|BEGIN.*PRIVATE KEY/);
+  const config = fs.readFileSync(path.join(root, 'app.config.ts'), 'utf8');
+  expect(config).toContain('googleServicesFile: identity.googleServicesFile');
+  const wear = fs.readFileSync(
+    path.join(root, 'targets/wear/build.gradle.template'),
+    'utf8'
+  );
+  expect(wear).not.toMatch(/google-services|firebase-messaging/);
 });

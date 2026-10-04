@@ -186,6 +186,7 @@ export default ({ config }: ConfigContext): Partial<ExpoConfig> => {
     },
     android: {
       package: identity.androidPackage,
+      googleServicesFile: identity.googleServicesFile,
       versionCode: identity.buildNumber ?? config.android?.versionCode,
       permissions: [
         ...androidPermissions,
@@ -263,6 +264,7 @@ export default ({ config }: ConfigContext): Partial<ExpoConfig> => {
     extra: {
       ...config.extra,
       APP_VARIANT: identity.variant,
+      remotePushEnabled: identity.remotePushEnabled,
       iosAppGroup: identity.appGroup,
       // Whether the Android build has a Maps key. The key itself stays out
       // of the JS bundle; the route screen only needs to know it is there.

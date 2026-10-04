@@ -1,3 +1,8 @@
+import {
+  remotePushRegistration,
+  remoteInvitationsEligible,
+} from '../services/remotePushRegistration';
+import * as Notifications from 'expo-notifications';
 import { useEffect, useMemo, useSyncExternalStore } from 'react';
 import { AppState, Platform } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -92,6 +97,55 @@ export function useChallengeSurfaces(connected: boolean) {
     return subscribeCompanionChallengeSession(clear);
     // Subscriptions are session-level; preference changes reconcile below.
   }, [supported, widget, notifications, t]);
+  useEffect(() => {
+    if (!supported || !hydrated) return;
+    const reconcile = (devicePushToken?: Notifications.DevicePushToken) => {
+      if (
+        !remoteInvitationsEligible() ||
+        getCompanionChallengeSession().blocked
+      )
+        return remotePushRegistration.clear();
+      // Initial query loading and transient offline state are not logout. Keep
+      // the persisted binding available for a guarded cold notification tap.
+      // Auth/storage transitions invalidate it synchronously through the barrier.
+      if (snapshot.state !== 'ready') return;
+      return remotePushRegistration.reconcile(
+        {
+          account: snapshot.accountKey,
+          configId: configId ?? '',
+          revision: sessionRevision,
+          enabled: true,
+        },
+        devicePushToken
+      );
+    };
+    void reconcile();
+    const foreground = AppState.addEventListener('change', (state) => {
+      if (state === 'active') void reconcile();
+    });
+    let lastNativeToken: string | undefined;
+    const tokens = Notifications.addPushTokenListener((token) => {
+      // Native registration can repeat the same callback without rotating its
+      // token. Keep this comparison in memory; never log native routing values.
+      const value = JSON.stringify(token);
+      if (value === lastNativeToken) return;
+      lastNativeToken = value;
+      void reconcile(token);
+    });
+    return () => {
+      foreground.remove();
+      tokens.remove();
+    };
+  }, [
+    supported,
+    hydrated,
+    configId,
+    sessionRevision,
+    snapshot.accountKey,
+    snapshot.state,
+    preferences,
+    master,
+  ]);
   useEffect(() => {
     if (!supported) return;
     void widget.offer(snapshot, sessionRevision, configId, i18n.language);

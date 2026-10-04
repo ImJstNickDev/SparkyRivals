@@ -1,5 +1,11 @@
+import {
+  remotePushRegistration,
+  remoteInvitationsEligible,
+} from '../../src/services/remotePushRegistration';
+import { useAppPreferencesStore } from '../../src/stores/appPreferencesStore';
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { Platform } from 'react-native';
+import * as Notifications from 'expo-notifications';
 import { useChallengeSurfaces } from '../../src/hooks/useChallengeSurfaces';
 import { useCompanionChallenges } from '../../src/hooks/useCompanionChallenges';
 import { publishChallengeWidget } from '../../src/services/challengeWidgetPublisher';
@@ -21,6 +27,13 @@ jest.mock('../../src/services/challengeNotifications', () => ({
 }));
 jest.mock('../../src/services/storage', () => ({
   getActiveServerConfigId: jest.fn(),
+}));
+jest.mock('../../src/services/remotePushRegistration', () => ({
+  remotePushRegistration: {
+    reconcile: jest.fn(async () => {}),
+    clear: jest.fn(async () => {}),
+  },
+  remoteInvitationsEligible: jest.fn(() => false),
 }));
 const publish = jest.mocked(publishChallengeWidget);
 const snapshot = fixture as CompanionChallengeSnapshot;
@@ -81,4 +94,69 @@ it('unsupported platforms perform no native writes', async () => {
     await Promise.resolve();
   });
   expect(publish).not.toHaveBeenCalled();
+});
+
+it('preserves a cold push binding during initial query loading, then reconciles the verified account', async () => {
+  jest
+    .spyOn(useAppPreferencesStore.persist, 'hasHydrated')
+    .mockReturnValue(true);
+  jest.mocked(remoteInvitationsEligible).mockReturnValue(true);
+  jest
+    .mocked(useCompanionChallenges)
+    .mockReturnValue(
+      state({ ...snapshot, state: 'unavailable', accountKey: '' })
+    );
+  const hook = renderHook(() => useChallengeSurfaces(true));
+  expect(remotePushRegistration.clear).not.toHaveBeenCalled();
+  expect(remotePushRegistration.reconcile).not.toHaveBeenCalled();
+  jest.mocked(useCompanionChallenges).mockReturnValue(state());
+  hook.rerender({});
+  expect(remotePushRegistration.reconcile).toHaveBeenCalledWith(
+    expect.objectContaining({ account: snapshot.accountKey, enabled: true }),
+    undefined
+  );
+});
+it('disabled consent revokes even when the Challenge query is still loading', () => {
+  jest
+    .spyOn(useAppPreferencesStore.persist, 'hasHydrated')
+    .mockReturnValue(true);
+  jest.mocked(remoteInvitationsEligible).mockReturnValue(false);
+  jest
+    .mocked(useCompanionChallenges)
+    .mockReturnValue(
+      state({ ...snapshot, state: 'unavailable', accountKey: '' })
+    );
+  renderHook(() => useChallengeSurfaces(true));
+  expect(remotePushRegistration.clear).toHaveBeenCalled();
+});
+it('forwards native rotation data and ignores duplicate callbacks', () => {
+  jest
+    .spyOn(useAppPreferencesStore.persist, 'hasHydrated')
+    .mockReturnValue(true);
+  jest.mocked(remoteInvitationsEligible).mockReturnValue(true);
+  let onToken: ((token: Notifications.DevicePushToken) => void) | undefined;
+  jest
+    .spyOn(Notifications, 'addPushTokenListener')
+    .mockImplementation((listener) => {
+      onToken = listener;
+      return { remove: jest.fn() };
+    });
+  renderHook(() => useChallengeSurfaces(true));
+  const first = { type: 'ios' as const, data: 'native-test-value' };
+  act(() => {
+    onToken!(first);
+    onToken!({ ...first });
+  });
+  expect(remotePushRegistration.reconcile).toHaveBeenCalledTimes(2);
+  expect(remotePushRegistration.reconcile).toHaveBeenLastCalledWith(
+    expect.objectContaining({ account: snapshot.accountKey }),
+    first
+  );
+  const changed = { ...first, data: 'rotated-native-test-value' };
+  act(() => onToken!(changed));
+  expect(remotePushRegistration.reconcile).toHaveBeenCalledTimes(3);
+  expect(remotePushRegistration.reconcile).toHaveBeenLastCalledWith(
+    expect.objectContaining({ account: snapshot.accountKey }),
+    changed
+  );
 });

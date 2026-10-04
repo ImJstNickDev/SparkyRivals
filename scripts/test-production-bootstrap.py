@@ -74,6 +74,49 @@ class BootstrapTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             bootstrap.prepare(self.root, self.root / 'elsewhere', 'https://local.test', True)
 
+    def test_optional_push_never_generates_external_credentials(self):
+        self.run_bootstrap()
+        self.assertFalse((self.data / 'secrets/expo_access_token').exists())
+
+    def test_private_external_push_import_is_idempotent_and_never_overwrites(self):
+        source = self.root / 'external-token'
+        source.write_text('unit-test-external-token\n')
+        source.chmod(0o600)
+        bootstrap.prepare(self.root, self.data, 'https://fitness.example.test', expo_token_source=source)
+        target = self.data / 'secrets/expo_access_token'
+        self.assertEqual(target.read_bytes(), source.read_bytes())
+        self.assertEqual(target.stat().st_mode & 0o777, 0o600)
+        bootstrap.prepare(self.root, self.data, 'https://fitness.example.test', expo_token_source=source)
+        source.write_text('replacement-unit-test-token\n')
+        with self.assertRaises(ValueError):
+            bootstrap.prepare(self.root, self.data, 'https://fitness.example.test', expo_token_source=source)
+        self.assertEqual(target.read_text(), 'unit-test-external-token\n')
+
+    def test_push_enabled_requires_external_private_file_and_container_path(self):
+        runtime = self.run_bootstrap()
+        runtime.write_text(runtime.read_text().replace('SPARKY_FITNESS_REMOTE_PUSH_ENABLED=false', 'SPARKY_FITNESS_REMOTE_PUSH_ENABLED=true'))
+        with self.assertRaisesRegex(ValueError, 'Push enabled'):
+            self.run_bootstrap()
+        token = self.data / 'secrets/expo_access_token'
+        token.write_text('unit-test-external-token\n'); token.chmod(0o600)
+        with self.assertRaisesRegex(ValueError, 'EXPO_ACCESS_TOKEN_FILE'):
+            self.run_bootstrap()
+        runtime.write_text(runtime.read_text() + '\nEXPO_ACCESS_TOKEN_FILE=/run/secrets/expo_access_token\n')
+        self.run_bootstrap()
+        token.chmod(0o644)
+        with self.assertRaisesRegex(ValueError, 'Push enabled'):
+            self.run_bootstrap()
+
+    def test_push_import_rejects_public_or_symlink_source(self):
+        source = self.root / 'external-token'
+        source.write_text('unit-test-external-token\n'); source.chmod(0o644)
+        with self.assertRaises(ValueError):
+            bootstrap.prepare(self.root, self.data, 'https://fitness.example.test', expo_token_source=source)
+        source.chmod(0o600)
+        link = self.root / 'linked-token'; link.symlink_to(source)
+        with self.assertRaises(ValueError):
+            bootstrap.prepare(self.root, self.data, 'https://fitness.example.test', expo_token_source=link)
+
 
 if __name__ == '__main__':
     unittest.main()

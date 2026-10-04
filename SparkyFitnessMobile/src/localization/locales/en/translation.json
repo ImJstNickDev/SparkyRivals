@@ -5922,6 +5922,7 @@
       "endingSoon": "Ending soon",
       "ended": "Challenge ends",
       "leadChanges": "Lead changes",
+      "remoteHint": "Invitations can arrive while the app is closed when your server supports push. Delivery uses Expo, Apple and Google without sharing scores or health data. Other alerts use data synced on this phone.",
       "hint": "Alerts use results refreshed on this phone. Lead changes are checked when the app refreshes."
     },
     "surfaces": {

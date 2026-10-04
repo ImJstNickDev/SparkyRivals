@@ -1,3 +1,4 @@
+import Constants from 'expo-constants';
 import { useTranslation } from 'react-i18next';
 import { Text } from 'react-native';
 import SettingsRow, { SettingsRowGroup } from '../SettingsRow';
@@ -32,10 +33,15 @@ export function ChallengeNotificationSettings() {
   return (
     <SettingsRowGroup title={labels.enabled}>
       <Text className="px-4 py-2 text-text-secondary">
-        {t('challenges.notifications.hint', {
-          defaultValue:
-            'Alerts use results refreshed on this phone. Lead changes are checked when the app refreshes.',
-        })}
+        {Constants.expoConfig?.extra?.remotePushEnabled === true
+          ? t('challenges.notifications.remoteHint', {
+              defaultValue:
+                'Invitations can arrive while the app is closed when your server supports push. Delivery uses Expo, Apple and Google without sharing scores or health data. Other alerts use data synced on this phone.',
+            })
+          : t('challenges.notifications.hint', {
+              defaultValue:
+                'Alerts use results refreshed on this phone. Lead changes are checked when the app refreshes.',
+            })}
       </Text>
       {(Object.keys(labels) as (keyof typeof labels)[])
         .filter((key) => key === 'enabled' || preferences.enabled)

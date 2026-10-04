@@ -1,9 +1,11 @@
+import { remotePushRegistration } from './remotePushRegistration';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import type { TFunction } from 'i18next';
 import { z } from 'zod';
 import { getNotificationPermissionStatus } from './notifications';
+import { prepareChallengeNotificationDelivery } from './challengeNotificationSetup';
 import { getCompanionChallengeSession } from './companionChallengeSession';
 import { getActiveServerConfigId } from './storage';
 import { getChallengeSurfaceUrl } from '../utils/challengeSurfaceLinks';
@@ -74,8 +76,11 @@ export class ChallengeNotificationReconciler {
         const ledgers = ledgerSchema.safeParse(parsed).data ?? {};
         const permission = await getNotificationPermissionStatus();
         if (!valid()) return;
+        await remotePushRegistration.settled();
+        if (!valid()) return;
         const plan = planChallengeNotifications({
           ...input,
+          remoteInvitations: remotePushRegistration.isActive(account),
           preferences: {
             ...input.preferences,
             enabled: input.preferences.enabled && permission === 'granted',
@@ -105,12 +110,7 @@ export class ChallengeNotificationReconciler {
             );
         await dismissOtherAccounts(account);
         if (!valid()) return;
-        if (Platform.OS === 'android')
-          await Notifications.setNotificationChannelAsync('challenges', {
-            name: t('challenges.title', { defaultValue: 'Challenges' }),
-            importance: Notifications.AndroidImportance.DEFAULT,
-          });
-        await Notifications.setNotificationCategoryAsync('challenge', []);
+        await prepareChallengeNotificationDelivery(t);
         const messages: Record<ChallengeAlertKind, string> = {
           invitation: t('challenges.notifications.invitationBody', {
             defaultValue:
@@ -133,6 +133,11 @@ export class ChallengeNotificationReconciler {
         for (const alert of plan.alerts) {
           const identifier = idFor(alert.key);
           if (!valid()) break;
+          if (
+            alert.kind === 'invitation' &&
+            remotePushRegistration.isActive(account)
+          )
+            continue;
           if (alert.at && current.some((n) => n.identifier === identifier))
             continue;
           await Notifications.scheduleNotificationAsync({
