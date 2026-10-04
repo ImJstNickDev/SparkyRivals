@@ -4,7 +4,7 @@ import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import { z } from 'zod';
-import { withTimeout } from '../utils/concurrency';
+import { TimeoutError, withTimeout } from '../utils/concurrency';
 import translation from '../localization/i18n';
 import { getNotificationPermissionStatus } from './notifications';
 import { getActiveServerConfig, type ServerConfig } from './storage';
@@ -36,6 +36,32 @@ const schema = z.object({
     .nullable(),
 });
 type Saved = z.infer<typeof schema>;
+type RegistrationStage =
+  | 'cleanup'
+  | 'permission'
+  | 'configuration'
+  | 'secure-read'
+  | 'token'
+  | 'secure-write'
+  | 'register';
+// Provider error messages can contain routing tokens or response bodies. Only
+// these fixed codes may leave the registration boundary, never the error itself.
+const SAFE_FAILURE_CODES = [
+  'E_REGISTRATION_FAILED',
+  'ERR_NOTIFICATIONS_NETWORK_ERROR',
+  'ERR_NOTIFICATIONS_SERVER_ERROR',
+  'ERR_NOTIFICATIONS_NO_EXPERIENCE_ID',
+  'ERR_NOTIFICATIONS_NO_APPLICATION_ID',
+  'ERR_NOTIF_DEVICE_ID',
+  'ERR_SECURESTORE_READ_ERROR',
+  'ERR_SECURESTORE_WRITE_ERROR',
+] as const;
+function registrationFailureCode(error: unknown) {
+  if (error instanceof TimeoutError) return 'timeout';
+  if (typeof error !== 'object' || error === null) return 'unavailable';
+  const code = 'code' in error ? error.code : undefined;
+  return SAFE_FAILURE_CODES.find((value) => value === code) ?? 'unavailable';
+}
 export interface PushEligibility {
   account: string;
   configId: string;
@@ -54,7 +80,7 @@ export interface PushRegistrationDependencies {
   register: typeof registerRemotePush;
   unregister: typeof unregisterRemotePush;
   now(): number;
-  warn(): void;
+  warn(stage: RegistrationStage, code: string): void;
 }
 /** Serial, durable installation revisions stop an old in-flight upsert from
  * resurrecting an account after a newer revoke/transfer reaches the server. */
@@ -154,7 +180,9 @@ export class RemotePushRegistration {
           });
         }
       })
-      .catch(() => this.deps.warn());
+      .catch((error: unknown) =>
+        this.deps.warn('cleanup', registrationFailureCode(error))
+      );
     return this.queue;
   }
   reconcile(
@@ -170,6 +198,7 @@ export class RemotePushRegistration {
       session.revision === input.revision;
     if (!input.enabled || !input.account || !this.deps.supported())
       return this.clear();
+    let stage: RegistrationStage = 'permission';
     this.queue = this.queue
       .then(async () => {
         if (!valid()) return;
@@ -179,11 +208,14 @@ export class RemotePushRegistration {
           void this.clear();
           return;
         }
+        stage = 'configuration';
         const config = await this.deps.config();
         if (!valid() || !config || config.id !== input.configId) return;
+        stage = 'secure-read';
         const saved = await this.load();
         if (!valid()) return;
         this.lastConfig = config;
+        stage = 'token';
         const token = await withTimeout(
           this.deps.token(devicePushToken),
           10_000,
@@ -215,8 +247,10 @@ export class RemotePushRegistration {
         };
         saved.binding = binding;
         ++saved.revision;
+        stage = 'secure-write';
         await this.persist(); // Persist revision before issuing any request.
         if (!valid()) return;
+        stage = 'register';
         const response = await this.deps.register(config, {
           installation_id: saved.installation,
           platform: this.deps.platform(),
@@ -229,6 +263,7 @@ export class RemotePushRegistration {
         binding.expires = response?.expires_at
           ? Date.parse(response.expires_at)
           : 0;
+        stage = 'secure-write';
         await this.persist();
         if (!valid()) return;
         this.update(
@@ -241,7 +276,7 @@ export class RemotePushRegistration {
             : null
         );
       })
-      .catch(() => {
+      .catch((error: unknown) => {
         // A transient refresh failure does not invalidate an acknowledged,
         // unexpired lease. Retaining it prevents duplicate local invitation alerts.
         const binding = this.saved?.binding;
@@ -257,7 +292,7 @@ export class RemotePushRegistration {
               }
             : null
         );
-        this.deps.warn();
+        this.deps.warn(stage, registrationFailureCode(error));
       });
     return this.queue;
   }
@@ -300,9 +335,9 @@ export const remotePushRegistration = new RemotePushRegistration({
   register: registerRemotePush,
   unregister: unregisterRemotePush,
   now: Date.now,
-  warn: () => {
+  warn: (stage, code) => {
     void addLog(
-      'Remote invitation registration unavailable; local fallback retained.',
+      `Remote invitation registration unavailable (${stage}: ${code}); local fallback retained.`,
       'WARNING'
     );
   },

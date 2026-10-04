@@ -198,7 +198,33 @@ it('falls back without logging token/error details after provider or server fail
     .mockRejectedValue(new Error('private-routing-value'));
   await service.reconcile(input());
   expect(service.isActive(input().account)).toBe(false);
-  expect(deps.warn).toHaveBeenCalledWith();
+  expect(deps.warn).toHaveBeenCalledWith('register', 'unavailable');
+});
+it.each([
+  ['E_REGISTRATION_FAILED', 'E_REGISTRATION_FAILED'],
+  ['ERR_NOTIFICATIONS_NETWORK_ERROR', 'ERR_NOTIFICATIONS_NETWORK_ERROR'],
+  ['private-routing-value', 'unavailable'],
+])(
+  'logs only an allowlisted token failure code: %s',
+  async (code, expected) => {
+    jest.mocked(deps.token).mockRejectedValue(
+      Object.assign(new Error('private-routing-value'), {
+        code,
+        response: 'private-response-body',
+      })
+    );
+    await service.reconcile(input());
+    expect(deps.warn).toHaveBeenCalledWith('token', expected);
+    expect(JSON.stringify(jest.mocked(deps.warn).mock.calls)).not.toMatch(
+      /private-routing-value|private-response-body/
+    );
+    expect(deps.register).not.toHaveBeenCalled();
+  }
+);
+it('identifies secure storage failures without exposing their message', async () => {
+  jest.mocked(deps.read).mockRejectedValue(new Error('private-storage-detail'));
+  await service.reconcile(input());
+  expect(deps.warn).toHaveBeenCalledWith('secure-read', 'unavailable');
 });
 it('does not register unsupported variants or persist a replacement identity after storage failure', async () => {
   deps.supported = () => false;
