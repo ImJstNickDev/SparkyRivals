@@ -17,6 +17,7 @@ import {
   type InvitationPushMessage,
 } from '../services/expoPushTransport.js';
 import challenges from '../models/challengeRepository.js';
+import challengeService from '../services/challengeService.js';
 const RUN = process.env.RUN_CHALLENGE_DB_TESTS === '1';
 const users = [randomUUID(), randomUUID(), randomUUID()];
 const [owner, recipient, outsider] = users as [string, string, string];
@@ -294,6 +295,40 @@ describe.runIf(RUN)(
         (await query('SELECT state,attempts FROM public.push_deliveries'))
           .rows[0]
       ).toMatchObject({ state: 'pending', attempts: 1 });
+    });
+    it('delivers a new lobby invitation without dates and suppresses a withdrawn invitation', async () => {
+      await reset();
+      await registerPush(recipient, registration());
+      const body = createChallengeRequestSchema.parse({
+        name: 'Goal lobby',
+        metric: 'steps',
+        scoring_mode: 'goal_progress',
+        duration_days: 7,
+        timezone: 'UTC',
+        participant_ids: [recipient],
+      });
+      const first = await challenges.create(owner, body);
+      const transport = sender();
+      await processRemotePush(transport);
+      expect(transport.send).toHaveBeenCalledTimes(1);
+      expect(
+        vi.mocked(transport.send).mock.calls[0]![0][0]!.data.challengeId
+      ).toBe(first);
+      await reset();
+      await registerPush(recipient, registration());
+      const second = await challenges.create(owner, body);
+      await challengeService.withdraw(owner, second, recipient);
+      const withdrawn = sender();
+      await processRemotePush(withdrawn);
+      expect(withdrawn.send).not.toHaveBeenCalled();
+      expect(
+        (
+          await query(
+            'SELECT state FROM push_deliveries d JOIN push_events e ON d.event_id=e.id WHERE e.challenge_id=$1',
+            [second]
+          )
+        ).rows
+      ).toEqual([{ state: 'suppressed' }]);
     });
     it('suppresses declined, cancelled, disabled and expired recipients before sending', async () => {
       for (const reason of ['declined', 'cancelled', 'disabled', 'expired']) {

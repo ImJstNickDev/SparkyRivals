@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import {
+  challengeTargetRequestSchema,
+  challengeReadyRequestSchema,
   createChallengeRequestSchema,
   inviteChallengeRequestSchema,
   renameChallengeRequestSchema,
@@ -17,6 +19,12 @@ export {
 
 // Keep OpenAPI shapes generated from the same contract clients consume.
 export const challengeOpenApiSchemas = {
+  ChallengeTarget: z.toJSONSchema(challengeTargetRequestSchema, {
+    target: 'openapi-3.0',
+  }),
+  ChallengeReady: z.toJSONSchema(challengeReadyRequestSchema, {
+    target: 'openapi-3.0',
+  }),
   ChallengeLeaderboard: z.toJSONSchema(challengeLeaderboardResponseSchema, {
     target: 'openapi-3.0',
   }),

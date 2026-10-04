@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
 import express from 'express';
 // @ts-expect-error TS(7016): no type declarations shipped for cookie-parser
 import cookieParser from 'cookie-parser';
@@ -33,6 +34,8 @@ vi.mock('../services/challengeService.js', () => ({
     invite: vi.fn(),
     respond: vi.fn(),
     update: vi.fn(),
+    configure: vi.fn(),
+    withdraw: vi.fn(),
   },
 }));
 vi.mock('../services/challengeLeaderboardService.js', () => ({
@@ -42,6 +45,15 @@ const actor = '10000000-0000-4000-8000-000000000001';
 const peer = '10000000-0000-4000-8000-000000000002';
 const id = '20000000-0000-4000-8000-000000000001';
 const url = '/api/v2/challenges';
+it('allows browser clients to negotiate the Challenge contract through CORS', () => {
+  const source = readFileSync(
+    new URL('../SparkyFitnessServer.ts', import.meta.url),
+    'utf8'
+  );
+  expect(source.match(/allowedHeaders:\s*\[([\s\S]*?)\]/)?.[1]).toContain(
+    "'x-challenge-contract-version'"
+  );
+});
 const detailFixture: Awaited<ReturnType<typeof service.detail>> = {
   challenge: {
     id,
@@ -88,9 +100,7 @@ beforeEach(() => {
   vi.mocked(service.create).mockResolvedValue({ challenge: { id } } as Awaited<
     ReturnType<typeof service.create>
   >);
-  vi.mocked(service.detail).mockResolvedValue({ challenge: { id } } as Awaited<
-    ReturnType<typeof service.detail>
-  >);
+  vi.mocked(service.detail).mockResolvedValue(detailFixture);
   vi.mocked(service.list).mockResolvedValue({
     challenges: [],
     limit: 20,
@@ -102,7 +112,11 @@ beforeEach(() => {
 describe('Challenge typed routes and authentication', () => {
   it('accepts the native transport cache-buster without forwarding it', async () => {
     expect((await request(app).get(`${url}?_=1790985600000`)).status).toBe(200);
-    expect(service.list).toHaveBeenCalledWith(actor, { limit: 20, offset: 0 });
+    expect(service.list).toHaveBeenCalledWith(
+      actor,
+      { limit: 20, offset: 0 },
+      false
+    );
   });
   it.each(['not-a-timestamp', '1&_=2', '1&user_id=someone'])(
     'rejects malformed cache metadata or selectors: %s',
@@ -124,10 +138,14 @@ describe('Challenge typed routes and authentication', () => {
         );
       expect(response.status).toBe(200);
       expect(response.headers['cache-control']).toBe('no-store');
-      expect(service.list).toHaveBeenCalledWith(actor, {
-        limit: 20,
-        offset: 0,
-      });
+      expect(service.list).toHaveBeenCalledWith(
+        actor,
+        {
+          limit: 20,
+          offset: 0,
+        },
+        false
+      );
       expect(getSession).toHaveBeenCalled();
     }
   );
@@ -311,3 +329,94 @@ it.each(['steps', 'workout_time'] as const)(
     );
   }
 );
+
+it('negotiates new types explicitly while keeping old clients safe', async () => {
+  const modern = {
+    ...detailFixture,
+    challenge: {
+      ...detailFixture.challenge,
+      metric: 'hydration' as const,
+      scoring_mode: 'goal_progress' as const,
+      lifecycle: 'lobby' as const,
+      start_date: null,
+      end_date: null,
+    },
+  };
+  vi.mocked(service.detail).mockResolvedValue(modern);
+  expect((await request(app).get(`${url}/${id}`)).status).toBe(409);
+  expect(
+    (
+      await request(app)
+        .get(`${url}/${id}`)
+        .set('X-Challenge-Contract-Version', '3')
+    ).status
+  ).toBe(200);
+  await request(app).get(url).set('X-Challenge-Contract-Version', '3');
+  expect(service.list).toHaveBeenCalledWith(
+    actor,
+    { limit: 20, offset: 0 },
+    true
+  );
+});
+it('validates self-only target/Ready commands with revision and ordinary authentication', async () => {
+  vi.mocked(service.configure).mockResolvedValue(detailFixture);
+  for (const [path, body] of [
+    ['target', { target_value: 8000, expected_revision: 0 }],
+    ['ready', { ready: true, expected_revision: 1 }],
+  ] as const) {
+    expect(
+      (
+        await request(app)
+          .put(`${url}/${id}/${path}`)
+          .set('X-Challenge-Contract-Version', '3')
+          .send(body)
+      ).status
+    ).toBe(200);
+    expect(service.configure).toHaveBeenCalledWith(actor, id, body);
+    expect(
+      (
+        await request(app)
+          .put(`${url}/${id}/${path}`)
+          .set('X-Challenge-Contract-Version', '3')
+          .send({ ...body, user_id: peer })
+      ).status
+    ).toBe(400);
+  }
+  expect(
+    (
+      await request(app)
+        .put(`${url}/${id}/target`)
+        .set('X-Challenge-Contract-Version', '3')
+        .send({ target_value: 0, expected_revision: 0 })
+    ).status
+  ).toBe(400);
+  expect(
+    (
+      await request(app)
+        .put(`${url}/${id}/ready`)
+        .set('X-Challenge-Contract-Version', '3')
+        .send({ ready: true })
+    ).status
+  ).toBe(400);
+});
+it('routes withdrawal through creator authorization in the service', async () => {
+  vi.mocked(service.withdraw).mockResolvedValue(detailFixture);
+  expect(
+    (
+      await request(app)
+        .delete(`${url}/${id}/invitations/${peer}`)
+        .set('X-Challenge-Contract-Version', '3')
+    ).status
+  ).toBe(200);
+  expect(service.withdraw).toHaveBeenCalledWith(actor, id, peer);
+  vi.mocked(service.withdraw).mockRejectedValue(
+    new ChallengeError(403, 'Only the creator may withdraw an invitation')
+  );
+  expect(
+    (
+      await request(app)
+        .delete(`${url}/${id}/invitations/${peer}`)
+        .set('X-Challenge-Contract-Version', '3')
+    ).status
+  ).toBe(403);
+});

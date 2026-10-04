@@ -64,7 +64,7 @@ async function create(
 ): Promise<string> {
   return withClient(actor, async (client) => {
     const result = await client.query<{ id: string }>(
-      'INSERT INTO public.challenges (creator_user_id, name, metric, scoring_mode, start_date, end_date, timezone) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id',
+      'INSERT INTO public.challenges (creator_user_id, name, metric, scoring_mode, start_date, end_date, timezone,duration_days,start_next_day) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id',
       [
         actor,
         input.name,
@@ -73,6 +73,8 @@ async function create(
         input.start_date,
         input.end_date,
         input.timezone,
+        input.duration_days ?? null,
+        input.start_next_day ?? false,
       ]
     );
     const id = result.rows[0]!.id;
@@ -85,7 +87,13 @@ async function create(
     return id;
   });
 }
-async function detail(actor: string, id: string) {
+async function detail(
+  actor: string,
+  id: string
+): Promise<{
+  challenge: ChallengeWithMembership;
+  participants: ChallengeRosterRow[];
+} | null> {
   return withClient(
     actor,
     async (client) => {
@@ -95,21 +103,31 @@ async function detail(actor: string, id: string) {
         'SELECT * FROM public.challenge_roster($1)',
         [id]
       );
-      return { challenge, participants: roster.rows };
+      return {
+        challenge,
+        participants: roster.rows.map((row) => ({
+          ...row,
+          target_value:
+            row.target_value === null || row.target_value === undefined
+              ? null
+              : Number(row.target_value),
+        })),
+      };
     },
     true
   );
 }
 async function list(
   actor: string,
-  query: ChallengeListQuery
+  query: ChallengeListQuery,
+  includeNewTypes = true
 ): Promise<ChallengeWithMembership[]> {
   return withClient(
     actor,
     async (client) => {
       const result = await client.query<ChallengeWithMembership>(
-        "SELECT c.*, cp.status AS my_membership FROM public.challenge_participants cp JOIN public.challenges c ON c.id=cp.challenge_id WHERE cp.user_id=$1 AND cp.status IN ('pending','accepted') ORDER BY c.created_at DESC, c.id DESC LIMIT $2 OFFSET $3",
-        [actor, query.limit + 1, query.offset]
+        "SELECT c.*, cp.status AS my_membership FROM public.challenge_participants cp JOIN public.challenges c ON c.id=cp.challenge_id WHERE cp.user_id=$1 AND cp.status IN ('pending','accepted') AND ($4 OR (c.scoring_mode='sum' AND c.metric IN ('steps','workout_time'))) ORDER BY c.created_at DESC, c.id DESC LIMIT $2 OFFSET $3",
+        [actor, query.limit + 1, query.offset, includeNewTypes]
       );
       return result.rows;
     },
@@ -121,9 +139,10 @@ async function invite(
   id: string,
   userId: string
 ): Promise<void> {
-  return withClient(actor, (client) =>
-    insertInvitation(client, actor, id, userId)
-  );
+  return withClient(actor, async (client) => {
+    await lockChallenge(client, id);
+    await insertInvitation(client, actor, id, userId);
+  });
 }
 async function respond(
   actor: string,
@@ -131,6 +150,7 @@ async function respond(
   status: 'accepted' | 'declined' | 'left'
 ): Promise<boolean> {
   return withClient(actor, async (client) => {
+    await lockChallenge(client, id);
     const result = await client.query(
       'UPDATE public.challenge_participants SET status=$1 WHERE challenge_id=$2 AND user_id=$3',
       [status, id, actor]
@@ -162,6 +182,8 @@ export interface ChallengeMetricPoint {
   display_name: string;
   entry_date: string | null;
   value: number | null;
+  raw_value?: string | null;
+  target_value?: string | number | null;
   workout_count?: number;
   data_updated_at: Date | null;
 }
@@ -174,19 +196,103 @@ async function leaderboard(actor: string, id: string) {
       const clock = await client.query<{ evaluated_at: Date }>(
         'SELECT CURRENT_TIMESTAMP AS evaluated_at'
       );
+      const source =
+        challenge.metric === 'steps'
+          ? 'SELECT user_id, display_name, entry_date, steps AS value, data_updated_at FROM public.challenge_step_points($1)'
+          : challenge.metric.startsWith('workout_')
+            ? 'SELECT user_id, display_name, entry_date, metric_value AS value, workout_count, data_updated_at FROM public.challenge_workout_points($1)'
+            : 'SELECT * FROM public.challenge_daily_metric_points($1)';
       const points = await client.query<ChallengeMetricPoint>(
-        challenge.metric === 'workout_time'
-          ? 'SELECT user_id, display_name, entry_date, workout_seconds AS value, workout_count, data_updated_at FROM public.challenge_workout_points($1)'
-          : 'SELECT user_id, display_name, entry_date, steps AS value, data_updated_at FROM public.challenge_step_points($1)',
+        `SELECT p.*, p.value::text AS raw_value, cp.target_value FROM (${source}) p JOIN public.challenge_participants cp ON cp.challenge_id=$1 AND cp.user_id=p.user_id`,
         [id]
       );
       return {
         challenge,
-        points: points.rows,
+        points: points.rows.map((row) => ({
+          ...row,
+          value:
+            row.value === null || row.value === undefined
+              ? null
+              : Number(row.value),
+        })),
         evaluated_at: clock.rows[0]!.evaluated_at,
       };
     },
     true
   );
 }
-export default { create, detail, list, invite, respond, update, leaderboard };
+async function lockChallenge(client: PoolClient, id: string): Promise<void> {
+  await client.query('SELECT public.lock_challenge_participation($1)', [id]);
+}
+async function configureTarget(
+  actor: string,
+  id: string,
+  target: number,
+  revision: number
+): Promise<boolean> {
+  return withClient(actor, async (client) => {
+    await lockChallenge(client, id);
+    const result = await client.query(
+      'UPDATE public.challenge_participants SET target_value=$1 WHERE challenge_id=$2 AND user_id=$3 AND target_revision=$4 RETURNING user_id',
+      [target, id, actor, revision]
+    );
+    return (result.rowCount ?? 0) === 1;
+  });
+}
+async function setReady(
+  actor: string,
+  id: string,
+  ready: boolean,
+  revision: number
+): Promise<boolean> {
+  return withClient(actor, async (client) => {
+    await lockChallenge(client, id);
+    const current = await client.query<{
+      locked_at: Date | null;
+      ready_at: Date | null;
+      target_revision: number;
+    }>(
+      "SELECT c.locked_at,cp.ready_at,cp.target_revision FROM public.challenges c JOIN public.challenge_participants cp ON cp.challenge_id=c.id WHERE c.id=$1 AND cp.user_id=$2 AND cp.status='accepted'",
+      [id, actor]
+    );
+    const row = current.rows[0];
+    if (
+      ready &&
+      row?.locked_at &&
+      row.ready_at &&
+      row.target_revision === revision
+    )
+      return true;
+    const result = await client.query(
+      'UPDATE public.challenge_participants SET ready_at=CASE WHEN $1 THEN now() ELSE NULL END WHERE challenge_id=$2 AND user_id=$3 AND target_revision=$4 RETURNING user_id',
+      [ready, id, actor, revision]
+    );
+    return (result.rowCount ?? 0) === 1;
+  });
+}
+async function withdraw(
+  actor: string,
+  id: string,
+  userId: string
+): Promise<boolean> {
+  return withClient(actor, async (client) => {
+    await lockChallenge(client, id);
+    const result = await client.query(
+      "UPDATE public.challenge_participants SET status='withdrawn' WHERE challenge_id=$1 AND user_id=$2 AND status='pending'",
+      [id, userId]
+    );
+    return (result.rowCount ?? 0) === 1;
+  });
+}
+export default {
+  create,
+  detail,
+  list,
+  invite,
+  respond,
+  update,
+  leaderboard,
+  configureTarget,
+  setReady,
+  withdraw,
+};

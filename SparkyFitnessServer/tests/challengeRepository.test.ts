@@ -18,7 +18,16 @@ describe('Challenge repository snapshots and bounded queries', () => {
     async (count) => {
       query
         .mockResolvedValueOnce({ rows: [] })
-        .mockResolvedValueOnce({ rows: [{ id, my_membership: 'accepted' }] })
+        .mockResolvedValueOnce({
+          rows: [
+            {
+              id,
+              metric: 'steps',
+              scoring_mode: 'sum',
+              my_membership: 'accepted',
+            },
+          ],
+        })
         .mockResolvedValueOnce({ rows: [{ evaluated_at: new Date() }] })
         .mockResolvedValueOnce({
           rows: Array.from({ length: count }, () => ({
@@ -34,10 +43,12 @@ describe('Challenge repository snapshots and bounded queries', () => {
       expect(query.mock.calls[0]).toEqual([
         'BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY',
       ]);
-      expect(query.mock.calls[3]).toEqual([
-        'SELECT user_id, display_name, entry_date, steps AS value, data_updated_at FROM public.challenge_step_points($1)',
-        [id],
-      ]);
+      expect(query.mock.calls[3]?.[0]).toContain('steps AS value');
+      expect(query.mock.calls[3]?.[0]).toContain(
+        'public.challenge_step_points($1)'
+      );
+      expect(query.mock.calls[3]?.[0]).toContain('p.value::text AS raw_value');
+      expect(query.mock.calls[3]?.[1]).toEqual([id]);
       expect(query.mock.calls[4]).toEqual(['COMMIT']);
       expect(release).toHaveBeenCalledOnce();
     }
@@ -62,7 +73,10 @@ describe('Challenge repository snapshots and bounded queries', () => {
         count
       );
       expect(query).toHaveBeenCalledTimes(5);
-      expect(query.mock.calls[3]?.[0]).toContain('workout_seconds AS value');
+      expect(query.mock.calls[3]?.[0]).toContain('metric_value AS value');
+      expect(query.mock.calls[3]?.[0]).toContain(
+        'public.challenge_workout_points($1)'
+      );
     }
   );
   it('does not project scores for an invisible challenge', async () => {

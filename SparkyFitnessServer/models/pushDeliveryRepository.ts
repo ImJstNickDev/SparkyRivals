@@ -57,7 +57,9 @@ export async function preparePushBatch(
         WHERE i.installation_id=d.installation_id AND i.enabled AND i.expires_at>now()
         AND i.account_guard=d.account_guard AND i.token_hash=d.token_hash
         AND cp.challenge_id=e.challenge_id AND cp.user_id=e.user_id AND cp.status='pending'
-        AND c.cancelled_at IS NULL AND (now() AT TIME ZONE c.timezone)::date<=c.end_date))`);
+        AND c.cancelled_at IS NULL AND (
+          (c.scoring_mode<>'sum' AND c.locked_at IS NULL)
+          OR (now() AT TIME ZONE c.timezone)::date<=c.end_date)))`);
   const result =
     await client.query<PendingPush>(`UPDATE public.push_deliveries d
     SET attempts=d.attempts+1, next_attempt_at=now()+interval '2 minutes', updated_at=now()

@@ -1,5 +1,10 @@
 import express from 'express';
 import { z } from 'zod';
+import {
+  challengeReadyRequestSchema,
+  challengeTargetRequestSchema,
+  challengeInvitationParamsSchema,
+} from '@workspace/shared';
 import { getChallengeLeaderboard } from '../../services/challengeLeaderboardService.js';
 import service from '../../services/challengeService.js';
 import { ChallengeError } from '../../utils/challengeErrors.js';
@@ -50,9 +55,53 @@ router.get('/', async (req, res) => {
             .optional(),
         })
         .transform(({ limit, offset }) => ({ limit, offset }))
-        .parse(req.query)
+        .parse(req.query),
+      req.get('X-Challenge-Contract-Version') === '3'
     )
   );
+});
+router.use('/:id', async (req, res, next) => {
+  if (req.get('X-Challenge-Contract-Version') === '3') {
+    next();
+    return;
+  }
+  const { id } = challengeIdParamsSchema.parse(req.params);
+  const { challenge } = await service.detail(req.userId, id);
+  if (
+    challenge.scoring_mode !== 'sum' ||
+    !['steps', 'workout_time'].includes(challenge.metric)
+  ) {
+    res.status(409).json({
+      error: 'Update SparkyRivals to open this Challenge type',
+      code: 'CHALLENGE_CLIENT_UPDATE_REQUIRED',
+    });
+    return;
+  }
+  next();
+});
+router.put('/:id/target', async (req, res) => {
+  const { id } = challengeIdParamsSchema.parse(req.params);
+  res.json(
+    await service.configure(
+      req.userId,
+      id,
+      challengeTargetRequestSchema.parse(req.body)
+    )
+  );
+});
+router.put('/:id/ready', async (req, res) => {
+  const { id } = challengeIdParamsSchema.parse(req.params);
+  res.json(
+    await service.configure(
+      req.userId,
+      id,
+      challengeReadyRequestSchema.parse(req.body)
+    )
+  );
+});
+router.delete('/:id/invitations/:userId', async (req, res) => {
+  const { id, userId } = challengeInvitationParamsSchema.parse(req.params);
+  res.json(await service.withdraw(req.userId, id, userId));
 });
 router.get('/:id/leaderboard', async (req, res) => {
   const { id } = challengeIdParamsSchema.parse(req.params);
@@ -253,4 +302,47 @@ export default router;
  *             schema: { $ref: '#/components/schemas/ChallengeLeaderboard' }
  *       '403': { description: Invitation acceptance required }
  *       '404': { $ref: '#/components/responses/ChallengeUnavailable' }
+ */
+
+/**
+ * @swagger
+ * /v2/challenges/{id}/target:
+ *   parameters:
+ *     - { $ref: '#/components/parameters/ChallengeId' }
+ *   put:
+ *     summary: Set own lobby target and clear Ready using an expected revision
+ *     tags: [Challenges]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema: { $ref: '#/components/schemas/ChallengeTarget' }
+ *     responses:
+ *       '200': { $ref: '#/components/responses/ChallengeDetailResult' }
+ *       '409': { description: Locked lobby or obsolete target revision }
+ * /v2/challenges/{id}/ready:
+ *   parameters:
+ *     - { $ref: '#/components/parameters/ChallengeId' }
+ *   put:
+ *     summary: Confirm or revoke own Ready state; the server atomically locks an all-ready lobby
+ *     tags: [Challenges]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema: { $ref: '#/components/schemas/ChallengeReady' }
+ *     responses:
+ *       '200': { $ref: '#/components/responses/ChallengeDetailResult' }
+ *       '409': { description: Locked lobby or obsolete target revision }
+ * /v2/challenges/{id}/invitations/{userId}:
+ *   parameters:
+ *     - { $ref: '#/components/parameters/ChallengeId' }
+ *     - { in: path, name: userId, required: true, schema: { type: string, format: uuid } }
+ *   delete:
+ *     summary: Creator withdraws a pending invitation from an unlocked goal lobby
+ *     tags: [Challenges]
+ *     responses:
+ *       '200': { $ref: '#/components/responses/ChallengeDetailResult' }
+ *       '403': { description: Creator authorization required }
+ *       '409': { description: Locked lobby or invitation no longer pending }
  */
