@@ -1,3 +1,5 @@
+import { remoteInvitationDataSchema } from '@workspace/shared';
+import { resolveRemotePushAccount } from './remotePushIdentity';
 import { Alert, AppState, Linking, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
@@ -215,6 +217,20 @@ export async function initNotifications(): Promise<void> {
   try {
     Notifications.setNotificationHandler({
       handleNotification: async (notification) => {
+        const data = notification.request.content.data;
+        if (data?.type === 'challenge_invitation') {
+          const parsed = remoteInvitationDataSchema.safeParse(data);
+          const allowed =
+            parsed.success &&
+            (await resolveRemotePushAccount(parsed.data.accountGuard));
+          if (!allowed)
+            return {
+              shouldShowBanner: false,
+              shouldShowList: false,
+              shouldPlaySound: false,
+              shouldSetBadge: false,
+            };
+        }
         const category = notification.request.content.categoryIdentifier;
         const isMedReminder = category === MEDICATION_REMINDER_CATEGORY;
         const isRestPing = category === REST_COMPLETE_CATEGORY;

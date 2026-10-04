@@ -452,3 +452,18 @@ const androidService = require('../../src/services/healthConnectService.ts');
 - Timer sync for timed sets: both sides share one start time (epoch ms). The phone's newest running `setTimerStartedAt` is sent in every `setTargets` update as `setTimers` (one entry at most, for a set not yet logged, because the wrist holds one timer); the watch (`WorkoutSessionStore.applyPhoneTimers`) starts its countdown or stopwatch from that time, never replacing one it started itself, and stops a copied one if the phone drops it without logging the set. A timer started on the wrist is sent as `setTimerStarted` (`onSetTimerStarted` → `applyWatchSetTimerStart`, ignored for another session, a logged set or a start over 3h old) and starts the phone's stopwatch from the same time; a countdown that already ran out does not buzz. A set logged on the wrist clears the phone's stopwatch after its reported duration is written. Last session's time for a timed set rides along as `previousDurationSec` (in the plan and in every `setTargets` update) and the idle watch stopwatch shows it in gray as "Last m:ss"; it is never a target. A timer started on the wrist is kept until it is logged even when the phone times a different set; logging another set leaves a synchronized timer for a different set running; the running timer is stored in the workout snapshot so a relaunch resumes it; a `setTargets` update that arrives before its plan keeps its `setTimers`; and `setTimerStarted` carries `armedAt` so the phone ignores a queued start from an earlier arm of the same session.
 
 - Timed-set sync both ways: the wrist's Stop button sends `setTimerStopped` (`seconds` and that run's `startedAt`); the phone drops its stopwatch and writes the seconds only when `startedAt` is the timer it has (`applyWatchSetTimerStop`), so a stop queued across a later run is ignored. Start and stop ignores are logged to the app log. Only a duration typed on the phone makes the watch count down; the gray "last time" value never does, so a timed set starts at 0 like the phone.
+
+## Remote invitation push source map
+
+- `remotePushRegistration.ts` stores random installation/revision/binding in
+  SecureStore and reconciles captured authenticated server destinations; no tokens
+  in AsyncStorage or logs. `remotePushIdentity.ts` is the dependency-free pre-auth
+  cleanup/foreground guard boundary. `storage.ts` invokes cleanup before removal.
+- `useChallengeSurfaces` shares the existing actor-scoped query state; registration
+  needs global/Challenge/invitation consent and OS permission. Never prompt in the
+  headless hook. Local invitation planning waits for registration and retains its
+  fallback; start/end/ending/lead remain local.
+- `challengeSurfaceLinking` accepts validated metadata and current-account guard,
+  never a remote URL. The identity resolver enables Firebase/remote registration
+  only for the owned production phone. Do not add FCM to Wear or widget targets.
+- See `../docs/fork/REMOTE_PUSH.md` for credential custody and physical acceptance.

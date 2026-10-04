@@ -40,6 +40,7 @@ export function planChallengeNotifications(input: {
   snapshot: CompanionChallengeSnapshot;
   freshResultIds: readonly string[];
   freshList: boolean;
+  remoteInvitations?: boolean;
   preferences: ChallengeNotificationPreferences;
   previous: ChallengeNotificationLedger;
   now: number;
@@ -57,6 +58,7 @@ export function planChallengeNotifications(input: {
         prefs.enabled &&
         previous.enabled &&
         prefs.invitations &&
+        !input.remoteInvitations &&
         !ledger.seen[c.id] &&
         ['active', 'upcoming'].includes(c.lifecycle)
       )

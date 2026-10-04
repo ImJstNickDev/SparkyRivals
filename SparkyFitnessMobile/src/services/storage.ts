@@ -1,3 +1,4 @@
+import { prepareRemotePushIdentityChange } from './remotePushIdentity';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import { CATEGORY_ORDER } from '../HealthMetrics';
@@ -75,6 +76,7 @@ const getRawStoredConfigs = async (): Promise<StoredServerConfig[]> => {
  * Also sets the saved/updated config as the active one.
  */
 export const saveServerConfig = async (config: ServerConfig): Promise<void> => {
+  await prepareRemotePushIdentityChange();
   try {
     const stored = await getRawStoredConfigs();
     const index = stored.findIndex((c) => c.id === config.id);
@@ -304,6 +306,7 @@ export const takeIdentityChangeServerConfigIds = async (): Promise<
 export const setActiveServerConfig = async (
   configId: string
 ): Promise<void> => {
+  await prepareRemotePushIdentityChange();
   try {
     await rememberOutgoingServerConfig(configId);
     await AsyncStorage.setItem(ACTIVE_SERVER_CONFIG_ID_KEY, configId);
@@ -333,6 +336,8 @@ export const setOnServerConfigDeleted = (
  * If the deleted config was active, it clears the active config.
  */
 export const deleteServerConfig = async (configId: string): Promise<void> => {
+  if (configId === (await getActiveServerConfigId()))
+    await prepareRemotePushIdentityChange();
   try {
     let stored = await getRawStoredConfigs();
     stored = stored.filter((config) => config.id !== configId);
@@ -573,6 +578,7 @@ export const loadCollapsedCategories = async (): Promise<string[]> => {
 };
 
 export const clearSessionToken = async (configId: string): Promise<void> => {
+  await prepareRemotePushIdentityChange();
   await SecureStore.deleteItemAsync(sessionTokenSecureStoreKey(configId));
   activeServerConfigCache = undefined;
 };

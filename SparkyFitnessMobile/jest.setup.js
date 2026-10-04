@@ -149,6 +149,10 @@ jest.mock('expo-background-task', () => ({
 jest.mock('expo-notifications', () => {
   let nextId = 1;
   return {
+    getExpoPushTokenAsync: jest
+      .fn()
+      .mockResolvedValue({ data: 'unit-test-routing-value' }),
+    addPushTokenListener: jest.fn(() => ({ remove: jest.fn() })),
     setNotificationHandler: jest.fn(),
     setNotificationChannelAsync: jest.fn().mockResolvedValue(undefined),
     getPermissionsAsync: jest.fn().mockResolvedValue({ status: 'granted' }),

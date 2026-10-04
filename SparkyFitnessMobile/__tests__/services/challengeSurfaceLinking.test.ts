@@ -1,3 +1,7 @@
+import {
+  remotePushRegistration,
+  remoteInvitationsEligible,
+} from '../../src/services/remotePushRegistration';
 import { Linking } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
@@ -26,6 +30,10 @@ jest.mock('expo-constants', () => ({
   default: {
     expoConfig: { name: 'test', slug: 'test', scheme: 'sparkyrivals' },
   },
+}));
+jest.mock('../../src/services/remotePushRegistration', () => ({
+  remotePushRegistration: { accountForGuard: jest.fn() },
+  remoteInvitationsEligible: jest.fn(),
 }));
 beforeEach(() => {
   jest.clearAllMocks();
@@ -128,3 +136,68 @@ it('forwards a verified foreground notification and releases both subscriptions'
   expect(removeNotifications).toHaveBeenCalled();
   expect(removeLinks).toHaveBeenCalled();
 });
+
+const remoteResponse = (extra = {}) =>
+  ({
+    notification: {
+      request: {
+        content: {
+          data: {
+            type: 'challenge_invitation',
+            challengeId: challenge.id,
+            eventId: '10000000-0000-4000-8000-000000000001',
+            accountGuard: '10000000-0000-4000-8000-000000000002',
+            ...extra,
+          },
+        },
+      },
+    },
+  }) as Notifications.NotificationResponse;
+it('constructs remote invitation destinations locally after consent/account verification', async () => {
+  jest.mocked(remoteInvitationsEligible).mockReturnValue(true);
+  jest
+    .mocked(remotePushRegistration.accountForGuard)
+    .mockResolvedValue(`config:${actor}`);
+  jest
+    .mocked(Notifications.getLastNotificationResponseAsync)
+    .mockResolvedValue(remoteResponse());
+  const remoteUrl = await challengeSurfaceLinking.getInitialURL();
+  expect(remoteInvitationsEligible).toHaveBeenCalled();
+  expect(remotePushRegistration.accountForGuard).toHaveBeenCalled();
+  expect(remoteUrl).toBe(
+    getChallengeSurfaceUrl(challenge.id, `config:${actor}`)
+  );
+});
+it.each(['consent', 'guard', 'account', 'url', 'id', 'storage'])(
+  'fails closed on remote %s mismatch',
+  async (reason) => {
+    jest
+      .mocked(remoteInvitationsEligible)
+      .mockReturnValue(reason !== 'consent');
+    jest
+      .mocked(remotePushRegistration.accountForGuard)
+      .mockResolvedValue(
+        reason === 'guard'
+          ? null
+          : reason === 'account'
+            ? 'other:actor'
+            : `config:${actor}`
+      );
+    if (reason === 'storage')
+      jest
+        .mocked(remotePushRegistration.accountForGuard)
+        .mockRejectedValueOnce(new Error('unavailable'));
+    jest
+      .mocked(Notifications.getLastNotificationResponseAsync)
+      .mockResolvedValue(
+        remoteResponse(
+          reason === 'url'
+            ? { url: 'https://untrusted.test' }
+            : reason === 'id'
+              ? { challengeId: '../unsafe' }
+              : {}
+        )
+      );
+    expect(await challengeSurfaceLinking.getInitialURL()).toBeNull();
+  }
+);
