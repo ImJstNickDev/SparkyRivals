@@ -3,7 +3,7 @@
 Milestone 8A release-engineering acceptance completed on the development laptop
 on 2026-10-04. This record distinguishes source, configuration, real binary and
 physical-device evidence. Broader functional QA remains explicitly listed below;
-Milestone 8B is deferred and has not run. PR #10 is ready for review, not merged.
+Milestone 8B is deferred and has not run. PR #10 merged normally as `0bd2420d3deebbc11c84afe76676799b8d87e3dc`.
 
 ## Repository baseline
 
@@ -282,7 +282,7 @@ weight:
 No fake measurement or screenshot seed was used. An actual real-weight Save/server
 ack was not performed in this acceptance; the original capture/send/persist paths
 remain unchanged and covered by source contracts. The reviewer-designated M8A
-blocker is closed. M8A is complete and PR #10 is ready for review, without merging.
+blocker is closed. M8A is complete; PR #10 subsequently merged normally at the maintainer's request.
 Broader authenticated cross-device sync, account clearing, health dedupe, every
 native surface, notifications and accessibility remain explicit
 post-M8A/pre-production QA unless a concrete regression is found.
@@ -423,3 +423,40 @@ and unrelated containers were untouched.
   provision no real server or NPM resources during 8A.
 - Follow [deployment handoff](DEPLOYMENT.md) for separate server bootstrap,
   NPM/TLS, backups/restores and production E2E. No production deployment occurred.
+
+## M8A.5 remote push acceptance — pending
+
+Source work and mocked/disposable integration validation are underway on
+`milestone/remote-push`, based on fork main after upstream sync PR #11.
+[REMOTE_PUSH.md](REMOTE_PUSH.md) records architecture and required real acceptance.
+No remote invitation has yet been demonstrated on either physical phone during
+this milestone. New native builds, Enhanced Push Security live rejection/success,
+notification taps and opt-out/re-enable/account transitions remain pending.
+M8A's previous native acceptance does not prove remote delivery. M8B remains deferred.
+
+### M8A.5 source/config checks (2026-10-04)
+
+- Server `pnpm run validate`: passed. No-DB CI: 452 suites passed, 12 skipped;
+  5,596 tests passed, 467 skipped (26 existing TODO cases).
+- Disposable PostgreSQL 18.3 clean startup through the normal server initializer:
+  passed. Serial Challenge/RLS/push integration: six suites, 400 tests passed.
+- Mobile `pnpm run validate`: passed. Full CI: 509 suites, 7,853 tests passed.
+  Existing translation completeness reports remain; no unrelated translations changed.
+- Frontend consumer `pnpm run validate`: passed, with existing Knip hints.
+- Wear pinned Kotlin/JVM harness: 34 tests passed. APK verifier unit tests: six passed.
+- Clean iOS/Android prebuild and native identity validation: owned development,
+  preview, production and upstream/default passed. Production repeat metadata was
+  identical. Firebase config/plugin is production phone only; Wear omits it. Apple
+  main has APNs entitlement; all four child targets omit remote push entitlement.
+- Bootstrap tests: 11 passed, including external-token import, private permissions,
+  no generation/overwrite and push-enabled missing-secret rejection.
+- Final root Compose built from this checkout and passed disposable local startup,
+  healthy DB/server/frontend, Docker DNS, external-network frontend routing,
+  no backend/database external DNS, zero host ports, bind-only state, logical
+  backup/restore and repeat startup. Containers/test-created networks shut down;
+  private disposable test files were retained, without deleting user data.
+- Docs build/link validation and diff checks passed; existing bundle-size warning
+  remains. Changed-file secret-pattern scan passed before each signed commit.
+
+Native release builds and physical remote delivery are still pending. These results
+are not evidence of APNs/FCM delivery to a real device.

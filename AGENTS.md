@@ -1,6 +1,6 @@
 # AGENTS.md
 
-*Last updated: 2026-10-03*
+*Last updated: 2026-10-04*
 
 This is the repo-root monorepo guide for SparkyFitness. Use it to choose the right package, understand shared repo-level rules, and find the next guide to read.
 
@@ -212,3 +212,10 @@ Keep the upstream license, attribution, history, functionality, and package guid
 This small root section makes fork guidance discoverable from every package
 without copying or replacing upstream instructions.
 <!-- SPARKYRIVALS FORK GUIDANCE END -->
+
+## Remote push boundary
+
+See `docs/fork/REMOTE_PUSH.md`. Remote invitations use Expo Push Service with a
+server-only access token; other Challenge reminders stay local. Never send health,
+score or participant details, log routing tokens, or add direct APNs/FCM/watch
+senders. Device registry/outbox data is private infrastructure, not diary sharing.

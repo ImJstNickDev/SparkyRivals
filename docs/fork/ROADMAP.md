@@ -105,9 +105,9 @@ Editable web/mobile Rematch, local phone notification reconciliation/preferences
 iOS/Android Challenge widgets, an Apple Watch complication and Wear Tile/complication
 reuse existing authoritative data and account-clearing transports. See
 [CHALLENGE_POLISH.md](CHALLENGE_POLISH.md) and [POLISH_VALIDATION.md](POLISH_VALIDATION.md).
-Remote push, recurrence, goals, streak engines and new scoring remain deferred.
+Recurrence, goals, streak engines and new scoring remain deferred. Remote invitation push is scoped separately in 8A.5.
 
-## 8A. Release engineering and local production preparation — complete; PR #10 ready for review
+## 8A. Release engineering and local production preparation — complete; PR #10 merged
 
 PR #8 merged normally at `02d6ab39a98e912c8c60052575fa95950da1d7be`.
 Frozen upstream `e132d4b0192cf474728920e17cbcdbc9f5058d1c` was validated and
@@ -130,12 +130,22 @@ blocker. The source fix keeps First check-in inside Entry without blocking other
 pages. Full EAS build 1006 and exported identity/profile checks passed. On
 2026-10-04 the maintainer confirmed physical Series 7 first-run display, swiping to
 Challenges, the unsynced state and return to the usable Entry form without entering
-or saving weight. M8A release-engineering acceptance is complete; PR #10 is ready
-for review and remains unmerged. An actual check-in Save/ack, broader authenticated
+or saving weight. M8A release-engineering acceptance is complete; PR #10 merged normally at
+`0bd2420d3deebbc11c84afe76676799b8d87e3dc`. An actual check-in Save/ack, broader authenticated
 sync, account clearing, health dedupe, native surfaces, notifications and
 accessibility acceptance remain explicitly post-M8A/pre-production QA. See
 [release evidence](RELEASE_VALIDATION.md), [BUILDING.md](BUILDING.md) and
 [DEPLOYMENT.md](DEPLOYMENT.md). Source tests do not waive device acceptance.
+
+## 8A.5. Secure remote invitation push — implementation/acceptance in progress
+
+Frozen upstream `9bae67beb0c909e225dc60c6a336c78269c130c9` synchronized through
+fork PR #11 (normal merge `6ff1fa32bdc27d6e7fa0144e49c69eb0c0b2e4ba`).
+The milestone branch is `milestone/remote-push`. Scope is opt-in phone registration,
+private durable invitation delivery through authenticated Expo Push, local fallback
+and production-only Firebase client config. Native/physical push acceptance is
+pending; this milestone is **not yet complete**. See [REMOTE_PUSH.md](REMOTE_PUSH.md).
+No direct Watch push, remote start/end/lead scheduler, scoring or production work.
 
 ## 8B. Real production deployment — deferred
 

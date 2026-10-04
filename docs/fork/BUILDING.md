@@ -411,3 +411,12 @@ Challenge complication projection checks. Neither Linux prebuild nor the Kotlin
 protocol harness compiles a Swift/Android application binary. See
 [CHALLENGE_POLISH.md](CHALLENGE_POLISH.md#milestone-8-native-acceptance-checklist-not-executed-here)
 for widget, complication, Tile, actual notification and accessibility acceptance.
+
+## Remote invitation builds (M8A.5)
+
+Owned production phone config includes the checked-in ordinary Firebase client
+file for `sparkyrivals-fb`; dev/preview/upstream omit it. Wear remains free of FCM.
+Reuse existing EAS APNs/FCM V1 credentials and internal production identity profile.
+Allocate Android phone/Wear versions above 1002/1000001002; keep the same permanent
+certificate. EAS remote iOS versions advance beyond 1006. Native and physical push
+acceptance is pending; see [REMOTE_PUSH.md](REMOTE_PUSH.md).

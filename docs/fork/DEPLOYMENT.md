@@ -205,7 +205,6 @@ UID/GID ownership, verify rendered mounts, then start the compatible stack and
 check database/auth/uploads. Test this before trusting the deployment. Never
 silently initialize an empty database because the bind source points elsewhere.
 
-
 ### Operator backup procedure (Milestone 8B)
 
 Choose a private timestamped directory beneath `dockerdata/backups/operator/`.
@@ -245,3 +244,15 @@ backend's normal initializer. Never overwrite a live production database as a
 routine restore test. The local acceptance harness tests logical dump/restore into
 a second disposable DB with existing cluster roles; cross-host role/UID recovery,
 provider credentials and actual off-host retention still require operator acceptance.
+
+## M8A.5 remote push handoff for M8B
+
+Remote push stays disabled by default. Supply the external Expo access token as a
+private `dockerdata/secrets/expo_access_token` file, optionally through bootstrap's
+`--expo-access-token-file` import. Bootstrap never generates/overwrites that token.
+Set `SPARKY_FITNESS_REMOTE_PUSH_ENABLED=true` and
+`EXPO_ACCESS_TOKEN_FILE=/run/secrets/expo_access_token` after importing, then validate
+bootstrap before startup. No APNs/FCM/signing credential belongs on the server.
+Outbound HTTPS to Expo is required. Topology, bind mounts and zero published ports
+are unchanged. See [REMOTE_PUSH.md](REMOTE_PUSH.md) for token rotation, backups,
+disabling delivery and the non-production acceptance boundary. No M8B action has run.
