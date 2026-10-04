@@ -662,7 +662,7 @@ Disposable bind data and private evidence were retained. No user-owned data or
 unrelated containers were removed. Final docs build and 27 local link-target checks
 passed; the branch-wide scan of 71 changed files found no secret material.
 
-## Milestone 8A.6 acceptance in progress
+## Milestone 8A.6 review handoff
 
 M8A and M8A.5 are merged. PR #12 merged normally as
 `8121e261a8e1a19637f047b9b9e0d139738292e3`, including the push-table startup RLS
@@ -671,8 +671,9 @@ and synchronized only through fork PR #13. The M8A.6 branch starts at synchroniz
 main `e2e21f8cd141b622152cf6bc837db2cd97c2e238`.
 
 Current source implements the [Challenge types and lobby contract](CHALLENGE_TYPES.md).
-Acceptance remains in progress; these checks do not establish physical health
-synchronization or Apple Move permission/data availability:
+The automated/build results below are separate from the targeted physical
+acceptance recorded afterward. They do not by themselves establish device data
+availability or exhaustive visual acceptance.
 
 - Server full no-DB CI: 454 files, 5,647 tests passed, 495 DB-gated tests skipped.
   The final CORS/header and repository checks passed separately: 37 tests.
@@ -696,10 +697,214 @@ synchronization or Apple Move permission/data availability:
   tests. Both APKs use `com.imjstnick.sparkyrivals` and the permanent signer SHA-256
   `3E:B2:F9:50:8D:15:9C:C1:50:14:1A:9A:57:0D:37:71:24:4F:59:10:59:D0:AE:09:E9:61:28:1E:B6:42:D5:2A`.
   Artifacts are private under `~/.local/share/sparkyrivals/artifacts/milestone-8a6/android-1007/`.
-  Runtime source corresponds to `312ea4d1d`; subsequent changes before that commit
-  were tests, server CORS and web catalog cleanup, outside these Android binaries.
-- No M8A.6 APK installation, EAS iOS compilation, physical Move-goal import or new
-  Challenge device flow has yet been claimed. Linux has not run Xcode.
+  Runtime source corresponds to `312ea4d1d`; subsequent commits changed docs and
+  the server connection-name projection, with no Android runtime changes.
+- Android phone **1007** and Wear **1000001007** were installed as updates on the
+  physical Galaxy A25 and Galaxy Watch on 2026-10-04, retaining application data.
+  Package versions were read back and both application processes launched.
+  Installation/launch was verified separately from the Challenge flows below.
+- Full EAS iOS production-internal build **1011** completed from
+  `ce332eabf88cf246cf269233e191b0caf34953c6`:
+  [EAS build](https://expo.dev/accounts/imjstnickdev/projects/sparkyrivals/builds/f74c6333-6e4e-48d6-ad93-8e89acfc0916).
+  The exported IPA contains all five expected targets at version 1011, the shared
+  App Group and Apple team, with signed production APNs entitlement only on the
+  phone. The phone binary contains the new MoveGoalModule. The IPA is private at
+  `~/.local/share/sparkyrivals/artifacts/milestone-8a6/ios-1011/`.
+  Compilation ran on EAS; Linux has not run Xcode. The maintainer installed and
+  launched build 1011 on the registered iPhone and logged both phones into the
+  synthetic acceptance accounts. Both displayed the empty Challenges screen
+  without errors. The maintainer subsequently read the Apple Move goal on the
+  physical iPhone, explicitly used it and saved the personal active-calorie goal.
+  An authenticated API readback confirmed a positive saved goal. Its numeric value
+  is excluded from the acceptance report. This confirms on-demand import through
+  the new native module; daily health synchronization is recorded separately below.
+- The maintainer saved steps, distance and active-calorie personal goals through
+  the new screen on both phones. Authenticated API readback matched all three
+  synthetic target values for each account, including kilometers converted to
+  canonical meters. This validates goal configuration, not health ingestion.
+- A separately seeded disposable database and loopback server were prepared for
+  device acceptance. The maintainer authorized a temporary Cloudflare tunnel;
+  its gateway allows only the required app API families, rejects administrative
+  and API-documentation routes and public signup, and initially blocks health
+  writes pending the explicit device-consent step. No test credentials, device
+  routing identifiers or temporary URL are part of this document.
+
+Physical acceptance has also exercised Android Step Goal creation, a three-day
+lobby, the default immediate-start setting, a 9,000-step self target and Ready.
+Server readback confirmed two pending invitations, explicit lobby state and unset
+start/end dates. The invitation picker exposed a functional defect: eligible
+counterparty names are absent from the Family & Friends response and appear as
+indistinguishable “Participant” labels. The Challenge roster itself resolves names
+correctly. The server correction now uses a narrow relationship-name projection:
+only the two relationship parties in self context can read the two names, without
+profile or diary access. Both physical accounts' authenticated API responses now
+contain the counterparty names. Nine real-DB tests and server validation pass;
+the maintainer subsequently confirmed distinguishable invitation-picker names.
+The signed server-only correction is `de2aaeb1fc06e586599e1fd269c726ebef2d496b`.
+The focused RLS/Challenge regression run passed **4 files / 372 tests** (including
+the nine new name-projection cases); API regressions passed **2 files / 33 tests**.
+Docs build also passed. No replacement native artifact was needed for this fix.
+
+Both phones subsequently became Ready with their own saved targets (Android
+9,000; iPhone 12,000). The pending coordinator invitation still correctly kept the
+Challenge in lobby with null dates.
+
+The maintainer withdrew the pending coordinator invitation on Android. Both
+phones then showed locked targets. API readback confirmed one activation, Active
+lifecycle, unchanged 9,000/12,000 targets and inclusive dates 2026-10-05 through
+2026-10-07 in Europe/Rome. The withdrawn participant no longer competes. This
+validates immediate activation and date assignment; real current-day health
+contributions are checked separately below.
+
+The maintainer then created a three-day Step Streak on iPhone with next-full-day
+start enabled. The personal target suggestions remained independent of the first
+Challenge: 8,000 on Android and 10,000 on iPhone, both saved and marked Ready.
+The still-pending coordinator blocked activation. After the coordinator declined
+through its own normal API session, readback confirmed locked targets and Upcoming
+lifecycle for 2026-10-06 through 2026-10-08 in Europe/Rome. The maintainer confirmed
+Upcoming, those dates and noneditable targets on both physical phones.
+
+Both physical watches displayed the goal lobby. Apple Watch showed the age of
+its last received update. Galaxy Watch initially remained unsynchronized while
+the Android phone was open, then displayed the lobby without reinstalling or
+clearing application data. Both Android packages were verified at 1007/1000001007,
+Google Play Services reported the peers reachable, and the actual JS lobby
+projection passed a separate Kotlin phone/envelope/Wear-persistence roundtrip.
+No Wear publication failure appeared in the visible app warnings. Normal Data
+Layer updates currently use nonurgent delivery, a plausible explanation for the
+delay, but the exact cause was not established. This confirms eventual delivery
+and rendering; prompt foreground synchronization remains a review/QA concern.
+
+### Restricted daily health synchronization
+
+The maintainer authorized only Steps, Distance and Active Calories for 2026-10-05
+on the disposable test infrastructure. The gateway validates the entire upload
+against the metric/date/field allowlist, rejecting unrelated health writes; no
+values are recorded in the acceptance log. Background sync and writeback remain
+outside this test.
+
+Both phones reported synchronization completed. The iPhone upload succeeded and
+its canonical Active Calories row is present. Neither phone supplied current-day
+Steps or Distance, and Android supplied none of the three metrics. The maintainer
+confirmed that Samsung Health and Apple activity showed zero steps/distance in
+the newly started day. This is an availability boundary, not evidence of an
+explicit zero record: the Challenge correctly retains missing-data semantics.
+Real Steps/Distance contributions and Android active-energy ingestion remain
+unverified on these devices. No health records were fabricated to fill this gap.
+
+The maintainer created a one-day immediate Move Goal on iPhone, confirmed the
+Apple-imported personal goal suggestion, then chose a **1 kcal test target** for
+this Challenge only. Both phones accepted/confirmed their own target and became
+Ready. The Challenge activated with locked targets; the physical iPhone UI and
+authoritative v3 API both showed an uncapped score above 100 points from the
+synced current-day active energy. The API returned `score_unit=points` and
+`canonical_unit=kcal`; Android's unavailable canonical data remained absent.
+This demonstrates target override and uncapped real-source scoring without
+modifying the underlying health record or the personal goal.
+
+The maintainer then created a two-day immediate Move Goal Streak on Android;
+both phones accepted/confirmed a 1 kcal test target and became Ready. The iPhone
+UI and API showed exactly **one goal day** despite progress above 100%, while
+Android showed zero goal days with missing canonical data. The response used
+`score_unit=goal_days`, retained `canonical_unit=kcal`, and kept the targets
+locked. Progress percentage is secondary and does not multiply goal-day scores.
+
+The maintainer confirmed that Move Goal and Move Goal Streak data also appear on
+both physical watches. This confirms presentation of the new score types, not
+visual acceptance: the Apple Watch Challenge list has text and icons overflowing
+the card boundaries, and the maintainer considers both watch interfaces in need
+of redesign. No screenshot or exhaustive accessibility/layout pass is claimed.
+
+The maintainer also created and accepted a same-day Step Race on the two phones.
+Both showed Active without target configuration or Ready. Authenticated API
+readback confirmed `steps + sum`, two accepted participants and no target/Ready
+values. This physically checks the legacy creation/consent flow; unavailable
+current-day steps still limit verification of real source contributions.
+
+For the final hydration check, the coordinator created a one-day Hydration Goal
+through its normal API session and confirmed its own target/Ready. The maintainer
+accepted on iPhone. The suggested target matched the existing personal
+`water_goal_ml`; acceptance alone left the target unsaved and the participant Not
+Ready. After explicit Save target/Ready, the maintainer recorded one manual drink
+using the normal Dashboard control, with health writeback disabled for the test.
+The restricted gateway admitted one current-day water write and returned 200.
+Authenticated readback confirmed one ledger entry, Challenge actual equal to the
+ordinary canonical water total, the correct target-based points, locked targets
+and unchanged totals on a second leaderboard read. The iPhone displayed fractional
+points. Food-water and provider/writeback deduplication remain covered by
+integration fixtures rather than this single manual physical entry.
+
+The maintainer also reported a prompt notification whose tap opened that result.
+Remote push was disabled on this disposable server; this is local notification
+navigation evidence, not a new Expo/APNs delivery test. The exact local category
+was not captured.
+
+### Maintainer feedback for the M8A.7 review handoff
+
+- The Challenge UI contains too much explanatory text. Let controls, labels and
+  visual hierarchy explain the interaction; reduce the walls of text.
+- Personal activity goals should return to the previous screen after Save. Review
+  saving on back navigation as well, retaining an explicit Save button for clarity.
+  These are requested UX changes, not behavior implemented or validated in M8A.6.
+- The maintainer finds Step Race's explicit start/end-date selection cleaner.
+  Explore those calendar controls for other Challenge types where meaningful in
+  M8A.7. Goal-lobby dates must continue to respect all-ready activation and the
+  immediate/next-full-day rule; this feedback does not change those domain rules.
+- The maintainer reported text that appears not to follow the app language.
+  Source inspection confirms titles, descriptions and buttons use i18n keys with
+  English fallback, while some goal-form units such as steps/minutes remain
+  literal strings. Review missing translations and literal labels separately;
+  translated physical presentation has not been validated. Preserve this feedback
+  in the final reviewer report rather than treating English fallback as complete
+  localization acceptance.
+- Move Goal Streak renders the singular result as “1 goal days” in the secondary
+  progress copy. Correct singular/plural localization during M8A.7; the numeric
+  goal-day result and uncapped secondary progress were physically verified.
+- Hydration points expose six fractional decimal places in the UI. Review client
+  display rounding/precision in M8A.7 while retaining exact server scores, ranking
+  and tie semantics. The maintainer found the prompt notification/result navigation
+  useful; preserve that behavior during the UI work.
+- Expand M8A.7 beyond phone polish to review/redesign the Apple Watch and Wear OS
+  Challenge interfaces. The maintainer reports poor presentation on both watches
+  and a concrete Apple Watch list defect: text and the icon overflow their card.
+  Include watch-sized layout constraints, clipping, readable labels and physical
+  visual checks in the review handoff. Data delivery does not establish UI quality;
+  these defects remain open and were not fixed during M8A.6.
+
+### Acceptance boundaries for review
+
+- **Automated coverage:** the metric/mode matrix, legacy Steps and Workout Time
+  sum regressions, canonical hydration without duplicate food-water contribution,
+  grouped workout calories/distance, fixed-point ties, lifecycle races, target
+  immutability, migration upgrades, RLS recovery and remote-invitation regressions
+  passed. Test run counts above overlap; do not add them as a unique test total.
+- **Physical health-source gaps:** current-day Steps/Distance were unavailable
+  on both phones and active-energy data was unavailable on Android. Qualifying
+  workout calorie/distance contributions were not exercised with a real workout.
+  The iPhone active-energy import and its goal scoring were physically verified.
+- **Other surfaces:** widget, Tile and complication protocol/model/source tests
+  passed, but every new metric was not physically checked on every surface.
+  Exhaustive VoiceOver/TalkBack, translated layouts and web/browser visual QA
+  remain outstanding. Native compilation is not a substitute for these checks.
+- **Push:** M8A.5 registry encryption, deny-all RLS recovery, authenticated sender,
+  invitation outbox and local fallback remain covered by regressions. This session
+  did not repeat real remote delivery; the disposable physical server had remote
+  push disabled and no delivery credentials were changed.
+- **Review status:** source and targeted native acceptance are ready for review;
+  the complete physical acceptance checklist is not certified as passed. M8A.6
+  must not be represented as fully accepted solely because its PR is open.
+
+### End of disposable acceptance session
+
+The owned temporary Cloudflare tunnel was stopped and removed. Both local server
+processes, the gateway and the disposable PostgreSQL container were stopped;
+listeners on 49146, 49147 and 49148 were verified closed. Disposable bind data and
+private evidence were retained; no user-owned persistent data was deleted.
+Temporary gateway upload-authorization flags were removed. The tunnel was not
+reused for production and the test connection will no longer serve the phones.
+
+Final changed-file secret scans and the branch-wide scan of 130 files found no
+new secret material. Documentation build and 39 local link-target checks passed.
 
 M8A.7 visual redesign and M8B production deployment remain deferred. No production
 server, NPM, push credentials or upstream repository was mutated.
