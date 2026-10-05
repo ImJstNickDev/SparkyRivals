@@ -19,6 +19,9 @@ import {
 type WaterExerciseBase = Pick<
   ExpandedGoals,
   | 'water_goal_ml'
+  | 'steps_goal'
+  | 'distance_goal_meters'
+  | 'active_calories_goal'
   | 'target_exercise_calories_burned'
   | 'target_exercise_duration_minutes'
 >;
@@ -41,6 +44,34 @@ export const WaterAndExerciseFields = <T extends WaterExerciseBase>({
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {(
+        [
+          ['steps_goal', 'Daily steps', 1, 'steps'],
+          ['distance_goal_meters', 'Daily distance', 1000, 'km'],
+          ['active_calories_goal', 'Daily active calories', 1, 'kcal'],
+        ] as const
+      ).map(([field, label, factor, unit]) => (
+        <div key={field} className="space-y-1.5">
+          <Label htmlFor={field}>
+            {t(`goals.${field}`, { defaultValue: label })} ({unit})
+          </Label>
+          <Input
+            id={field}
+            type="number"
+            step="any"
+            value={state[field] == null ? '' : Number(state[field]) / factor}
+            onChange={(event) =>
+              setState({
+                ...state,
+                [field]:
+                  event.target.value === ''
+                    ? null
+                    : Number(event.target.value) * factor,
+              })
+            }
+          />
+        </div>
+      ))}
       <div className="space-y-1.5">
         <Label className="text-xs">
           {t('goals.goalsSettings.waterGoal', { unit: water_display_unit })}

@@ -16,12 +16,15 @@ struct ChallengeDetailView: View {
         if let item, let snapshot = store.context.challengeSnapshot {
             ScrollView {
                 VStack(spacing: 10) {
-                    Text(item.isWorkoutTime ? "Workout time" : "Steps").font(.caption2).foregroundStyle(.secondary)
+                    Text(item.metricLabel).font(.caption2).foregroundStyle(.secondary)
                     Text(item.statusLabel).font(.caption2).foregroundStyle(.secondary)
                     Text(item.name).font(.headline).multilineTextAlignment(.center)
                         .accessibilityAddTraits(.isHeader)
                     if item.isInvitation {
                         invitation(item)
+                    } else if item.lifecycle == .lobby {
+                        Text("Waiting for players").font(.headline)
+                        Text("Set target and Ready on iPhone").font(.caption)
                     } else if item.lifecycle == .upcoming {
                         Label("Starts \(ChallengeFormat.date(item.startDate))", systemImage: "calendar")
                             .font(.headline)
@@ -47,8 +50,10 @@ struct ChallengeDetailView: View {
                                 .font(.caption2).foregroundStyle(.secondary)
                         }
                     }
-                    Text("\(ChallengeFormat.date(item.startDate)) – \(ChallengeFormat.date(item.endDate))")
-                        .font(.caption2).foregroundStyle(.secondary)
+                    if item.lifecycle != .lobby {
+                        Text("\(ChallengeFormat.date(item.startDate)) – \(ChallengeFormat.date(item.endDate))")
+                            .font(.caption2).foregroundStyle(.secondary)
+                    }
                     if item.isInvitation || item.lifecycle == .upcoming {
                         Text(item.timezone).font(.caption2).foregroundStyle(.secondary)
                     }
@@ -80,7 +85,7 @@ struct ChallengeDetailView: View {
 
     @ViewBuilder
     private func rules(_ item: WatchChallenge) -> some View {
-        Label(item.isWorkoutTime ? "Workout time · highest total" : "Steps · highest total", systemImage: item.isWorkoutTime ? "timer" : "figure.walk").font(.caption)
+        Label(item.metricLabel, systemImage: item.isWorkoutTime ? "timer" : "figure.walk").font(.caption)
         if let count = item.participantCount {
             Text("\(count) participants").font(.caption).foregroundStyle(.secondary)
         }

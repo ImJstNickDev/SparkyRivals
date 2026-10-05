@@ -1,6 +1,9 @@
+import type { UserGoalsInitializer } from '@workspace/shared';
+type GoalWrite = Omit<UserGoalsInitializer, 'goal_date'> & {
+  goal_date?: string | Date | null;
+};
 import { getClient } from '../db/poolManager.js';
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function getGoalByDate(userId: any, selectedDate: any) {
+async function getGoalByDate(userId: string, selectedDate: string) {
   const client = await getClient(userId); // User-specific operation
   try {
     const result = await client.query(
@@ -9,7 +12,7 @@ async function getGoalByDate(userId: any, selectedDate: any) {
                cholesterol, sodium, potassium, dietary_fiber, sugars,
                vitamin_a, vitamin_c, calcium, iron,
                caffeine_mg, alcohol_g,
-               target_exercise_calories_burned, target_exercise_duration_minutes,
+               target_exercise_calories_burned, target_exercise_duration_minutes, steps_goal, distance_goal_meters, active_calories_goal,
                protein_percentage, carbs_percentage, fat_percentage,
                breakfast_percentage, lunch_percentage, dinner_percentage, snacks_percentage,
                custom_meal_percentages, custom_nutrients
@@ -36,7 +39,7 @@ async function getAllHistoricalGoals(userId: string) {
               cholesterol, sodium, potassium, dietary_fiber, sugars,
               vitamin_a, vitamin_c, calcium, iron,
               caffeine_mg, alcohol_g,
-              target_exercise_calories_burned, target_exercise_duration_minutes,
+              target_exercise_calories_burned, target_exercise_duration_minutes, steps_goal, distance_goal_meters, active_calories_goal,
               protein_percentage, carbs_percentage, fat_percentage,
               breakfast_percentage, lunch_percentage, dinner_percentage, snacks_percentage,
               custom_meal_percentages, custom_nutrients
@@ -66,7 +69,7 @@ async function getGoalsInRange(
               cholesterol, sodium, potassium, dietary_fiber, sugars,
               vitamin_a, vitamin_c, calcium, iron,
               caffeine_mg, alcohol_g,
-              target_exercise_calories_burned, target_exercise_duration_minutes,
+              target_exercise_calories_burned, target_exercise_duration_minutes, steps_goal, distance_goal_meters, active_calories_goal,
               protein_percentage, carbs_percentage, fat_percentage,
               breakfast_percentage, lunch_percentage, dinner_percentage, snacks_percentage,
               custom_meal_percentages, custom_nutrients
@@ -82,8 +85,10 @@ async function getGoalsInRange(
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function getMostRecentGoalBeforeDate(userId: any, selectedDate: any) {
+async function getMostRecentGoalBeforeDate(
+  userId: string,
+  selectedDate: string
+) {
   const client = await getClient(userId); // User-specific operation
   try {
     const result = await client.query(
@@ -92,7 +97,7 @@ async function getMostRecentGoalBeforeDate(userId: any, selectedDate: any) {
                cholesterol, sodium, potassium, dietary_fiber, sugars,
                vitamin_a, vitamin_c, calcium, iron,
                caffeine_mg, alcohol_g,
-               target_exercise_calories_burned, target_exercise_duration_minutes,
+               target_exercise_calories_burned, target_exercise_duration_minutes, steps_goal, distance_goal_meters, active_calories_goal,
                protein_percentage, carbs_percentage, fat_percentage,
                breakfast_percentage, lunch_percentage, dinner_percentage, snacks_percentage,
                custom_meal_percentages, custom_nutrients
@@ -107,8 +112,7 @@ async function getMostRecentGoalBeforeDate(userId: any, selectedDate: any) {
     client.release();
   }
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function upsertGoal(goalData: any) {
+async function upsertGoal(goalData: GoalWrite) {
   const client = await getClient(goalData.user_id); // User-specific operation
   try {
     const result = await client.query(
@@ -121,9 +125,9 @@ async function upsertGoal(goalData: any) {
         protein_percentage, carbs_percentage, fat_percentage,
         breakfast_percentage, lunch_percentage, dinner_percentage, snacks_percentage,
         custom_meal_percentages, custom_nutrients, created_at, updated_at,
-        caffeine_mg, alcohol_g
+        caffeine_mg, alcohol_g, steps_goal, distance_goal_meters, active_calories_goal
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38)
       ON CONFLICT (user_id, COALESCE(goal_date, '1900-01-01'::date))
       DO UPDATE SET
         calories = EXCLUDED.calories,
@@ -157,6 +161,9 @@ async function upsertGoal(goalData: any) {
         custom_nutrients = EXCLUDED.custom_nutrients,
         caffeine_mg = EXCLUDED.caffeine_mg,
         alcohol_g = EXCLUDED.alcohol_g,
+        steps_goal = EXCLUDED.steps_goal,
+        distance_goal_meters = EXCLUDED.distance_goal_meters,
+        active_calories_goal = EXCLUDED.active_calories_goal,
         updated_at = now()
       RETURNING *`,
       [
@@ -195,6 +202,9 @@ async function upsertGoal(goalData: any) {
         new Date(), // for updated_at
         goalData.caffeine_mg,
         goalData.alcohol_g,
+        goalData.steps_goal,
+        goalData.distance_goal_meters,
+        goalData.active_calories_goal,
       ]
     );
     return result.rows[0];
@@ -202,8 +212,11 @@ async function upsertGoal(goalData: any) {
     client.release();
   }
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function deleteGoalsInRange(userId: any, startDate: any, endDate: any) {
+async function deleteGoalsInRange(
+  userId: string,
+  startDate: string,
+  endDate: string
+) {
   const client = await getClient(userId); // User-specific operation
   try {
     await client.query(
@@ -219,8 +232,7 @@ async function deleteGoalsInRange(userId: any, startDate: any, endDate: any) {
     client.release();
   }
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function deleteDefaultGoal(userId: any) {
+async function deleteDefaultGoal(userId: string) {
   const client = await getClient(userId); // User-specific operation
   try {
     await client.query(

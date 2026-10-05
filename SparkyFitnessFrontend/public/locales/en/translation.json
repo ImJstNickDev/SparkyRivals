@@ -2792,7 +2792,10 @@
     "saveAndStart": "Save & Start Plan",
     "saveAsPreset": "Save Preset & Start 6-Month Cascading Goal",
     "savePresetDescription": "Give your goal preset a name. This will save your current configuration for future use and apply it as your plan starting today.",
-    "startCascadingPlan": "Start 6-Month Cascading Plan"
+    "startCascadingPlan": "Start 6-Month Cascading Plan",
+    "steps_goal": "Daily steps",
+    "distance_goal_meters": "Daily distance",
+    "active_calories_goal": "Daily active calories"
   },
   "common": {
     "add": "Add",
@@ -6796,6 +6799,141 @@
     "workoutAcceptHint": "Accept to share daily aggregate workout time and session counts for the whole Challenge date range, including earlier days. Workout details and other health data stay private.",
     "rematch": "Rematch",
     "rematchReview": "Review your rematch. Everyone you invite will choose whether to join again.",
-    "rematchOmitted": "Some previous participants are no longer eligible and have not been selected."
+    "rematchOmitted": "Some previous participants are no longer eligible and have not been selected.",
+    "aggregateConsent": "Only daily aggregates for the chosen metric and your chosen target are shared after acceptance. Other health data stays private.",
+    "cancelledAggregate": "Cancelled. Challenge data sharing has stopped.",
+    "aggregateReconciles": "Results can change when canonical data arrives late, is corrected or deleted. Locked targets stay unchanged.",
+    "withdrawn": "Withdrawn",
+    "targetDisplay": "Daily target: {{target}}",
+    "type": "Challenge type",
+    "metricHint": "Only the chosen daily aggregate is shared after acceptance. Personal targets are confirmed in the lobby and lock when everyone is Ready.",
+    "duration": "Duration in days (1–366)",
+    "nextDay": "Start on next full day",
+    "readyTiming": "Starts when all invitations are resolved and everyone is Ready. With next full day off, the entire current day counts, including activity before activation.",
+    "waitingDates": "Dates set when everyone is Ready",
+    "lobby": "Waiting for players",
+    "noMetricData": "No data recorded",
+    "metricCoverageHint": "Missing data scores zero. It does not mean all devices have synced. Results can change when data is corrected.",
+    "metricLeading": "{{name}} leads by {{value}}",
+    "metricBehind": "{{value}} behind the lead",
+    "metricCoverage": "{{present}} of {{eligible}} elapsed days have data",
+    "yourChallenge": "Your Challenge",
+    "openNamed": "Open {{name}}",
+    "moreParticipants": "Show more participants",
+    "hubTitle": "Every step, together.",
+    "hubDescription": "A little friendly competition. A little more movement.",
+    "startDate": "Start date",
+    "chooseStart": "Choose start date",
+    "endDate": "End date",
+    "chooseEnd": "Choose end date",
+    "timezoneDetails": "Timezone & daily totals",
+    "creatorJoined": "You join automatically. Your friends receive invitations.",
+    "validationError": "Add a name, a valid timezone and a date range of 1–366 days starting today or within the next year.",
+    "surfaces": {
+      "empty": "No Challenges. Create one in the app.",
+      "notSynced": "Open the app to sync Challenges.",
+      "steps": "{{value}} steps",
+      "tied": "Tied for the lead",
+      "ahead": "Ahead by {{value}}",
+      "behind": "{{value}} behind",
+      "invitation": "Invitation · Review in the app",
+      "lobby": "Waiting for players · Ready in the app",
+      "upcoming": "Starts {{date}}",
+      "completed": "Completed · Reconciled results",
+      "remaining": "{{number}} days remaining",
+      "rank": "Rank {{rank}} of {{participants}}",
+      "stale": "May be out of date"
+    },
+    "progressRules": "Each day earns actual ÷ your target × 100 points, without a cap. Points accumulate; equal points tie.",
+    "goalDayRules": "Each day at or above your target counts once. Equal goal-day totals tie.",
+    "lobbyRules": "At least two people must join. Pending invitations block the start. Choose your own target, save it and press Ready. Targets lock when everyone is Ready.",
+    "nextDayHint": "When everyone is Ready, targets lock and scoring starts on the next full day in the Challenge timezone.",
+    "immediateHint": "When everyone is Ready, scoring starts immediately. The entire current Challenge-local day counts, including earlier activity.",
+    "withdraw": "Withdraw invitation",
+    "dailyTarget": "Your daily target ({{unit}})",
+    "goalSuggested": "Suggested from your personal goal. You can choose a different target for this Challenge.",
+    "saveTarget": "Save target",
+    "invalidTarget": "Enter a positive target with at most six decimal places in the canonical unit.",
+    "ready": "Ready",
+    "notReady": "Not ready",
+    "unready": "Not ready",
+    "lockedTargets": "Locked daily targets",
+    "durationReview_one": "{{count}} calendar day",
+    "durationReview_other": "{{count}} calendar days",
+    "groups": {
+      "movement": "Movement",
+      "workout": "Workout",
+      "hydration": "Hydration"
+    },
+    "membership": {
+      "accepted": "Accepted",
+      "pending": "Pending",
+      "declined": "Declined",
+      "left": "Left",
+      "withdrawn": "Withdrawn"
+    },
+    "units": {
+      "steps": "steps",
+      "meters": "distance",
+      "kcal": "kcal",
+      "seconds": "workout time",
+      "milliliters": "hydration",
+      "points": "points",
+      "goal_days": "goal days"
+    },
+    "types": {
+      "step-race": "Step Race",
+      "step-goal": "Step Goal",
+      "step-streak": "Step Streak",
+      "distance-race": "Distance Race",
+      "distance-goal": "Distance Goal",
+      "distance-streak": "Distance Streak",
+      "active-calories": "Active Calories",
+      "move-goal": "Move Goal",
+      "move-streak": "Move Goal Streak",
+      "workout-minutes": "Workout Minutes",
+      "workout-minutes-goal": "Workout Minutes Goal",
+      "workout-minutes-streak": "Workout Minutes Streak",
+      "workout-calories": "Workout Calories",
+      "workout-calorie-goal": "Workout Calorie Goal",
+      "workout-calorie-streak": "Workout Calorie Streak",
+      "workout-distance": "Workout Distance",
+      "hydration-goal": "Hydration Goal",
+      "hydration-streak": "Hydration Streak"
+    },
+    "typeLabels": {
+      "steps": {
+        "sum": "Step Race",
+        "goal_progress": "Step Goal",
+        "goal_days": "Step Streak"
+      },
+      "distance": {
+        "sum": "Distance Race",
+        "goal_progress": "Distance Goal",
+        "goal_days": "Distance Streak"
+      },
+      "active_calories": {
+        "sum": "Active Calories",
+        "goal_progress": "Move Goal",
+        "goal_days": "Move Goal Streak"
+      },
+      "workout_time": {
+        "sum": "Workout Minutes",
+        "goal_progress": "Workout Minutes Goal",
+        "goal_days": "Workout Minutes Streak"
+      },
+      "workout_calories": {
+        "sum": "Workout Calories",
+        "goal_progress": "Workout Calorie Goal",
+        "goal_days": "Workout Calorie Streak"
+      },
+      "workout_distance": {
+        "sum": "Workout Distance"
+      },
+      "hydration": {
+        "goal_progress": "Hydration Goal",
+        "goal_days": "Hydration Streak"
+      }
+    }
   }
 }

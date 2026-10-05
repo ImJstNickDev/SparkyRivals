@@ -15,6 +15,7 @@ import {
 } from '../fixtures/challenges';
 jest.mock('@/api/api', () => ({ apiCall: jest.fn() }));
 const api = jest.mocked(apiCall);
+const headers = { 'X-Challenge-Contract-Version': '3' };
 beforeEach(() => jest.resetAllMocks());
 describe('Challenge API', () => {
   it('parses list pages', async () => {
@@ -27,6 +28,7 @@ describe('Challenge API', () => {
     expect((await challengeApi.list(20)).challenges).toEqual([challenge]);
     expect(api).toHaveBeenCalledWith('/v2/challenges', {
       params: { limit: 20, offset: 20 },
+      headers,
     });
   });
   it('reads detail and authoritative results', async () => {
@@ -49,11 +51,12 @@ describe('Challenge API', () => {
     await challengeApi.invite(challenge.id, peer);
     expect(api).toHaveBeenCalledWith(`/v2/challenges/${challenge.id}`, {
       method: 'PATCH',
+      headers,
       body: { name: 'Together' },
     });
     expect(api).toHaveBeenCalledWith(
       `/v2/challenges/${challenge.id}/invitations`,
-      { method: 'POST', body: { user_id: peer } }
+      { method: 'POST', headers, body: { user_id: peer } }
     );
   });
   it.each(['accept', 'decline', 'leave', 'cancel'] as const)(
@@ -63,7 +66,7 @@ describe('Challenge API', () => {
       await challengeApi.respond(challenge.id, action);
       expect(api).toHaveBeenCalledWith(
         `/v2/challenges/${challenge.id}/${action}`,
-        { method: 'POST', body: {} }
+        { method: 'POST', headers, body: {} }
       );
     }
   );

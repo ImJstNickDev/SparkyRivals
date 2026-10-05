@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import com.sparkyrivals.companion.allowedSurfaceDestination
 import androidx.compose.runtime.key
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
@@ -36,7 +37,6 @@ import com.sparkyrivals.companion.ChallengeItem
 import com.sparkyrivals.companion.ChallengeProtocol
 import com.sparkyrivals.companion.ChallengeRow
 import com.sparkyrivals.companion.ChallengeSnapshot
-import com.sparkyrivals.companion.workoutDurationParts
 import java.text.NumberFormat
 import java.time.Instant
 import java.time.LocalDate
@@ -72,7 +72,7 @@ fun ChallengeApp(state: CompanionState, now: Long, surfaceLink: Pair<String?,Str
                                 items(snapshot.items.size, key = { snapshot.items[it].id }) { index ->
                                     val item = snapshot.items[index]
                                     Button(onClick = { nav.navigate("detail/${Uri.encode(item.id)}") }, modifier = Modifier.fillMaxWidth(),
-                                        secondaryLabel = { Text(stringResource(if (item.metric == "workout_time") R.string.workout_time else R.string.steps_label) + " · " + status(item)) }, label = { Text(item.name) })
+                                        secondaryLabel = { Text(metricLabel(LocalContext.current,item) + " · " + status(item)) }, label = { Text(item.name) })
                                 }
                                 if (snapshot.hasMore) item { Hint(stringResource(R.string.more_phone)) }
                                 item { Freshness(snapshot, now) }
@@ -111,6 +111,7 @@ private fun WearList(content: TransformingLazyColumnScope.() -> Unit) {
     color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
 @Composable private fun status(item: ChallengeItem): String = stringResource(when {
     item.membership == "pending" -> R.string.invitation
+    item.lifecycle == "lobby" -> R.string.lobby
     item.lifecycle == "upcoming" -> R.string.upcoming
     item.lifecycle == "completed" -> R.string.completed
     else -> R.string.active
@@ -120,17 +121,18 @@ private fun day(value: String) = LocalDate.parse(value).format(DateTimeFormatter
 
 @Composable
 fun ChallengeDetail(item: ChallengeItem, snapshot: ChallengeSnapshot, now: Long) = WearList {
-    item { Hint(stringResource(if (item.metric == "workout_time") R.string.workout_time else R.string.steps_label)) }
+    item { Hint(metricLabel(LocalContext.current,item)) }
     item { Hint(status(item)) }
     item { Heading(item.name) }
     when {
         item.membership == "pending" -> {
             item { Heading(stringResource(if (item.lifecycle == "completed") R.string.review_phone else R.string.accept_phone)) }
-            item { Hint(stringResource(if (item.metric == "workout_time") R.string.workout_rule else R.string.steps_rule)) }
+            item { Hint(stringResource(when(item.scoringMode){ "goal_progress" -> R.string.goal_progress_rule; "goal_days" -> R.string.goal_days_rule; else -> R.string.sum_rule })) }
         }
+        item.lifecycle == "lobby" -> { item { Heading(stringResource(R.string.ready_phone)) } }
         item.lifecycle == "upcoming" -> {
             item { Heading(stringResource(R.string.start_date, day(item.startDate))) }
-            item { Hint(stringResource(if (item.metric == "workout_time") R.string.workout_rule else R.string.steps_rule)) }
+            item { Hint(stringResource(when(item.scoringMode){ "goal_progress" -> R.string.goal_progress_rule; "goal_days" -> R.string.goal_days_rule; else -> R.string.sum_rule })) }
         }
         else -> {
             val own = item.rows.firstOrNull { it.isSelf }
@@ -139,13 +141,13 @@ fun ChallengeDetail(item: ChallengeItem, snapshot: ChallengeSnapshot, now: Long)
             // Presentation only: 1v1 places self first; group keeps server order/ranks.
             val rows = if (item.participantCount == 2L) item.rows.filter { it.isSelf } + item.rows.filterNot { it.isSelf } else item.rows
             items(rows.size, key = { rows[it].id }) { index -> ParticipantScore(rows[index], item, now, item.participantCount == 2L) }
-            if (item.rows.any { it.daysWithData < it.eligibleDays }) item { Hint(stringResource(if (item.metric == "workout_time") R.string.workout_coverage else R.string.coverage)) }
+            if (item.rows.any { it.daysWithData < it.eligibleDays }) item { Hint(stringResource(R.string.metric_coverage)) }
             if (item.lifecycle == "completed") item { Hint(stringResource(R.string.reconciled)) }
         }
     }
     item.participantCount?.let { count -> item { Hint(pluralStringResource(R.plurals.participants, count.toInt(), count.toInt())) } }
     if (item.lifecycle == "active") item { Heading(pluralStringResource(R.plurals.days_left, item.daysRemaining.toInt(), item.daysRemaining.toInt())) }
-    item { Hint(stringResource(R.string.date_range, day(item.startDate), day(item.endDate))) }
+    if(item.lifecycle!="lobby") item { Hint(stringResource(R.string.date_range, day(item.startDate), day(item.endDate))) }
     item { Hint(item.timezone) }
     item { Freshness(snapshot, now) }
 }
@@ -153,7 +155,7 @@ fun ChallengeDetail(item: ChallengeItem, snapshot: ChallengeSnapshot, now: Long)
     val text = when {
         own.leader && own.tied -> stringResource(R.string.tied_lead)
         own.leader && item.leadMargin != null -> stringResource(R.string.lead, score(item.leadMargin, item))
-        own.gapToLeader != null && own.gapToLeader > 0 -> stringResource(R.string.behind, score(own.gapToLeader, item))
+        own.gapToLeader != null && own.gapToLeader.toDouble() > 0 -> stringResource(R.string.behind, score(own.gapToLeader, item))
         own.rank != null -> stringResource(R.string.rank, number(own.rank))
         else -> null
     }
@@ -174,7 +176,7 @@ fun ChallengeDetail(item: ChallengeItem, snapshot: ChallengeSnapshot, now: Long)
         row.today?.let { point ->
             val today = Instant.ofEpochMilli(now).atZone(ZoneId.of(item.timezone)).toLocalDate().toString()
             Text(if (point.date == today) stringResource(R.string.today) else day(point.date), style = MaterialTheme.typography.labelSmall, color = color)
-            Text(when { !point.eligible -> stringResource(R.string.not_started); !point.present -> stringResource(if (item.metric == "workout_time") R.string.no_workout else R.string.no_steps); else -> score(point.value, item) }, color = color)
+            Text(when { !point.eligible -> stringResource(R.string.not_started); !point.present -> stringResource(noMetricData(item)); else -> score(point.value, item) }, color = color)
         }
     }
 }
@@ -185,9 +187,4 @@ fun ChallengeDetail(item: ChallengeItem, snapshot: ChallengeSnapshot, now: Long)
     }
 }
 
-@Composable private fun score(value: Long, item: ChallengeItem): String {
-    if (item.metric == "steps") return stringResource(R.string.steps, number(value))
-    return workoutDurationParts(value).map { (amount, unit) ->
-        stringResource(when (unit) { "hour" -> R.string.hours_short; "minute" -> R.string.minutes_short; else -> R.string.seconds_short }, number(amount))
-    }.joinToString(" ")
-}
+@Composable private fun score(value: Number, item: ChallengeItem): String = formatScore(LocalContext.current,value,item)

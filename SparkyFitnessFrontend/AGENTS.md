@@ -129,3 +129,7 @@ Completed/cancelled accepted members can open `/challenges/new?rematch=<id>`.
 The existing create form uses `prepareChallengeRematch` from shared for dates and
 eligible former participants; submission remains ordinary create/invite consent.
 See `../docs/fork/CHALLENGE_POLISH.md` and the Challenge screen/helper tests.
+
+## M8A.6 Challenge domain source map
+
+`pages/Challenges/ChallengeLobby.tsx` handles self-target/Ready and creator-only pending withdrawal. Creation maps friendly types to shared metric/mode contracts. The existing Goals editor includes steps/distance/active-energy fields. Request header `X-Challenge-Contract-Version: 3` opts into the extended domain; never calculate rank on clients. See `docs/fork/CHALLENGE_TYPES.md`.

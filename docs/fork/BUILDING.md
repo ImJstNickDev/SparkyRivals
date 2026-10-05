@@ -420,3 +420,15 @@ Reuse existing EAS APNs/FCM V1 credentials and internal production identity prof
 Allocate Android phone/Wear versions above 1002/1000001002; keep the same permanent
 certificate. EAS remote iOS versions advance beyond 1006. Native and physical push
 acceptance is pending; see [REMOTE_PUSH.md](REMOTE_PUSH.md).
+
+## M8A.6 native acceptance
+
+`modules/move-goal` is a local iOS Expo module using existing HealthKit entitlement and Activity Summary authorization on demand. A full new iOS build is required, not a re-sign. Wear protocol/UI source changes also require native compilation. Preserve owned identities, shared phone/Wear signing, monotonic build numbers and existing push credentials. See [CHALLENGE_TYPES.md](CHALLENGE_TYPES.md) and [release evidence](RELEASE_VALIDATION.md).
+
+The acceptance artifacts are Android phone **1007**, Wear **1000001007** and full
+EAS iOS **1011**. Both APKs were signed with the permanent certificate and installed
+on the Galaxy A25/Watch; the iPhone/Apple Watch build compiled through EAS. Artifact
+paths, exact source revisions and physical checks are recorded in the release
+evidence. New distributed builds must advance those numbers. Phone/watch layout,
+accessibility and unavailable physical health-source checks remain explicit QA
+debt; the disposable acceptance server and tunnel are now stopped.

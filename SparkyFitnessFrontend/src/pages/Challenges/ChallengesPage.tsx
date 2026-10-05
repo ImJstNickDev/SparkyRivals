@@ -32,7 +32,7 @@ export default function ChallengesPage() {
       label: t('challenges.invitations', 'Invitations'),
       items: challenges.filter((c) => c.my_membership === 'pending'),
     },
-    ...(['active', 'upcoming', 'completed', 'cancelled'] as const).map(
+    ...(['active', 'lobby', 'upcoming', 'completed', 'cancelled'] as const).map(
       (key) => ({
         key,
         label: statuses[key],

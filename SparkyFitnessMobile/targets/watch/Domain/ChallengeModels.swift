@@ -9,7 +9,7 @@ struct ChallengeSnapshot: Codable, Equatable {
 }
 
 enum ChallengeLifecycle: String, Codable {
-    case upcoming, active, completed
+    case upcoming, active, completed, lobby
 }
 
 struct WatchChallenge: Codable, Equatable, Identifiable {
@@ -30,6 +30,26 @@ struct WatchChallenge: Codable, Equatable, Identifiable {
 
     // Optional so persisted v1 Steps contexts remain decodable.
     var metric: ChallengeMetric? = nil
+    var scoringMode: String? = nil
+    var scoreUnit: String? = nil
+    var unit: String { scoreUnit ?? (metric == .workoutTime ? "seconds" : "steps") }
+    var metricLabel: String { (metric ?? .steps).label }
+    var noData: String {
+        if [.workoutTime, .workoutCalories, .workoutDistance].contains(metric ?? .steps) { return String(localized: "No workout recorded") }
+        return metric == nil || metric == .steps ? String(localized: "No step data") : String(localized: "No data recorded")
+    }
+    func formattedScore(_ value: Double) -> String {
+        let number = value.formatted(.number.precision(.fractionLength(0...6)))
+        switch unit {
+        case "seconds": return ChallengeDurationFormat.string(value)
+        case "meters": return "\((value / 1000).formatted(.number.precision(.fractionLength(0...6)))) km"
+        case "kcal": return "\(number) kcal"
+        case "milliliters": return "\(number) ml"
+        case "points": return String(localized: "\(number) pts")
+        case "goal_days": return String(localized: "\(number) goal days")
+        default: return String(localized: "\(number) steps")
+        }
+    }
     var isWorkoutTime: Bool { metric == .workoutTime }
     var ownRow: ChallengeParticipant? { rows.first(where: \.isSelf) }
     var isVersus: Bool { participantCount == 2 && rows.count == 2 && ownRow != nil }
@@ -64,6 +84,31 @@ struct ChallengeDay: Codable, Equatable {
 enum ChallengeMetric: String, Codable {
     case steps
     case workoutTime = "workout_time"
+    case distance
+    case activeCalories = "active_calories"
+    case workoutCalories = "workout_calories"
+    case workoutDistance = "workout_distance"
+    case hydration
+    var unit: String {
+        switch self {
+        case .steps: return "steps"
+        case .distance, .workoutDistance: return "meters"
+        case .activeCalories, .workoutCalories: return "kcal"
+        case .workoutTime: return "seconds"
+        case .hydration: return "milliliters"
+        }
+    }
+    var label: String {
+        switch self {
+        case .steps: return String(localized: "Steps")
+        case .distance: return String(localized: "Distance")
+        case .activeCalories: return String(localized: "Active calories")
+        case .workoutTime: return String(localized: "Workout time")
+        case .workoutCalories: return String(localized: "Workout calories")
+        case .workoutDistance: return String(localized: "Workout distance")
+        case .hydration: return String(localized: "Hydration")
+        }
+    }
 }
 
 /// Formatting only; integer seconds remain authoritative server values.

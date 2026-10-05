@@ -14,7 +14,9 @@ describe('goalRepository', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (getClient as any).mockResolvedValue(mockClient);
+    vi.mocked(getClient).mockResolvedValue(
+      mockClient as Awaited<ReturnType<typeof getClient>>
+    );
   });
 
   describe('upsertGoal', () => {
@@ -71,13 +73,14 @@ describe('goalRepository', () => {
       expect(mockClient.query).toHaveBeenCalledTimes(1);
       const [sql, params] = mockClient.query.mock.calls[0];
 
-      // Check positional params count ($1 through $35)
-      expect(params).toHaveLength(35);
+      // New activity goals are appended without shifting nutrition parameters.
+      expect(params).toHaveLength(38);
       expect(params[0]).toBe('user-1'); // $1 user_id
       expect(params[1]).toBe('2026-09-05'); // $2 goal_date
       expect(params[2]).toBe(2000); // $3 calories
       expect(params[33]).toBe(300); // $34 caffeine_mg
       expect(params[34]).toBe(14); // $35 alcohol_g
+      expect(params.slice(35)).toEqual([undefined, undefined, undefined]);
 
       // Check SQL includes caffeine_mg and alcohol_g in INSERT and DO UPDATE
       expect(sql).toContain('caffeine_mg');

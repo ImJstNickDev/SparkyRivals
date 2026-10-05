@@ -179,3 +179,7 @@ family, so refreshed results also reach the Watch. Milestone 5 adds a
 projection and a durable Android Data Layer publisher. Watch mutations remain deferred. Milestone 7 adds read-only native surfaces
 and Rematch/local notifications; see [CHALLENGE_POLISH.md](CHALLENGE_POLISH.md). No service deployment or Docker persistence change is involved:
 production remains a separate checkout with bind-mounted `dockerdata/` only.
+
+## Functional Challenge types
+
+M8A.6 adds the existing-component type selector, dated personal activity goals and self-target/Ready/withdrawal lobby controls to phone/web. It introduces no visual redesign. See [CHALLENGE_TYPES.md](CHALLENGE_TYPES.md); M8A.7 owns polish.

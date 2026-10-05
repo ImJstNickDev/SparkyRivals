@@ -57,4 +57,21 @@
     <string name="surface_time_short">Time</string>
     <string name="surface_invite_short">Invite</string>
     <string name="surface_soon_short">Soon</string>
+    <string name="distance_label">Distance</string>
+    <string name="active_calories_label">Active calories</string>
+    <string name="workout_calories_label">Workout calories</string>
+    <string name="workout_distance_label">Workout distance</string>
+    <string name="hydration_label">Hydration</string>
+    <string name="no_metric_data">No data recorded</string>
+    <string name="lobby">Waiting for players</string>
+    <string name="ready_phone">Set target and Ready on phone</string>
+    <string name="sum_rule">Highest accumulated total wins</string>
+    <string name="goal_progress_rule">Personal target progress earns uncapped points</string>
+    <string name="goal_days_rule">Each day reaching your target counts once</string>
+    <string name="metric_coverage">Missing data does not mean all devices have synced.</string>
+    <string name="distance_value">%1$s km</string>
+    <string name="calorie_value">%1$s kcal</string>
+    <string name="hydration_value">%1$s ml</string>
+    <string name="points_value">%1$s pts</string>
+    <string name="goal_days_value">%1$s goal days</string>
 </resources>

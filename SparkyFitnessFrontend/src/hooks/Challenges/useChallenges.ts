@@ -77,6 +77,9 @@ export function useChallengeConnections() {
 }
 type ChallengeCommand =
   | { action: 'create'; body: CreateChallengeRequest }
+  | { action: 'target'; id: string; target: number; revision: number }
+  | { action: 'ready'; id: string; ready: boolean; revision: number }
+  | { action: 'withdraw'; id: string; userId: string }
   | { action: 'rename'; id: string; name: string }
   | { action: 'invite'; id: string; userId: string }
   | { action: 'accept' | 'decline' | 'leave' | 'cancel'; id: string };
@@ -94,6 +97,20 @@ export function useChallengeMutation() {
           return challengeApi.create(command.body);
         case 'rename':
           return challengeApi.rename(command.id, command.name);
+        case 'target':
+          return challengeApi.target(
+            command.id,
+            command.target,
+            command.revision
+          );
+        case 'ready':
+          return challengeApi.ready(
+            command.id,
+            command.ready,
+            command.revision
+          );
+        case 'withdraw':
+          return challengeApi.withdraw(command.id, command.userId);
         case 'invite':
           return challengeApi.invite(command.id, command.userId);
         default:

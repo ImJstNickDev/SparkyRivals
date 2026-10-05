@@ -24,22 +24,32 @@ export function describeChallenge(
   now = new Date()
 ): ChallengeResponse {
   const today = instantToDay(now, challenge.timezone);
-  const totalDays = daysBetween(challenge.start_date, challenge.end_date) + 1;
+  const totalDays =
+    challenge.duration_days ??
+    (challenge.start_date && challenge.end_date
+      ? daysBetween(challenge.start_date, challenge.end_date) + 1
+      : 1);
   const lifecycle = challenge.cancelled_at
     ? 'cancelled'
-    : today < challenge.start_date
-      ? 'upcoming'
-      : today > challenge.end_date
-        ? 'completed'
-        : 'active';
+    : !challenge.start_date || !challenge.end_date
+      ? 'lobby'
+      : today < challenge.start_date
+        ? 'upcoming'
+        : today > challenge.end_date
+          ? 'completed'
+          : 'active';
   const elapsed = Math.max(
     0,
-    Math.min(totalDays, daysBetween(challenge.start_date, today))
+    Math.min(
+      totalDays,
+      challenge.start_date ? daysBetween(challenge.start_date, today) : 0
+    )
   );
   return {
     ...challenge,
     created_at: challenge.created_at.toISOString(),
     updated_at: challenge.updated_at.toISOString(),
+    locked_at: challenge.locked_at?.toISOString() ?? null,
     cancelled_at: challenge.cancelled_at?.toISOString() ?? null,
     lifecycle,
     progress: {
@@ -56,6 +66,8 @@ function describeParticipant(
 ): ChallengeParticipantResponse {
   return {
     ...row,
+    ready_at: row.ready_at?.toISOString() ?? null,
+    withdrawn_at: row.withdrawn_at?.toISOString() ?? null,
     invited_at: row.invited_at.toISOString(),
     accepted_at: row.accepted_at?.toISOString() ?? null,
     declined_at: row.declined_at?.toISOString() ?? null,
@@ -77,9 +89,10 @@ async function detail(
 }
 async function list(
   actor: string,
-  query: ChallengeListQuery
+  query: ChallengeListQuery,
+  includeNewTypes = true
 ): Promise<ChallengeListResponse> {
-  const rows = await repository.list(actor, query);
+  const rows = await repository.list(actor, query, includeNewTypes);
   const now = new Date();
   return {
     challenges: rows
@@ -95,7 +108,10 @@ async function create(
 ): Promise<ChallengeDetailResponse> {
   const parsed = createChallengeRequestSchema.parse(input);
   const today = instantToDay(new Date(), parsed.timezone);
-  if (parsed.start_date < today || daysBetween(today, parsed.start_date) > 366)
+  if (
+    parsed.start_date &&
+    (parsed.start_date < today || daysBetween(today, parsed.start_date) > 366)
+  )
     throw new ChallengeError(
       400,
       'Start date must be today or within the next 366 days'
@@ -120,7 +136,8 @@ async function invite(
     throw new ChallengeError(409, 'Creator participates automatically');
   if (
     challenge.lifecycle === 'completed' ||
-    challenge.lifecycle === 'cancelled'
+    challenge.lifecycle === 'cancelled' ||
+    challenge.locked_at
   )
     throw new ChallengeError(409, 'Invitations are closed');
   try {
@@ -174,7 +191,7 @@ async function update(
   if (
     challenge.lifecycle === 'completed' ||
     challenge.lifecycle === 'cancelled' ||
-    ('name' in change && challenge.lifecycle !== 'upcoming')
+    ('name' in change && !['upcoming', 'lobby'].includes(challenge.lifecycle))
   )
     throw new ChallengeError(
       409,
@@ -192,4 +209,85 @@ async function update(
     return rethrowChallengeWriteError(error);
   }
 }
-export default { create, detail, list, invite, respond, update };
+async function configure(
+  actor: string,
+  id: string,
+  intent:
+    | { target_value: number; expected_revision: number }
+    | { ready: boolean; expected_revision: number }
+): Promise<ChallengeDetailResponse> {
+  const { challenge, participants } = await detail(actor, id);
+  const own = participants.find((row) => row.user_id === actor);
+  // A retry of the final Ready after activation is successful without mutating the lock.
+  if (
+    'ready' in intent &&
+    intent.ready &&
+    challenge.locked_at &&
+    own?.ready_at &&
+    own.target_revision === intent.expected_revision
+  )
+    return detail(actor, id);
+  if (challenge.lifecycle !== 'lobby' || challenge.my_membership !== 'accepted')
+    throw new ChallengeError(
+      409,
+      'Target and readiness are locked or unavailable'
+    );
+  try {
+    const changed =
+      'target_value' in intent
+        ? await repository.configureTarget(
+            actor,
+            id,
+            intent.target_value,
+            intent.expected_revision
+          )
+        : await repository.setReady(
+            actor,
+            id,
+            intent.ready,
+            intent.expected_revision
+          );
+    if (!changed)
+      throw new ChallengeError(
+        409,
+        'Target changed; refresh before confirming'
+      );
+    return detail(actor, id);
+  } catch (error) {
+    return rethrowChallengeWriteError(error);
+  }
+}
+async function withdraw(
+  actor: string,
+  id: string,
+  userId: string
+): Promise<ChallengeDetailResponse> {
+  const { challenge } = await detail(actor, id);
+  if (challenge.creator_user_id !== actor)
+    throw new ChallengeError(
+      403,
+      'Only the creator can withdraw an invitation'
+    );
+  if (challenge.lifecycle !== 'lobby')
+    throw new ChallengeError(409, 'Invitations are locked');
+  try {
+    if (!(await repository.withdraw(actor, id, userId)))
+      throw new ChallengeError(
+        409,
+        'Only pending invitations can be withdrawn'
+      );
+    return detail(actor, id);
+  } catch (error) {
+    return rethrowChallengeWriteError(error);
+  }
+}
+export default {
+  create,
+  detail,
+  list,
+  invite,
+  respond,
+  update,
+  configure,
+  withdraw,
+};

@@ -26,6 +26,19 @@ export const userGoalsSchema = z.object({
   iron: z.number().nullable(),
   caffeine_mg: z.number().nullable(),
   alcohol_g: z.number().nullable(),
+  steps_goal: z.number().positive().max(1_000_000_000).nullable().optional(),
+  distance_goal_meters: z
+    .number()
+    .positive()
+    .max(1_000_000_000)
+    .nullable()
+    .optional(),
+  active_calories_goal: z
+    .number()
+    .positive()
+    .max(1_000_000_000)
+    .nullable()
+    .optional(),
   target_exercise_calories_burned: z.number().nullable(),
   target_exercise_duration_minutes: z.number().nullable(),
   protein_percentage: z.number().nullable(),
@@ -65,6 +78,19 @@ export const userGoalsInitializerSchema = z.object({
   iron: z.number().optional().nullable(),
   caffeine_mg: z.number().optional().nullable(),
   alcohol_g: z.number().optional().nullable(),
+  steps_goal: z.number().positive().max(1_000_000_000).nullable().optional(),
+  distance_goal_meters: z
+    .number()
+    .positive()
+    .max(1_000_000_000)
+    .nullable()
+    .optional(),
+  active_calories_goal: z
+    .number()
+    .positive()
+    .max(1_000_000_000)
+    .nullable()
+    .optional(),
   target_exercise_calories_burned: z.number().optional().nullable(),
   target_exercise_duration_minutes: z.number().optional().nullable(),
   protein_percentage: z.number().optional().nullable(),
@@ -104,6 +130,19 @@ export const userGoalsMutatorSchema = z.object({
   iron: z.number().optional().nullable(),
   caffeine_mg: z.number().optional().nullable(),
   alcohol_g: z.number().optional().nullable(),
+  steps_goal: z.number().positive().max(1_000_000_000).nullable().optional(),
+  distance_goal_meters: z
+    .number()
+    .positive()
+    .max(1_000_000_000)
+    .nullable()
+    .optional(),
+  active_calories_goal: z
+    .number()
+    .positive()
+    .max(1_000_000_000)
+    .nullable()
+    .optional(),
   target_exercise_calories_burned: z.number().optional().nullable(),
   target_exercise_duration_minutes: z.number().optional().nullable(),
   protein_percentage: z.number().optional().nullable(),

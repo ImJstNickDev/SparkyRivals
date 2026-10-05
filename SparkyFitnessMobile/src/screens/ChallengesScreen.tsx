@@ -42,7 +42,7 @@ export default function ChallengesScreen({
       title: t('challenges.invitations', { defaultValue: 'Invitations' }),
       items: challenges.filter((c) => c.my_membership === 'pending'),
     },
-    ...(['active', 'upcoming', 'completed', 'cancelled'] as const).map(
+    ...(['active', 'lobby', 'upcoming', 'completed', 'cancelled'] as const).map(
       (state) => ({
         title: statuses[state],
         items: challenges.filter(

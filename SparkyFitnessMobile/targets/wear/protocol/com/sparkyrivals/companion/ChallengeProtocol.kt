@@ -26,7 +26,7 @@ object ChallengeProtocol {
     }
     private fun decodeSnapshot(json: JSONObject): ChallengeSnapshot {
         val version = json.number("version")
-        require(version in 1L..2L)
+        require(version in 1L..3L)
         val state = json.text("state", 20)
         require(state == "ready" || state == "unavailable")
         if (state == "unavailable") return ChallengeSnapshot()
@@ -34,30 +34,36 @@ object ChallengeProtocol {
         val time = json.number("generatedAt").also { require(it > 0) }
         val items = json.getJSONArray("items").objects(8).map { item ->
             val metric = if (item.has("metric")) item.text("metric", 20) else "steps"
-            require(metric in listOf("steps", "workout_time"))
-            require(metric != "workout_time" || (version == 2L && item.text("scoreUnit", 20) == "seconds"))
-            require(metric != "steps" || !item.has("scoreUnit") || item.text("scoreUnit", 20) == "steps")
-            val lifecycle = item.text("lifecycle", 20).also { require(it in listOf("active", "upcoming", "completed")) }
+            val mode = if(item.has("scoringMode")) item.text("scoringMode",20) else "sum"
+            val unit = if(item.has("scoreUnit")) item.text("scoreUnit",20) else "steps"
+            val canonical = mapOf("steps" to "steps", "distance" to "meters", "active_calories" to "kcal", "workout_time" to "seconds", "workout_calories" to "kcal", "workout_distance" to "meters", "hydration" to "milliliters")
+            require(metric in canonical && mode in listOf("sum","goal_progress","goal_days"))
+            require(metric != "hydration" || mode != "sum")
+            require(metric != "workout_distance" || mode == "sum")
+            require(unit == when(mode){"goal_progress" -> "points"; "goal_days" -> "goal_days"; else -> canonical[metric]})
+            if(version < 3) require(mode == "sum" && (metric == "steps" || (metric == "workout_time" && version == 2L)))
+            val lifecycle = item.text("lifecycle", 20).also { require(it in listOf("active", "upcoming", "completed", "lobby")) }
+            require(lifecycle != "lobby" || (version == 3L && mode != "sum"))
             val membership = item.text("membership", 20).also { require(it in listOf("accepted", "pending")) }
-            val start = item.day("startDate")
-            val end = item.day("endDate").also { require(it >= start) }
+            val start = if(lifecycle == "lobby") "" else item.day("startDate")
+            val end = if(lifecycle == "lobby") "" else item.day("endDate").also { require(it >= start) }
             val zone = item.text("timezone", 100).also { ZoneId.of(it) }
             val totalDays = item.number("totalDays").also { require(it in 1..366) }
             val daysRemaining = item.number("daysRemaining").also { require(it <= totalDays) }
             val currentDay = item.optionalNumber("currentDay")?.also { require(it in 1..totalDays) }
             val participantCount = item.optionalNumber("participantCount")?.also { require(it in 1..100) }
-            val rows = if (membership == "pending" || lifecycle == "upcoming") emptyList() else item.getJSONArray("rows").objects(4).map { row ->
+            val rows = if (membership == "pending" || lifecycle == "upcoming" || lifecycle == "lobby") emptyList() else item.getJSONArray("rows").objects(4).map { row ->
                 ChallengeRow(
-                    row.text("id", 100), row.text("name", 200), row.bool("isSelf"), row.number("total"),
-                    row.optionalNumber("rank")?.also { require(it in 1..100) }, row.bool("tied"), row.bool("leader"), row.optionalNumber("gapToLeader"),
+                    row.text("id", 100), row.text("name", 200), row.bool("isSelf"), row.score("total", version),
+                    row.optionalNumber("rank")?.also { require(it in 1..100) }, row.bool("tied"), row.bool("leader"), row.optionalScore("gapToLeader", version),
                     row.optJSONObject("today")?.let { point ->
-                        ChallengePoint(point.day("date"), point.number("value"), point.bool("present"), point.bool("eligible"), point.optionalNumber("workoutCount"))
+                        ChallengePoint(point.day("date"), point.score("value", version), point.bool("present"), point.bool("eligible"), point.optionalNumber("workoutCount"))
                     }, row.optionalNumber("daysWithData") ?: row.number("daysWithSteps"), row.number("eligibleDays"), row.optionalNumber("workoutCount")
                 )
             }.also { require(it.map { row -> row.id }.distinct().size == it.size); require(it.count { row -> row.isSelf } <= 1) }
             ChallengeItem(item.text("id", 100), item.text("name", 200), lifecycle, membership, start, end, zone,
                 totalDays, daysRemaining, currentDay,
-                participantCount, item.optionalNumber("leadMargin"), rows, metric)
+                participantCount, item.optionalScore("leadMargin", version), rows, metric, mode, unit)
         }.also { require(it.map { item -> item.id }.distinct().size == it.size) }
         return ChallengeSnapshot(account, state, time, items, json.bool("hasMore"))
     }
@@ -70,27 +76,38 @@ private fun JSONObject.number(key: String): Long {
     require(number.isFinite() && number >= 0 && number <= 9007199254740991.0 && number % 1.0 == 0.0)
     return number.toLong()
 }
+private fun JSONObject.score(key: String, version: Long): Number {
+    if(version < 3) return number(key)
+    val value=(get(key) as? Number ?: error(key)).toDouble()
+    require(value.isFinite() && value >= 0 && value <= 1e30)
+    return value
+}
+private fun JSONObject.optionalScore(key: String, version: Long): Number? = if(!has(key) || isNull(key)) null else score(key,version)
 private fun JSONObject.optionalNumber(key: String): Long? = if (!has(key) || isNull(key)) null else number(key)
 private fun JSONObject.day(key: String): String = text(key, 10).also { require(it.matches(Regex("\\d{4}-\\d{2}-\\d{2}"))); LocalDate.parse(it) }
 private fun JSONArray.objects(max: Int): List<JSONObject> { require(length() <= max); return (0 until length()).map { getJSONObject(it) } }
 
-data class ChallengePoint(val date: String, val value: Long, val present: Boolean, val eligible: Boolean, val workoutCount: Long? = null) {
+data class ChallengePoint(val date: String, val value: Number, val present: Boolean, val eligible: Boolean, val workoutCount: Long? = null) {
     fun json() = JSONObject().put("date", date).put("value", value).put("present", present).put("eligible", eligible).put("workoutCount", workoutCount)
 }
-data class ChallengeRow(val id: String, val name: String, val isSelf: Boolean, val total: Long, val rank: Long?, val tied: Boolean, val leader: Boolean, val gapToLeader: Long?, val today: ChallengePoint?, val daysWithData: Long, val eligibleDays: Long, val workoutCount: Long? = null) {
+data class ChallengeRow(val id: String, val name: String, val isSelf: Boolean, val total: Number, val rank: Long?, val tied: Boolean, val leader: Boolean, val gapToLeader: Number?, val today: ChallengePoint?, val daysWithData: Long, val eligibleDays: Long, val workoutCount: Long? = null) {
     fun json(workout: Boolean = false) = JSONObject().put("id", id).put("name", name).put("isSelf", isSelf).put("total", total).put("rank", rank)
         .put("tied", tied).put("leader", leader).put("gapToLeader", gapToLeader).put("today", today?.json())
         .put(if (workout) "daysWithData" else "daysWithSteps", daysWithData).put("eligibleDays", eligibleDays).put("workoutCount", workoutCount)
 }
-data class ChallengeItem(val id: String, val name: String, val lifecycle: String, val membership: String, val startDate: String, val endDate: String, val timezone: String, val totalDays: Long, val daysRemaining: Long, val currentDay: Long?, val participantCount: Long?, val leadMargin: Long?, val rows: List<ChallengeRow>, val metric: String = "steps") {
+data class ChallengeItem(val id: String, val name: String, val lifecycle: String, val membership: String, val startDate: String, val endDate: String, val timezone: String, val totalDays: Long, val daysRemaining: Long, val currentDay: Long?, val participantCount: Long?, val leadMargin: Number?, val rows: List<ChallengeRow>, val metric: String = "steps", val scoringMode: String = "sum", val scoreUnit: String = if(metric=="workout_time") "seconds" else "steps") {
     fun json() = JSONObject().put("id", id).put("name", name).put("lifecycle", lifecycle).put("membership", membership)
         .put("startDate", startDate).put("endDate", endDate).put("timezone", timezone).put("totalDays", totalDays)
         .put("daysRemaining", daysRemaining).put("currentDay", currentDay).put("participantCount", participantCount)
-        .put("leadMargin", leadMargin).put("rows", JSONArray(rows.map { it.json(metric == "workout_time") }))
-        .also { if (metric == "workout_time") it.put("metric", metric).put("scoreUnit", "seconds") }
+        .put("leadMargin", leadMargin).put("rows", JSONArray(rows.map { it.json(metric != "steps" || scoringMode != "sum") }))
+        .also {
+            if(metric != "steps" || scoringMode != "sum") it.put("metric",metric).put("scoreUnit",scoreUnit)
+            if(scoringMode != "sum" || metric !in listOf("steps","workout_time")) it.put("scoringMode",scoringMode)
+            if(lifecycle == "lobby") { it.remove("startDate"); it.remove("endDate") }
+        }
 }
 data class ChallengeSnapshot(val accountKey: String = "", val state: String = "unavailable", val generatedAt: Long = 0, val items: List<ChallengeItem> = emptyList(), val hasMore: Boolean = false) {
-    fun json() = JSONObject().put("version", if (items.any { it.metric == "workout_time" }) 2 else 1).put("accountKey", accountKey).put("state", state).put("generatedAt", generatedAt)
+    fun json() = JSONObject().put("version", if(items.any { it.scoringMode != "sum" || it.metric !in listOf("steps","workout_time") }) 3 else if (items.any { it.metric == "workout_time" }) 2 else 1).put("accountKey", accountKey).put("state", state).put("generatedAt", generatedAt)
         .put("items", JSONArray(items.map { it.json() })).put("hasMore", hasMore)
 }
 data class ChallengeEnvelope(val publisherId: String, val sequence: Long, val snapshot: ChallengeSnapshot) {

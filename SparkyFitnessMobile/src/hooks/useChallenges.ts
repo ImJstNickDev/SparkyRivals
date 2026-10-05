@@ -111,6 +111,9 @@ export function useChallengeScreenRefresh() {
 }
 type ChallengeCommand =
   | { action: 'create'; body: CreateChallengeRequest }
+  | { action: 'target'; id: string; target: number; revision: number }
+  | { action: 'ready'; id: string; ready: boolean; revision: number }
+  | { action: 'withdraw'; id: string; userId: string }
   | { action: 'rename'; id: string; name: string }
   | { action: 'invite'; id: string; userId: string }
   | { action: 'accept' | 'decline' | 'leave' | 'cancel'; id: string };
@@ -127,6 +130,20 @@ export function useChallengeMutation() {
           return challengesApi.create(command.body);
         case 'rename':
           return challengesApi.rename(command.id, command.name);
+        case 'target':
+          return challengesApi.target(
+            command.id,
+            command.target,
+            command.revision
+          );
+        case 'ready':
+          return challengesApi.ready(
+            command.id,
+            command.ready,
+            command.revision
+          );
+        case 'withdraw':
+          return challengesApi.withdraw(command.id, command.userId);
         case 'invite':
           return challengesApi.invite(command.id, command.userId);
         default:

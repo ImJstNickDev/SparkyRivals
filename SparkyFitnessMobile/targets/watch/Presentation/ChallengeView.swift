@@ -118,6 +118,7 @@ extension WatchChallenge {
         switch lifecycle {
         case .active: return String(localized: "Active")
         case .upcoming: return String(localized: "Upcoming")
+        case .lobby: return String(localized: "Waiting for players")
         case .completed: return String(localized: "Completed")
         }
     }
@@ -125,7 +126,7 @@ extension WatchChallenge {
 
 enum ChallengeFormat {
     static func score(_ value: Double, item: WatchChallenge) -> String {
-        item.isWorkoutTime ? ChallengeDurationFormat.string(value) : String(localized: "\(steps(value)) steps")
+        item.formattedScore(value)
     }
 
     static func steps(_ value: Double) -> String {

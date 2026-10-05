@@ -125,3 +125,5 @@ and remains unmerged. The first-run Watch navigation fix passed physical accepta
 in full EAS build 1006 without entering weight. Broader functional QA remains listed
 in [RELEASE_VALIDATION.md](RELEASE_VALIDATION.md). Milestone 8B production deployment
 is deferred and requires separate authorization.
+
+- [Challenge types, personal goals and Ready lobbies](CHALLENGE_TYPES.md) — M8A.6 domain and compatibility rules.

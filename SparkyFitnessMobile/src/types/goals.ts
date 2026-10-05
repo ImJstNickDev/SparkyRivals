@@ -1,4 +1,7 @@
 export interface DailyGoals {
+  steps_goal?: number | null;
+  distance_goal_meters?: number | null;
+  active_calories_goal?: number | null;
   calories: number;
   protein: number;
   carbs: number;

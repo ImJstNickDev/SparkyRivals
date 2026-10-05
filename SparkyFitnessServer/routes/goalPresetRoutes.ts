@@ -1,3 +1,4 @@
+import { validateActivityGoals } from '../middleware/validateActivityGoals.js';
 import express from 'express';
 import { authenticate } from '../middleware/authMiddleware.js';
 import goalPresetService from '../services/goalPresetService.js';
@@ -20,17 +21,22 @@ const router = express.Router();
  *       201:
  *         description: Goal preset created successfully.
  */
-router.post('/', authenticate, async (req, res, next) => {
-  try {
-    const newPreset = await goalPresetService.createGoalPreset(
-      req.userId,
-      req.body
-    );
-    res.status(201).json(newPreset);
-  } catch (error) {
-    next(error);
+router.post(
+  '/',
+  authenticate,
+  validateActivityGoals(),
+  async (req, res, next) => {
+    try {
+      const newPreset = await goalPresetService.createGoalPreset(
+        req.userId,
+        req.body
+      );
+      res.status(201).json(newPreset);
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 /**
  * @swagger
  * /goal-presets:
@@ -119,24 +125,29 @@ router.get('/:id', authenticate, async (req, res, next) => {
  *       200:
  *         description: Goal preset updated successfully.
  */
-router.put('/:id', authenticate, async (req, res, next) => {
-  try {
-    const updatedPreset = await goalPresetService.updateGoalPreset(
-      req.params.id,
+router.put(
+  '/:id',
+  authenticate,
+  validateActivityGoals(),
+  async (req, res, next) => {
+    try {
+      const updatedPreset = await goalPresetService.updateGoalPreset(
+        req.params.id,
 
-      req.userId,
-      req.body
-    );
-    if (!updatedPreset) {
-      return res
-        .status(404)
-        .json({ message: 'Goal preset not found or not authorized.' });
+        req.userId,
+        req.body
+      );
+      if (!updatedPreset) {
+        return res
+          .status(404)
+          .json({ message: 'Goal preset not found or not authorized.' });
+      }
+      res.status(200).json(updatedPreset);
+    } catch (error) {
+      next(error);
     }
-    res.status(200).json(updatedPreset);
-  } catch (error) {
-    next(error);
   }
-});
+);
 /**
  * @swagger
  * /goal-presets/{id}:

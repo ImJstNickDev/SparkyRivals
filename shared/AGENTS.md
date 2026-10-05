@@ -58,3 +58,7 @@
 invitation metadata. `PushInstallations`, `PushEvents` and `PushDeliveries` mirror
 system-private infrastructure tables; they are not token read APIs. Never add
 scores, health records, participant identity or remote URLs to notification data.
+
+## M8A.6 Challenge domain source map
+
+`src/challenges/types.ts` owns the Challenge combination matrix, target precision and personal-goal suggestion mapping. `format.ts` formats canonical client values; `Challenges.api.zod.ts` validates legacy v1/v2 and negotiated v3 results. Keep metric units separate from score units and preserve null dates for unactivated lobbies. See `docs/fork/CHALLENGE_TYPES.md`.

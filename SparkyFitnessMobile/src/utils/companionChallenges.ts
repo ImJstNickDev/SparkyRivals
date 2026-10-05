@@ -1,3 +1,4 @@
+import { challengeScoreUnit } from '@workspace/shared';
 import type {
   ChallengeLeaderboardResponse,
   ChallengeResponse,
@@ -36,15 +37,19 @@ export function selectCompanionChallenges(
       ? 0
       : c.lifecycle === 'active'
         ? 1
-        : c.lifecycle === 'upcoming'
+        : c.lifecycle === 'lobby'
           ? 2
-          : 3;
+          : c.lifecycle === 'upcoming'
+            ? 3
+            : 4;
   relevant.sort(
     (a, b) =>
       priority(a) - priority(b) ||
       (a.lifecycle === 'upcoming' && b.lifecycle === 'upcoming'
-        ? a.start_date.localeCompare(b.start_date)
-        : b.end_date.localeCompare(a.end_date)) ||
+        ? (a.start_date ?? '').localeCompare(b.start_date ?? '')
+        : (b.end_date ?? b.created_at).localeCompare(
+            a.end_date ?? a.created_at
+          )) ||
       a.id.localeCompare(b.id)
   );
   let completed = 0;
@@ -96,6 +101,7 @@ export function buildCompanionChallenges(input: {
       cached?.data?.challenge.id === challenge.id &&
       cached.data.challenge.lifecycle === challenge.lifecycle &&
       cached.data.challenge.metric === challenge.metric &&
+      cached.data.challenge.scoring_mode === challenge.scoring_mode &&
       cached.data.challenge.my_membership === 'accepted' &&
       cached.data.entries.some((row) => row.user_id === input.actor)
         ? cached.data
@@ -110,15 +116,25 @@ export function buildCompanionChallenges(input: {
           )
         : [];
     items.push({
-      ...(metadata.metric === 'workout_time'
-        ? { metric: 'workout_time' as const, scoreUnit: 'seconds' as const }
-        : {}),
+      ...(metadata.scoring_mode !== 'sum' ||
+      !['steps', 'workout_time'].includes(metadata.metric)
+        ? {
+            metric: metadata.metric,
+            scoringMode: metadata.scoring_mode,
+            scoreUnit: challengeScoreUnit(
+              metadata.metric,
+              metadata.scoring_mode
+            ),
+          }
+        : metadata.metric === 'workout_time'
+          ? { metric: 'workout_time' as const, scoreUnit: 'seconds' as const }
+          : {}),
       id: challenge.id,
       name: clip(metadata.name),
       lifecycle: challenge.lifecycle,
       membership: challenge.my_membership,
-      startDate: metadata.start_date,
-      endDate: metadata.end_date,
+      ...(metadata.start_date ? { startDate: metadata.start_date } : {}),
+      ...(metadata.end_date ? { endDate: metadata.end_date } : {}),
       timezone: metadata.timezone,
       totalDays: metadata.progress.total_days,
       daysRemaining: metadata.progress.days_remaining,
@@ -158,10 +174,12 @@ export function buildCompanionChallenges(input: {
               },
             }
           : {}),
-        ...(metadata.metric === 'workout_time'
+        ...(metadata.metric !== 'steps' || metadata.scoring_mode !== 'sum'
           ? {
               daysWithData: row.coverage.days_with_data ?? 0,
-              workoutCount: row.total_workout_count ?? 0,
+              ...(metadata.metric.startsWith('workout_')
+                ? { workoutCount: row.total_workout_count ?? 0 }
+                : {}),
             }
           : {
               daysWithSteps:
@@ -174,7 +192,11 @@ export function buildCompanionChallenges(input: {
     });
   }
   return {
-    version: items.some((item) => item.metric === 'workout_time') ? 2 : 1,
+    version: items.some((item) => item.scoringMode !== undefined)
+      ? 3
+      : items.some((item) => item.metric === 'workout_time')
+        ? 2
+        : 1,
     accountKey: input.accountKey,
     state: 'ready',
     generatedAt,

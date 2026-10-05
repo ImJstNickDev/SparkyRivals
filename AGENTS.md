@@ -219,3 +219,7 @@ See `docs/fork/REMOTE_PUSH.md`. Remote invitations use Expo Push Service with a
 server-only access token; other Challenge reminders stay local. Never send health,
 score or participant details, log routing tokens, or add direct APNs/FCM/watch
 senders. Device registry/outbox data is private infrastructure, not diary sharing.
+
+## M8A.6 Challenge domain source map
+
+M8A.6 Challenge types: `docs/fork/CHALLENGE_TYPES.md` maps canonical metrics, fixed-point goal scoring, self-only target snapshots and transactional Ready lobbies. Keep existing sum behavior and M8A.5 encrypted invitation push/RLS recovery intact. Mobile/web own target and Ready actions; watches stay read-only.

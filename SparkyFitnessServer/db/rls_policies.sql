@@ -138,6 +138,21 @@ AS $function$
   SELECT NULLIF(current_setting('app.authenticated_user_id', true), '')::uuid;
 $function$;
 
+-- Connection labels do not require access to a contact's private profile.
+-- Project only the two names for a relationship belonging to the self-context
+-- caller. Neither a guessed relationship ID nor a switched context grants access.
+CREATE OR REPLACE FUNCTION public.family_access_display_names(p_access_id uuid)
+RETURNS TABLE(owner_full_name text, family_full_name text)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = pg_catalog, public AS $$
+  SELECT p_owner.full_name, p_family.full_name
+  FROM public.family_access fa
+  LEFT JOIN public.profiles p_owner ON p_owner.id = fa.owner_user_id
+  LEFT JOIN public.profiles p_family ON p_family.id = fa.family_user_id
+  WHERE fa.id = p_access_id
+    AND public.current_user_id() = public.authenticated_user_id()
+    AND public.authenticated_user_id() IN (fa.owner_user_id, fa.family_user_id);
+$$;
+
 
  CREATE OR REPLACE FUNCTION public.get_accessible_users(p_user_id UUID)
     RETURNS TABLE(
@@ -1069,9 +1084,22 @@ USING (
 CREATE POLICY challenge_participant_invite ON public.challenge_participants FOR INSERT
 WITH CHECK (public.owns_challenge(challenge_id) AND invited_by_user_id = public.challenge_actor());
 CREATE POLICY challenge_participant_respond ON public.challenge_participants FOR UPDATE
-USING (user_id = public.challenge_actor())
-WITH CHECK (user_id = public.challenge_actor());
+USING (user_id = public.challenge_actor() OR (status = 'pending' AND public.owns_challenge(challenge_id) AND EXISTS (SELECT 1 FROM public.challenges c WHERE c.id=challenge_id AND c.scoring_mode<>'sum' AND c.locked_at IS NULL AND c.cancelled_at IS NULL)))
+WITH CHECK (user_id = public.challenge_actor() OR (status = 'withdrawn' AND public.owns_challenge(challenge_id)));
 -- No DELETE policies: departure is an audited transition; user deletion cascades.
+
+-- Serialize a self-context member's mutations before locking participant rows.
+-- An invitee has no generic UPDATE permission on the Challenge parent itself.
+CREATE OR REPLACE FUNCTION public.lock_challenge_participation(p_challenge uuid)
+RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public AS $$
+BEGIN
+  IF COALESCE(public.challenge_membership(p_challenge),'') NOT IN ('accepted','pending')
+    OR public.challenge_actor() IS NULL THEN
+    RAISE EXCEPTION 'Challenge unavailable' USING ERRCODE='42501';
+  END IF;
+  PERFORM 1 FROM public.challenges WHERE id=p_challenge FOR UPDATE;
+END;
+$$;
 
 -- Only display names are projected from profiles. Challenge membership never
 -- makes profile/body-measurement rows available through their ordinary policies.
@@ -1079,7 +1107,8 @@ CREATE OR REPLACE FUNCTION public.challenge_roster(p_challenge_id uuid)
 RETURNS TABLE (
   challenge_id uuid, user_id uuid, status text, invited_by_user_id uuid,
   invited_at timestamptz, accepted_at timestamptz, declined_at timestamptz,
-  left_at timestamptz, created_at timestamptz, updated_at timestamptz, display_name text
+  left_at timestamptz, created_at timestamptz, updated_at timestamptz,
+  target_value numeric, ready_at timestamptz, target_revision integer, withdrawn_at timestamptz, display_name text
 )
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path = pg_catalog, public AS $$
   SELECT cp.*, COALESCE(NULLIF(btrim(p.full_name), ''), 'Participant')
@@ -1124,20 +1153,21 @@ $$;
 CREATE OR REPLACE FUNCTION public.challenge_workout_points(p_challenge_id uuid)
 RETURNS TABLE (
   user_id uuid, display_name text, entry_date date,
-  workout_seconds double precision, workout_count integer, data_updated_at timestamptz
+  workout_seconds double precision, workout_count integer, data_updated_at timestamptz, metric_value numeric
 )
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path = pg_catalog, public AS $$
   WITH consent AS MATERIALIZED (
     SELECT c.* FROM public.challenges c
-    WHERE c.id = p_challenge_id AND c.metric = 'workout_time'
+    WHERE c.id = p_challenge_id AND c.metric IN ('workout_time','workout_calories','workout_distance')
       AND c.cancelled_at IS NULL AND public.challenge_membership(c.id) = 'accepted'
   ), members AS MATERIALIZED (
-    SELECT cp.user_id, c.start_date,
+    SELECT cp.user_id, c.metric, c.start_date,
       LEAST(c.end_date, (CURRENT_TIMESTAMP AT TIME ZONE c.timezone)::date) AS through_date
     FROM consent c JOIN public.challenge_participants cp
       ON cp.challenge_id = c.id AND cp.status = 'accepted'
   ), candidates AS (
     SELECT e.id, e.user_id, e.entry_date, e.duration_minutes, e.source_id,
+      m.metric, e.calories_burned, e.distance,
       e.workout_plan_assignment_id, e.updated_at,
       p.id AS parent_id, p.entry_date AS parent_date,
       p.updated_at AS parent_updated_at,
@@ -1161,6 +1191,9 @@ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = pg_catalog, public AS $$
     SELECT user_id, COALESCE(parent_id, id) AS session_id,
       COALESCE(parent_date, entry_date) AS day,
       SUM(duration_minutes) AS minutes,
+      max(metric) AS metric,
+      CASE WHEN bool_and(calories_burned BETWEEN 0 AND 1000000000) THEN SUM(calories_burned) END AS calories,
+      CASE WHEN bool_and(distance IS NULL OR distance BETWEEN 0 AND 1000000000) THEN SUM(distance) * 1000 END AS meters,
       max(GREATEST(updated_at, parent_updated_at, last_completed)) AS changed_at,
       bool_and(NOT synthetic AND duration_minutes >= 0 AND duration_minutes <= 10080) AS valid,
       bool_and(
@@ -1177,15 +1210,89 @@ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = pg_catalog, public AS $$
   ), daily AS (
     -- Round once per participant/day after numeric summation, preserving fractions.
     SELECT user_id, day, round(SUM(minutes) * 60)::double precision AS seconds,
-      count(*)::integer AS sessions, max(changed_at) AS changed_at
+      count(*)::integer AS sessions, max(changed_at) AS changed_at,
+      CASE max(metric) WHEN 'workout_time' THEN round(SUM(minutes) * 60)
+        WHEN 'workout_calories' THEN round(SUM(calories),6)
+        ELSE round(SUM(meters),6) END AS metric_value
     FROM sessions WHERE valid AND performed AND minutes BETWEEN 0 AND 10080
     GROUP BY user_id, day
   )
   SELECT m.user_id, COALESCE(NULLIF(btrim(p.full_name), ''), 'Participant'),
-    d.day, d.seconds, COALESCE(d.sessions, 0), d.changed_at
+    d.day, CASE WHEN m.metric='workout_time' THEN d.seconds END, COALESCE(d.sessions, 0), d.changed_at, d.metric_value
   FROM members m LEFT JOIN public.profiles p ON p.id = m.user_id
   LEFT JOIN daily d ON d.user_id = m.user_id
   ORDER BY m.user_id, d.day;
+$$;
+
+-- Shared canonical daily hydration. SECURITY INVOKER keeps ordinary diary RLS;
+-- the consent projection below calls it only for accepted, date-bounded members.
+CREATE OR REPLACE FUNCTION public.canonical_hydration_days(p_users uuid[], p_start date, p_end date)
+RETURNS TABLE(user_id uuid, entry_date date, water_ml numeric, manual_ml numeric, ledger_ml numeric, food_ml numeric, changed_at timestamptz)
+LANGUAGE sql STABLE SET search_path = pg_catalog, public AS $$
+  WITH ledger AS (
+    SELECT w.user_id,w.entry_date,SUM(w.water_ml) AS ml,
+      COALESCE(SUM(w.water_ml) FILTER (WHERE w.source='manual'),0) AS manual,
+      max(COALESCE(w.updated_at,w.created_at)) AS changed_at
+    FROM public.water_intake w WHERE w.user_id=ANY(p_users) AND w.entry_date BETWEEN p_start AND p_end
+    GROUP BY w.user_id,w.entry_date
+  ), food AS (
+    SELECT fe.user_id,fe.entry_date,
+      SUM(COALESCE(NULLIF(fe.water_ml,0)*fe.quantity/NULLIF(fe.serving_size,0),fe.quantity*public.sf_volume_unit_to_ml(fe.unit),0)) AS ml,
+      max(fe.created_at) AS changed_at
+    FROM public.food_entries fe JOIN public.user_preferences pref ON pref.user_id=fe.user_id AND pref.add_food_water_to_intake
+    WHERE fe.user_id=ANY(p_users) AND fe.entry_date BETWEEN p_start AND p_end
+      AND NOT EXISTS (SELECT 1 FROM public.water_intake_entries wie WHERE wie.food_entry_id=fe.id)
+    GROUP BY fe.user_id,fe.entry_date
+    HAVING SUM(COALESCE(NULLIF(fe.water_ml,0)*fe.quantity/NULLIF(fe.serving_size,0),fe.quantity*public.sf_volume_unit_to_ml(fe.unit),0)) > 0
+  )
+  SELECT COALESCE(l.user_id,f.user_id),COALESCE(l.entry_date,f.entry_date),
+    COALESCE(l.ml,0)+COALESCE(f.ml,0),COALESCE(l.manual,0),COALESCE(l.ml,0),COALESCE(f.ml,0),GREATEST(l.changed_at,f.changed_at)
+  FROM ledger l FULL JOIN food f USING(user_id,entry_date);
+$$;
+
+-- New daily metrics expose only the metric selected by the accepted Challenge.
+CREATE OR REPLACE FUNCTION public.challenge_daily_metric_points(p_challenge uuid)
+RETURNS TABLE(user_id uuid,display_name text,entry_date date,value numeric,data_updated_at timestamptz)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = pg_catalog, public AS $$
+  WITH consent AS MATERIALIZED (
+    SELECT c.* FROM public.challenges c WHERE c.id=p_challenge AND c.cancelled_at IS NULL
+      AND c.metric IN ('distance','active_calories','hydration') AND public.challenge_membership(c.id)='accepted'
+  ), members AS MATERIALIZED (
+    SELECT cp.user_id,c.metric,c.start_date,LEAST(c.end_date,(CURRENT_TIMESTAMP AT TIME ZONE c.timezone)::date) AS through_date
+    FROM consent c JOIN public.challenge_participants cp ON cp.challenge_id=c.id AND cp.status='accepted'
+  ), distances AS (
+    -- Each provider writes a daily TOTAL, never a delta. A newer canonical daily
+    -- reading replaces an older one, including downward corrections. Do not add
+    -- overlapping phone-provider totals. Stable UUID resolves equal timestamps.
+    SELECT DISTINCT ON (cm.user_id,cm.entry_date) cm.user_id,cm.entry_date,
+      CASE lower(cc.measurement_type) WHEN 'm' THEN cm.value::numeric
+        WHEN 'km' THEN cm.value::numeric*1000 WHEN 'mi' THEN cm.value::numeric*1609.344 END AS value,
+      COALESCE(cm.updated_at,cm.created_at) AS changed_at
+    FROM members m JOIN public.custom_measurements cm ON cm.user_id=m.user_id
+    JOIN public.custom_categories cc ON cc.id=cm.category_id AND cc.user_id=cm.user_id
+    WHERE m.metric='distance' AND cm.entry_date BETWEEN m.start_date AND m.through_date
+      AND lower(cc.name)='distance' AND cc.frequency='Daily' AND cc.data_type='numeric'
+      AND lower(cc.measurement_type) IN ('m','km','mi')
+      AND CASE WHEN cm.value ~ '^[0-9]+([.][0-9]+)?$' AND length(cm.value)<32 THEN cm.value::numeric <= 1000000000 ELSE false END
+    ORDER BY cm.user_id,cm.entry_date,COALESCE(cm.updated_at,cm.created_at) DESC,cm.entry_timestamp DESC,cm.id DESC
+  ), energy AS (
+    SELECT e.user_id,e.entry_date,SUM(e.calories_burned) AS value,max(e.updated_at) AS changed_at
+    FROM members m JOIN public.exercise_entries e ON e.user_id=m.user_id
+    WHERE m.metric='active_calories' AND e.entry_date BETWEEN m.start_date AND m.through_date
+      AND e.exercise_name='Active Calories' AND e.exercise_preset_entry_id IS NULL
+      AND e.calories_burned BETWEEN 0 AND 1000000000
+    GROUP BY e.user_id,e.entry_date
+  ), hydration AS (
+    SELECT h.user_id,h.entry_date,h.water_ml AS value,h.changed_at
+    FROM consent c CROSS JOIN LATERAL public.canonical_hydration_days(
+      ARRAY(SELECT m.user_id FROM members m),c.start_date,LEAST(c.end_date,(CURRENT_TIMESTAMP AT TIME ZONE c.timezone)::date)) h
+    WHERE c.metric='hydration'
+  ), daily AS (
+    SELECT * FROM distances UNION ALL SELECT * FROM energy UNION ALL SELECT * FROM hydration
+  )
+  SELECT m.user_id,COALESCE(NULLIF(btrim(p.full_name),''),'Participant'),d.entry_date,round(d.value,6),d.changed_at
+  FROM members m LEFT JOIN public.profiles p ON p.id=m.user_id LEFT JOIN daily d ON d.user_id=m.user_id
+  ORDER BY m.user_id,d.entry_date;
 $$;
 
 -- Remote push is private delivery infrastructure. No ordinary/delegated SQL

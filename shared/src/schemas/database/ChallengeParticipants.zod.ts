@@ -5,11 +5,16 @@ export const challengeMembershipStatusSchema = z.enum([
   "accepted",
   "declined",
   "left",
+  "withdrawn",
 ]);
 export const challengeParticipantsSchema = z.object({
   challenge_id: z.uuid(),
   user_id: z.uuid(),
   status: challengeMembershipStatusSchema,
+  target_value: z.number().positive().nullable().optional(),
+  ready_at: z.date().nullable().optional(),
+  target_revision: z.number().int().nonnegative().optional(),
+  withdrawn_at: z.date().nullable().optional(),
   invited_by_user_id: z.uuid(),
   invited_at: z.date(),
   accepted_at: z.date().nullable(),

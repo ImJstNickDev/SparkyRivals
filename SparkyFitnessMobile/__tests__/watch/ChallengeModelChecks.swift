@@ -25,7 +25,7 @@ struct ChallengeModelChecks {
         check(ChallengePayloadMapper.snapshot(from: nil) == nil, "old phone")
         check(ChallengePayloadMapper.snapshot(from: ["version": 1]) == nil, "partial snapshot")
         var modified = payload
-        modified["version"] = 3
+        modified["version"] = 4
         check(ChallengePayloadMapper.snapshot(from: modified) == nil, "unknown version")
         modified = payload
         modified["state"] = "unavailable"
@@ -100,6 +100,34 @@ struct ChallengeModelChecks {
         emptyChallenges["items"] = []
         let contextWithoutWeight = ContextPayloadMapper.context(from: ["challengeSnapshot": emptyChallenges], previous: .empty)
         check(!contextWithoutWeight.hasSeed && contextWithoutWeight.challengeSnapshot?.items.isEmpty == true, "empty Challenges need no weight")
+        var goal = payload
+        goal["version"] = 3
+        var goalItem = (payload["items"] as! [[String: Any]])[0]
+        goalItem["metric"] = "steps"
+        goalItem["scoringMode"] = "goal_progress"
+        goalItem["scoreUnit"] = "points"
+        var goalRows = goalItem["rows"] as! [[String: Any]]
+        goalRows[0]["total"] = 140.123456
+        goalItem["rows"] = goalRows
+        goal["items"] = [goalItem]
+        let parsedGoal = ChallengePayloadMapper.snapshot(from: goal)!.items[0]
+        check(parsedGoal.ownRow?.total == 140.123456, "fractional authoritative goal points")
+        check(parsedGoal.unit == "points", "points are not steps")
+        goalItem["lifecycle"] = "lobby"
+        goalItem.removeValue(forKey: "startDate")
+        goalItem.removeValue(forKey: "endDate")
+        goal["items"] = [goalItem]
+        let lobbySnapshot = ChallengePayloadMapper.snapshot(from: goal)!
+        check(lobbySnapshot.items[0].rows.isEmpty, "lobby never exposes cached scores")
+        check(ChallengeSurfaceSnapshot.make(lobbySnapshot).rank.isEmpty, "lobby complication has no rank")
+        for (metric, unit) in [("distance", "meters"), ("active_calories", "kcal"), ("workout_calories", "kcal"), ("workout_distance", "meters")] {
+            var modern = (payload["items"] as! [[String: Any]])[0]
+            modern["metric"] = metric
+            modern["scoreUnit"] = unit
+            modern["scoringMode"] = "sum"
+            goal["items"] = [modern]
+            check(ChallengePayloadMapper.snapshot(from: goal)!.items[0].unit == unit, "canonical metric unit")
+        }
         var workout = payload
         workout["version"] = 2
         var workoutItem = (payload["items"] as! [[String: Any]])[0]

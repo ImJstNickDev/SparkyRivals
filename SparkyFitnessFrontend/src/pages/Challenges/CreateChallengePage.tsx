@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   prepareChallengeRematch,
+  CHALLENGE_TYPES,
   type ChallengeRematchDraft,
   addDays,
   todayInZone,
@@ -70,10 +71,19 @@ function CreateForm({
   defaultTimezone: string;
   draft?: ChallengeRematchDraft;
 }) {
-  const [metric, setMetric] = useState<'steps' | 'workout_time'>(
-    draft?.metric ?? 'steps'
+  const [typeId, setTypeId] = useState<string>(
+    CHALLENGE_TYPES.find(
+      (type) =>
+        type.metric === (draft?.metric ?? 'steps') &&
+        type.scoring_mode === (draft?.scoring_mode ?? 'sum')
+    )?.id ?? 'step-race'
   );
-  const { t, day, rules } = useChallengeFormat(metric);
+  const type = CHALLENGE_TYPES.find((type) => type.id === typeId)!;
+  const { metric, scoring_mode } = type;
+  const goalMode = scoring_mode !== 'sum';
+  const [duration, setDuration] = useState(String(draft?.duration_days ?? 7));
+  const [nextDay, setNextDay] = useState(draft?.start_next_day ?? false);
+  const { t, day, rules } = useChallengeFormat(metric, scoring_mode);
   const [timezone, setTimezone] = useState(
     defaultTimezone || Intl.DateTimeFormat().resolvedOptions().timeZone
   );
@@ -96,12 +106,17 @@ function CreateForm({
     const parsed = createChallengeRequestSchema.safeParse({
       name,
       metric,
-      start_date: start,
-      end_date: end,
+      scoring_mode,
+      ...(goalMode
+        ? { duration_days: Number(duration), start_next_day: nextDay }
+        : { start_date: start, end_date: end }),
       timezone,
       participant_ids: selected,
     });
-    if (!parsed.success || start < today || start > addDays(today, 366)) {
+    if (
+      !parsed.success ||
+      (!goalMode && (start < today || start > addDays(today, 366)))
+    ) {
       setValidationError(true);
       return;
     }
@@ -140,28 +155,34 @@ function CreateForm({
           )}
         </p>
       </header>
-      <fieldset className="grid gap-3 sm:grid-cols-2">
-        <legend className="mb-3 font-semibold">
-          {t('challenges.metric', 'Challenge metric')}
-        </legend>
-        {(['steps', 'workout_time'] as const).map((value) => (
-          <label
-            key={value}
-            className="flex cursor-pointer items-center gap-3 rounded-2xl border p-4"
-          >
-            <input
-              type="radio"
-              name="metric"
-              value={value}
-              checked={metric === value}
-              onChange={() => setMetric(value)}
-            />
-            {value === 'steps'
-              ? t('challenges.stepsMetric', 'Steps')
-              : t('challenges.workoutTime', 'Workout time')}
-          </label>
-        ))}
-      </fieldset>
+      <div className="space-y-2">
+        <Label htmlFor="challenge-type">
+          {t('challenges.type', 'Challenge type')}
+        </Label>
+        <select
+          id="challenge-type"
+          className="w-full rounded-md border bg-background p-3"
+          value={typeId}
+          onChange={(event) => setTypeId(event.target.value)}
+        >
+          {['movement', 'workout', 'hydration'].map((group) => (
+            <optgroup
+              key={group}
+              label={t(`challenges.groups.${group}`, { defaultValue: group })}
+            >
+              {CHALLENGE_TYPES.filter((item) => item.group === group).map(
+                (item) => (
+                  <option key={item.id} value={item.id}>
+                    {t(`challenges.types.${item.id}`, {
+                      defaultValue: item.label,
+                    })}
+                  </option>
+                )
+              )}
+            </optgroup>
+          ))}
+        </select>
+      </div>
       <section className="flex items-center gap-4 rounded-3xl bg-primary/5 p-5">
         {metric === 'workout_time' ? (
           <Timer aria-hidden className="h-9 w-9 shrink-0" />
@@ -171,15 +192,20 @@ function CreateForm({
         <div>
           <h2 className="font-semibold">{rules}</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            {metric === 'workout_time'
-              ? t('challenges.workoutHint', {
+            {goalMode || !['steps', 'workout_time'].includes(metric)
+              ? t('challenges.metricHint', {
                   defaultValue:
-                    'Recorded qualifying workout duration counts. Calories and workout count do not decide the winner.',
+                    'Only the chosen daily aggregate is shared after acceptance. Personal targets are confirmed in the lobby and lock when everyone is Ready.',
                 })
-              : t(
-                  'challenges.canonicalHint',
-                  'Your existing daily step totals count. There is nothing extra to track.'
-                )}
+              : metric === 'workout_time'
+                ? t('challenges.workoutHint', {
+                    defaultValue:
+                      'Recorded qualifying workout duration counts. Calories and workout count do not decide the winner.',
+                  })
+                : t(
+                    'challenges.canonicalHint',
+                    'Your existing daily step totals count. There is nothing extra to track.'
+                  )}
           </p>
         </div>
       </section>
@@ -196,66 +222,96 @@ function CreateForm({
           placeholder={t('challenges.namePlaceholder', 'Our next seven days')}
         />
       </div>
-      <fieldset className="space-y-4">
-        <legend className="font-semibold">
-          {t('challenges.chooseDays', 'Choose your days')}
-        </legend>
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => {
-              setStart(today);
-              setEnd(today);
-            }}
-          >
-            {t('challenges.todayPreset', 'Today')}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => {
-              setStart(today);
-              setEnd(addDays(today, 6));
-            }}
-          >
-            {t('challenges.weekPreset', '7 days from today')}
-          </Button>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="challenge-start">
-              {t('challenges.start', 'Start date')}
-            </Label>
-            <Input
-              id="challenge-start"
-              type="date"
-              min={today}
-              max={addDays(today, 366)}
-              value={start}
-              onChange={(e) => setStart(e.target.value)}
+      {goalMode ? (
+        <fieldset className="space-y-3">
+          <Label htmlFor="challenge-duration">
+            {t('challenges.duration', 'Duration in days (1–366)')}
+          </Label>
+          <Input
+            id="challenge-duration"
+            type="number"
+            min={1}
+            max={366}
+            value={duration}
+            onChange={(event) => setDuration(event.target.value)}
+          />
+          <label className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              checked={nextDay}
+              onChange={(event) => setNextDay(event.target.checked)}
             />
+            {t('challenges.nextDay', 'Start on next full day')}
+          </label>
+          <p className="text-sm text-muted-foreground">
+            {t(
+              'challenges.readyTiming',
+              'Starts when all invitations are resolved and everyone is Ready. With next full day off, the entire current day counts, including activity before activation.'
+            )}
+          </p>
+        </fieldset>
+      ) : (
+        <fieldset className="space-y-4">
+          <legend className="font-semibold">
+            {t('challenges.chooseDays', 'Choose your days')}
+          </legend>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setStart(today);
+                setEnd(today);
+              }}
+            >
+              {t('challenges.todayPreset', 'Today')}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setStart(today);
+                setEnd(addDays(today, 6));
+              }}
+            >
+              {t('challenges.weekPreset', '7 days from today')}
+            </Button>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="challenge-end">
-              {t('challenges.end', 'End date')}
-            </Label>
-            <Input
-              id="challenge-end"
-              type="date"
-              min={start}
-              value={end}
-              onChange={(e) => setEnd(e.target.value)}
-            />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="challenge-start">
+                {t('challenges.start', 'Start date')}
+              </Label>
+              <Input
+                id="challenge-start"
+                type="date"
+                min={today}
+                max={addDays(today, 366)}
+                value={start}
+                onChange={(e) => setStart(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="challenge-end">
+                {t('challenges.end', 'End date')}
+              </Label>
+              <Input
+                id="challenge-end"
+                type="date"
+                min={start}
+                value={end}
+                onChange={(e) => setEnd(e.target.value)}
+              />
+            </div>
           </div>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          {t(
-            'challenges.dateHint',
-            'Both dates count. Choose between 1 and 366 days.'
-          )}
-        </p>
-      </fieldset>
+          <p className="text-sm text-muted-foreground">
+            {t(
+              'challenges.dateHint',
+              'Both dates count. Choose between 1 and 366 days.'
+            )}
+          </p>
+        </fieldset>
+      )}
       <details className="rounded-2xl border p-4">
         <summary className="cursor-pointer text-sm font-medium">
           {t('challenges.timezone', 'Challenge timezone')}: {timezone}
@@ -269,15 +325,20 @@ function CreateForm({
             }}
           />
           <p className="text-sm text-muted-foreground">
-            {metric === 'workout_time'
-              ? t('challenges.workoutTimezoneHint', {
+            {goalMode || !['steps', 'workout_time'].includes(metric)
+              ? t('challenges.metricHint', {
                   defaultValue:
-                    'This sets when the Challenge starts and ends. Workouts keep their existing daily date buckets.',
+                    'Only the chosen daily aggregate is shared after acceptance. Personal targets are confirmed in the lobby and lock when everyone is Ready.',
                 })
-              : t(
-                  'challenges.timezoneHint',
-                  'This sets when the Challenge starts and ends. Steps keep their existing daily date buckets.'
-                )}
+              : metric === 'workout_time'
+                ? t('challenges.workoutTimezoneHint', {
+                    defaultValue:
+                      'This sets when the Challenge starts and ends. Workouts keep their existing daily date buckets.',
+                  })
+                : t(
+                    'challenges.timezoneHint',
+                    'This sets when the Challenge starts and ends. Steps keep their existing daily date buckets.'
+                  )}
           </p>
         </div>
       </details>
@@ -313,15 +374,20 @@ function CreateForm({
           </p>
         )}
         <p className="text-sm text-muted-foreground">
-          {metric === 'workout_time'
-            ? t('challenges.workoutConsent', {
+          {goalMode || !['steps', 'workout_time'].includes(metric)
+            ? t('challenges.metricHint', {
                 defaultValue:
-                  'You join automatically. Invited people must accept before aggregate workout time is shared. Dates and rules cannot be changed after creation.',
+                  'Only the chosen daily aggregate is shared after acceptance. Personal targets are confirmed in the lobby and lock when everyone is Ready.',
               })
-            : t(
-                'challenges.createConsent',
-                'You join automatically. Invited people must accept before their steps are shared. Dates and rules cannot be changed after creation.'
-              )}
+            : metric === 'workout_time'
+              ? t('challenges.workoutConsent', {
+                  defaultValue:
+                    'You join automatically. Invited people must accept before aggregate workout time is shared. Dates and rules cannot be changed after creation.',
+                })
+              : t(
+                  'challenges.createConsent',
+                  'You join automatically. Invited people must accept before their steps are shared. Dates and rules cannot be changed after creation.'
+                )}
         </p>
       </div>
       {validationError && (

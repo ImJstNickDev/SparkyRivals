@@ -384,6 +384,7 @@ describe.runIf(process.env.RUN_CHALLENGE_DB_TESTS === '1')(
           'workout_seconds',
           'workout_count',
           'data_updated_at',
+          'metric_value',
         ]);
       } finally {
         c.release();

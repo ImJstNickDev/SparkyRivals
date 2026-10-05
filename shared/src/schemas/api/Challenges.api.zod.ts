@@ -1,3 +1,11 @@
+import {
+  CHALLENGE_METRIC_UNITS,
+  challengeTargetSchema,
+  isChallengeCombinationAllowed,
+  challengeCanonicalUnitSchema,
+  challengeScoreUnitSchema,
+  challengeScoreUnit,
+} from "../../challenges/types.ts";
 import { z } from "zod";
 import { daysBetween, isDayString } from "../../utils/timezone.ts";
 import {
@@ -20,9 +28,11 @@ export const createChallengeRequestSchema = z
     name: challengeNameSchema,
     metric: challengeMetricSchema.default("steps"),
     scoring_mode: challengeScoringModeSchema.default("sum"),
-    start_date: challengeDaySchema,
-    end_date: challengeDaySchema,
+    start_date: challengeDaySchema.optional(),
+    end_date: challengeDaySchema.optional(),
     timezone: challengeTimezoneSchema,
+    duration_days: z.number().int().min(1).max(CHALLENGE_MAX_DAYS).optional(),
+    start_next_day: z.boolean().optional(),
     participant_ids: z
       .array(z.uuid())
       .max(CHALLENGE_MAX_PARTICIPANTS - 1)
@@ -30,7 +40,39 @@ export const createChallengeRequestSchema = z
   })
   .strict()
   .superRefine((value, ctx) => {
-    if (isDayString(value.start_date) && isDayString(value.end_date)) {
+    if (!isChallengeCombinationAllowed(value.metric, value.scoring_mode))
+      ctx.addIssue({
+        code: "custom",
+        path: ["scoring_mode"],
+        message: "Unsupported Challenge type",
+      });
+    if (value.scoring_mode === "sum") {
+      if (
+        !value.start_date ||
+        !value.end_date ||
+        value.duration_days !== undefined ||
+        value.start_next_day !== undefined
+      )
+        ctx.addIssue({
+          code: "custom",
+          message: "Sum Challenges require fixed dates only",
+        });
+    } else if (
+      !value.duration_days ||
+      value.start_date !== undefined ||
+      value.end_date !== undefined
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Goal Challenges require duration, not provisional dates",
+      });
+    }
+    if (
+      value.start_date &&
+      value.end_date &&
+      isDayString(value.start_date) &&
+      isDayString(value.end_date)
+    ) {
       const duration = daysBetween(value.start_date, value.end_date) + 1;
       if (duration < 1 || duration > CHALLENGE_MAX_DAYS)
         ctx.addIssue({
@@ -64,6 +106,7 @@ export const challengeListQuerySchema = z
   .strict();
 export type ChallengeListQuery = z.infer<typeof challengeListQuerySchema>;
 export const challengeLifecycleSchema = z.enum([
+  "lobby",
   "upcoming",
   "active",
   "completed",
@@ -71,6 +114,7 @@ export const challengeLifecycleSchema = z.enum([
 ]);
 export type ChallengeLifecycle = z.infer<typeof challengeLifecycleSchema>;
 export const challengeResponseSchema = challengesSchema.extend({
+  locked_at: z.iso.datetime().nullable().optional(),
   cancelled_at: z.iso.datetime().nullable(),
   created_at: z.iso.datetime(),
   updated_at: z.iso.datetime(),
@@ -87,6 +131,9 @@ export const challengeResponseSchema = challengesSchema.extend({
 export type ChallengeResponse = z.infer<typeof challengeResponseSchema>;
 export const challengeParticipantResponseSchema =
   challengeParticipantsSchema.extend({
+    target_value: challengeTargetSchema.nullable().optional(),
+    ready_at: z.iso.datetime().nullable().optional(),
+    withdrawn_at: z.iso.datetime().nullable().optional(),
     display_name: z.string(),
     invited_at: z.iso.datetime(),
     accepted_at: z.iso.datetime().nullable(),
@@ -115,7 +162,14 @@ export type ChallengeListResponse = z.infer<typeof challengeListResponseSchema>;
 
 export const challengeDailyScoreSchema = z.object({
   date: challengeDaySchema,
-  value: z.number().int(),
+  value: z.number(),
+  actual_value: z.number().optional(),
+  score_scaled: z
+    .string()
+    .regex(/^-?\d+$/)
+    .optional(),
+  progress_points: z.number().nonnegative().optional(),
+  goal_reached: z.boolean().optional(),
   /** True for a canonical metric point, including a qualifying explicit zero. */
   present: z.boolean(),
   workout_count: z.number().int().nonnegative().optional(),
@@ -127,13 +181,19 @@ export const challengeLeaderboardEntrySchema = z.object({
   user_id: z.uuid(),
   display_name: z.string(),
   membership_status: z.literal("accepted"),
-  total_score: z.number().int(),
+  total_score: z.number(),
+  total_score_scaled: z
+    .string()
+    .regex(/^-?\d+$/)
+    .optional(),
+  total_actual_value: z.number().optional(),
+  target_value: challengeTargetSchema.nullable().optional(),
   total_workout_count: z.number().int().nonnegative().optional(),
   /** Competition ranking: equal scores share a rank; subsequent ranks skip. */
   rank: z.number().int().positive().nullable(),
   is_tied: z.boolean(),
-  gap_to_leader: z.number().int().nonnegative().nullable(),
-  gap_to_next_rank: z.number().int().nonnegative().nullable(),
+  gap_to_leader: z.number().nonnegative().nullable(),
+  gap_to_next_rank: z.number().nonnegative().nullable(),
   daily: z.array(challengeDailyScoreSchema),
   today: challengeDailyScoreSchema.nullable(),
   coverage: z.object({
@@ -149,8 +209,10 @@ export type ChallengeLeaderboardEntry = z.infer<
 >;
 export const challengeLeaderboardResponseSchema = z
   .object({
-    contract_version: z.union([z.literal(1), z.literal(2)]),
-    score_unit: z.enum(["steps", "seconds"]).optional(),
+    contract_version: z.union([z.literal(1), z.literal(2), z.literal(3)]),
+    score_unit: challengeScoreUnitSchema.optional(),
+    canonical_unit: challengeCanonicalUnitSchema.optional(),
+    score_scale: z.number().int().positive().optional(),
     challenge: challengeResponseSchema,
     calculated_at: z.iso.datetime(),
     /** Completed results still change when canonical data is corrected. */
@@ -159,11 +221,48 @@ export const challengeLeaderboardResponseSchema = z
     ranking_available: z.boolean(),
     leader_user_ids: z.array(z.uuid()),
     /** Null with fewer than two competitors or unavailable ranking; zero on a tie. */
-    lead_margin: z.number().int().nonnegative().nullable(),
+    lead_margin: z.number().nonnegative().nullable(),
     entries: z.array(challengeLeaderboardEntrySchema),
   })
   .superRefine((result, ctx) => {
-    const workout = result.challenge.metric === "workout_time";
+    const workout = result.challenge.metric.startsWith("workout_");
+    if (result.contract_version === 3) {
+      if (
+        result.score_unit !==
+          challengeScoreUnit(
+            result.challenge.metric,
+            result.challenge.scoring_mode,
+          ) ||
+        result.canonical_unit !==
+          CHALLENGE_METRIC_UNITS[result.challenge.metric] ||
+        result.score_scale !== 1_000_000 ||
+        result.entries.some(
+          (entry) =>
+            entry.total_score_scaled === undefined ||
+            entry.total_actual_value === undefined ||
+            entry.coverage.days_with_data === undefined ||
+            entry.daily.some(
+              (day) =>
+                day.actual_value === undefined ||
+                day.score_scaled === undefined,
+            ),
+        )
+      )
+        ctx.addIssue({
+          code: "custom",
+          message: "Incomplete v3 score contract",
+        });
+      return;
+    }
+    if (
+      result.challenge.scoring_mode !== "sum" ||
+      !["steps", "workout_time"].includes(result.challenge.metric) ||
+      result.challenge.lifecycle === "lobby"
+    )
+      ctx.addIssue({
+        code: "custom",
+        message: "Challenge requires contract v3",
+      });
     if (
       (workout &&
         (result.contract_version !== 2 || result.score_unit !== "seconds")) ||
@@ -196,3 +295,19 @@ export const challengeLeaderboardResponseSchema = z
 export type ChallengeLeaderboardResponse = z.infer<
   typeof challengeLeaderboardResponseSchema
 >;
+
+export const challengeTargetRequestSchema = z
+  .object({
+    target_value: challengeTargetSchema,
+    expected_revision: z.number().int().nonnegative(),
+  })
+  .strict();
+export const challengeReadyRequestSchema = z
+  .object({
+    ready: z.boolean(),
+    expected_revision: z.number().int().nonnegative(),
+  })
+  .strict();
+export const challengeInvitationParamsSchema = challengeIdParamsSchema
+  .extend({ userId: z.uuid() })
+  .strict();

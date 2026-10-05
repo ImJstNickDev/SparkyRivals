@@ -102,6 +102,7 @@ import {
   SafeNutrientTrends,
   SafeExerciseStatistics,
   SafeCardioSession,
+  SafePersonalGoals,
   SafeChallenges,
   SafeChallengeDetail,
   SafeCreateChallenge,
@@ -457,6 +458,14 @@ function AppContent() {
               />
             )}
           </Stack.Screen>
+          <Stack.Screen
+            name="PersonalGoals"
+            component={SafePersonalGoals}
+            options={createStackScreenOptions(
+              t('goals.personal', { defaultValue: 'Personal activity goals' }),
+              { headerBackButtonDisplayMode: 'minimal' }
+            )}
+          />
           <Stack.Screen
             name="Challenges"
             component={SafeChallenges}

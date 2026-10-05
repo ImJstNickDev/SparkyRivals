@@ -181,6 +181,7 @@ app.use(
             'x-api-key',
             'x-client-id',
             'x-requested-with',
+            'x-challenge-contract-version',
             // MCP StreamableHTTP headers; browser clients fail CORS preflight
             // without them.
             'mcp-protocol-version',

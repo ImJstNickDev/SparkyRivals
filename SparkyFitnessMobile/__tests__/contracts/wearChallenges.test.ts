@@ -73,8 +73,13 @@ it('uses current-account data and supplied rank/tie/gap without reranking', () =
   expect(ui()).toContain('row.tied');
   expect(ui()).toContain('own.gapToLeader');
   expect(ui()).not.toMatch(/\.sorted|\.sumOf|\.fold\(/);
-  expect(ui()).toContain('R.string.no_workout else R.string.no_steps');
-  expect(ui()).toContain('workoutDurationParts(value)');
+  expect(ui()).toContain('noMetricData(item)');
+  expect(
+    wear('src/main/kotlin/com/sparkyrivals/wear/ChallengePresentation.kt')
+  ).toContain('R.string.no_workout');
+  expect(
+    wear('src/main/kotlin/com/sparkyrivals/wear/ChallengePresentation.kt')
+  ).toContain('workoutDurationParts(value.toLong())');
 });
 it('includes every requested developer preview only in debug sources', () => {
   const previews = wear(

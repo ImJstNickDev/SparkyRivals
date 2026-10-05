@@ -1,4 +1,21 @@
 import { getClient } from '../db/poolManager.js';
+import type { PoolClient } from 'pg';
+
+interface FamilyAccessListing {
+  id: string;
+  owner_user_id: string;
+  family_user_id: string | null;
+  family_email: string;
+  access_permissions: Permissions;
+  access_start_date: Date;
+  access_end_date: Date | null;
+  is_active: boolean;
+  status: string | null;
+  owner_full_name: string | null;
+  family_full_name: string | null;
+  owner_email?: string | null;
+}
+
 async function checkFamilyAccessPermission(
   familyUserId: string,
   ownerUserId: string,
@@ -51,18 +68,15 @@ async function checkCopyPermissions(familyUserId: string, ownerUserId: string) {
     client.release();
   }
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function getFamilyAccessEntriesByOwner(ownerUserId: string) {
-  const client = await getClient(ownerUserId); // User-specific operation
+  const client: PoolClient = await getClient(ownerUserId);
   try {
-    const result = await client.query(
+    const result = await client.query<FamilyAccessListing>(
       `SELECT fa.id, fa.owner_user_id, fa.family_user_id, fa.family_email, fa.access_permissions,
               fa.access_start_date, fa.access_end_date, fa.is_active, fa.status,
-              p_owner.full_name AS owner_full_name, p_family.full_name AS family_full_name
+              names.owner_full_name, names.family_full_name
        FROM family_access fa
-       LEFT JOIN profiles p_owner ON fa.owner_user_id = p_owner.id
-       LEFT JOIN public."user" u ON u.id = fa.owner_user_id
-       LEFT JOIN profiles p_family ON fa.family_user_id = p_family.id
+       LEFT JOIN LATERAL public.family_access_display_names(fa.id) names ON true
        WHERE fa.owner_user_id = $1
        ORDER BY fa.created_at DESC`,
       [ownerUserId]
@@ -72,19 +86,17 @@ async function getFamilyAccessEntriesByOwner(ownerUserId: string) {
     client.release();
   }
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function getFamilyAccessEntriesByUserId(userId: string) {
-  const client = await getClient(userId); // User-specific operation
+  const client: PoolClient = await getClient(userId);
   try {
-    const result = await client.query(
+    const result = await client.query<FamilyAccessListing>(
       `SELECT fa.id, fa.owner_user_id, fa.family_user_id, fa.family_email, fa.access_permissions,
               fa.access_start_date, fa.access_end_date, fa.is_active, fa.status,
-              p_owner.full_name AS owner_full_name, p_family.full_name AS family_full_name,
+              names.owner_full_name, names.family_full_name,
               u.email as owner_email
        FROM family_access fa
-       LEFT JOIN profiles p_owner ON fa.owner_user_id = p_owner.id
+       LEFT JOIN LATERAL public.family_access_display_names(fa.id) names ON true
        LEFT JOIN public."user" u ON u.id = fa.owner_user_id
-       LEFT JOIN profiles p_family ON fa.family_user_id = p_family.id
        WHERE fa.owner_user_id = $1 OR fa.family_user_id = $1
        ORDER BY fa.created_at DESC`,
       [userId]
