@@ -188,7 +188,7 @@ These tables store global configuration settings, lookup values, and reference m
 | Table | Write | Read |
 |-------|-------|------|
 | `challenges` | Self-context creator creates, renames upcoming competitions or cancels upcoming/active competitions; immutable dates/rules | Creator, pending invitee or accepted participant; no caregiver inheritance |
-| `challenge_participants` | Creator invites an existing active family relationship; invited user alone accepts/declines; participant alone leaves | Creator sees roster; accepted participants see accepted peers and their own row; others see only their own membership |
+| `challenge_participants` | Creator invites an existing active family relationship; invited user alone accepts/declines; participant may leave; creator may remove another accepted member only in an unlocked goal lobby | Creator sees roster; accepted participants see accepted peers and their own row; others see only their own membership |
 
 This domain is classified Tier 1 because generic delegation never grants access.
 Explicit Challenge consent is the sole exception for narrowly scoped competition
@@ -250,3 +250,10 @@ The function is installed by the normal startup RLS script; no new table or
 profile-readable policy is introduced.
 
 Existing `challenges`, `challenge_participants`, `user_goals` and `goal_presets` keep their security tiers. Participant targets/readiness are self-only and immutable after activation. Parent row locks serialize roster changes. `challenge_daily_metric_points` and extended `challenge_workout_points` expose only accepted members and the selected metric/date range. `canonical_hydration_days` is SECURITY INVOKER and retains diary RLS. `lock_challenge_participation` verifies self-context accepted/pending membership before acquiring the parent lock. Push deny-all/startup recovery remains unchanged.
+
+M8A.7 creator removal reuses the `left` membership state without new columns or
+read policies. The UPDATE policy and participant trigger both restrict this to a
+non-cancelled, unlocked goal lobby. Parent locking serializes removal against
+Ready/activation, and the existing activation trigger rechecks the remaining
+roster. Self-only target/readiness rules remain enforced, including a removal
+request that tries to change target fields. Pending withdrawal is unchanged.

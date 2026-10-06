@@ -102,6 +102,7 @@ export const challengeListQuerySchema = z
   .object({
     limit: z.coerce.number().int().min(1).max(50).default(20),
     offset: z.coerce.number().int().min(0).max(10000).default(0),
+    view: z.enum(["mine", "invitations", "history", "summary"]).optional(),
   })
   .strict();
 export type ChallengeListQuery = z.infer<typeof challengeListQuerySchema>;
@@ -120,6 +121,8 @@ export const challengeResponseSchema = challengesSchema.extend({
   updated_at: z.iso.datetime(),
   lifecycle: challengeLifecycleSchema,
   my_membership: challengeMembershipStatusSchema,
+  /** Optional self-only preparation projection for bounded list summaries. */
+  my_ready: z.boolean().optional(),
   progress: z.object({
     today: challengeDaySchema,
     total_days: z.number().int().positive(),

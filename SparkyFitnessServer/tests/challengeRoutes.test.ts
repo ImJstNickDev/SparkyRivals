@@ -36,6 +36,7 @@ vi.mock('../services/challengeService.js', () => ({
     update: vi.fn(),
     configure: vi.fn(),
     withdraw: vi.fn(),
+    removeParticipant: vi.fn(),
   },
 }));
 vi.mock('../services/challengeLeaderboardService.js', () => ({
@@ -419,4 +420,29 @@ it('routes withdrawal through creator authorization in the service', async () =>
         .set('X-Challenge-Contract-Version', '3')
     ).status
   ).toBe(403);
+});
+
+it('validates removal identifiers and forwards only the authenticated actor', async () => {
+  vi.mocked(service.removeParticipant).mockResolvedValue(detailFixture);
+  expect(
+    (
+      await request(app)
+        .delete(`${url}/${id}/participants/${peer}`)
+        .set('X-Challenge-Contract-Version', '3')
+    ).status
+  ).toBe(200);
+  expect(service.removeParticipant).toHaveBeenCalledWith(actor, id, peer);
+  expect(
+    (await request(app).delete(`${url}/${id}/participants/not-a-uuid`)).status
+  ).toBe(400);
+  vi.mocked(service.removeParticipant).mockRejectedValue(
+    new ChallengeError(409, 'Participants are locked')
+  );
+  expect(
+    (await request(app).delete(`${url}/${id}/participants/${peer}`)).status
+  ).toBe(409);
+  getSession.mockResolvedValue(null);
+  expect(
+    (await request(app).delete(`${url}/${id}/participants/${peer}`)).status
+  ).toBe(401);
 });

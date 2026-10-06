@@ -78,6 +78,109 @@ describe.runIf(process.env.RUN_CHALLENGE_DB_TESTS === '1')(
         ]);
       await endPool();
     });
+    it('lets only the creator remove an accepted or Ready peer before lock, without altering targets', async () => {
+      for (const confirmed of [false, true]) {
+        const id = await lobby({ participant_ids: [peer, third] });
+        await twoTargets(id);
+        if (confirmed) await ready(peer, id);
+        await expect(
+          service.removeParticipant(peer, id, owner)
+        ).rejects.toThrow();
+        await expect(
+          service.removeParticipant(owner, id, owner)
+        ).rejects.toThrow();
+        await expect(
+          service.removeParticipant(outsider, id, peer)
+        ).rejects.toThrow();
+        await expect(
+          sql(
+            "UPDATE challenge_participants SET status='left',target_value=1 WHERE challenge_id=$1 AND user_id=$2",
+            [id, peer],
+            owner
+          )
+        ).rejects.toThrow();
+        const removed = await service.removeParticipant(owner, id, peer);
+        expect(
+          removed.participants.find((p) => p.user_id === peer)
+        ).toMatchObject({ status: 'left', target_value: 8000 });
+        await expect(getChallengeLeaderboard(peer, id)).rejects.toThrow();
+        await expect(
+          service.removeParticipant(owner, id, peer)
+        ).rejects.toThrow();
+        expect(removed.challenge.lifecycle).toBe('lobby');
+      }
+    });
+    it('removal of the last unready peer activates the remaining Ready roster exactly once', async () => {
+      const id = await lobby({ participant_ids: [peer, third] });
+      await twoTargets(id);
+      await service.respond(third, id, 'accept');
+      await ready(owner, id);
+      await ready(peer, id);
+      const result = await service.removeParticipant(owner, id, third);
+      expect(result.challenge.lifecycle).toBe('active');
+      expect(result.challenge.locked_at).toBeTruthy();
+      await expect(service.removeParticipant(owner, id, peer)).rejects.toThrow(
+        'locked'
+      );
+      const direct = await sql(
+        "UPDATE challenge_participants SET status='left' WHERE challenge_id=$1 AND user_id=$2",
+        [id, peer],
+        owner
+      );
+      expect(direct.rowCount).toBe(0);
+    });
+    it('removal cannot cross a concurrent final Ready lock', async () => {
+      const id = await lobby({
+        participant_ids: [peer, third],
+        start_next_day: true,
+      });
+      await twoTargets(id);
+      await service.respond(third, id, 'accept');
+      await target(third, id);
+      await ready(owner, id);
+      await ready(peer, id);
+      const outcomes = await Promise.allSettled([
+        ready(third, id),
+        service.removeParticipant(owner, id, third),
+      ]);
+      expect(outcomes.some((o) => o.status === 'fulfilled')).toBe(true);
+      const result = await service.detail(owner, id);
+      expect(result.challenge.lifecycle).toBe('upcoming');
+      const membership = result.participants.find((p) => p.user_id === third)!;
+      expect(['accepted', 'left']).toContain(membership.status);
+      if (membership.status === 'accepted')
+        expect(membership.ready_at).toBeTruthy();
+      await expect(service.removeParticipant(owner, id, peer)).rejects.toThrow(
+        'locked'
+      );
+    });
+    it('does not let a creator remove accepted members of a legacy sum Challenge', async () => {
+      const day = todayInZone('UTC');
+      const id = (
+        await service.create(
+          owner,
+          createChallengeRequestSchema.parse({
+            name: 'Legacy race',
+            metric: 'steps',
+            scoring_mode: 'sum',
+            start_date: day,
+            end_date: day,
+            timezone: 'UTC',
+            participant_ids: [peer],
+          })
+        )
+      ).challenge.id;
+      await service.respond(peer, id, 'accept');
+      await expect(service.removeParticipant(owner, id, peer)).rejects.toThrow(
+        'locked'
+      );
+      const direct = await sql(
+        "UPDATE challenge_participants SET status='left' WHERE challenge_id=$1 AND user_id=$2",
+        [id, peer],
+        owner
+      );
+      expect(direct.rowCount).toBe(0);
+    });
     it('starts with null dates, explicit lobby, and creator requiring a target and Ready', async () => {
       const id = await lobby();
       expect((await service.detail(owner, id)).challenge).toMatchObject({
@@ -202,15 +305,18 @@ describe.runIf(process.env.RUN_CHALLENGE_DB_TESTS === '1')(
     it('targets are self-only, accepted-visible, pending/outsider results remain private', async () => {
       const id = await lobby({ participant_ids: [peer, third] });
       await twoTargets(id);
+      await expect(
+        sql(
+          'UPDATE challenge_participants SET target_value=1 WHERE challenge_id=$1 AND user_id=$2',
+          [id, peer],
+          owner
+        )
+      ).rejects.toThrow('Target and readiness are locked or unavailable');
       expect(
-        (
-          await sql(
-            'UPDATE challenge_participants SET target_value=1 WHERE challenge_id=$1 AND user_id=$2',
-            [id, peer],
-            owner
-          )
-        ).rowCount
-      ).toBe(0);
+        (await service.detail(peer, id)).participants.find(
+          (p) => p.user_id === peer
+        )?.target_value
+      ).toBe(8000);
       expect(
         (await service.detail(peer, id)).participants.find(
           (p) => p.user_id === owner

@@ -54,7 +54,7 @@ router.get('/', async (req, res) => {
             .regex(/^\d{1,20}$/)
             .optional(),
         })
-        .transform(({ limit, offset }) => ({ limit, offset }))
+        .transform(({ _, ...query }) => query)
         .parse(req.query),
       req.get('X-Challenge-Contract-Version') === '3'
     )
@@ -102,6 +102,10 @@ router.put('/:id/ready', async (req, res) => {
 router.delete('/:id/invitations/:userId', async (req, res) => {
   const { id, userId } = challengeInvitationParamsSchema.parse(req.params);
   res.json(await service.withdraw(req.userId, id, userId));
+});
+router.delete('/:id/participants/:userId', async (req, res) => {
+  const { id, userId } = challengeInvitationParamsSchema.parse(req.params);
+  res.json(await service.removeParticipant(req.userId, id, userId));
 });
 router.get('/:id/leaderboard', async (req, res) => {
   const { id } = challengeIdParamsSchema.parse(req.params);
@@ -345,4 +349,20 @@ export default router;
  *       '200': { $ref: '#/components/responses/ChallengeDetailResult' }
  *       '403': { description: Creator authorization required }
  *       '409': { description: Locked lobby or invitation no longer pending }
+ */
+
+/**
+ * @swagger
+ * /v2/challenges/{id}/participants/{userId}:
+ *   delete:
+ *     tags: [Challenges]
+ *     summary: Creator removes an accepted participant from an unlocked goal lobby
+ *     parameters:
+ *       - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+ *       - { in: path, name: userId, required: true, schema: { type: string, format: uuid } }
+ *     responses:
+ *       '200': { description: Updated Challenge detail; roster readiness recalculated }
+ *       '403': { description: Not the creator or attempted self-removal }
+ *       '404': { description: Challenge unavailable }
+ *       '409': { description: Lobby locked or participant no longer accepted }
  */
