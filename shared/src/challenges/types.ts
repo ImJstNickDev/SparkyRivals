@@ -82,7 +82,7 @@ export const CHALLENGE_TYPES = [
     id: "step-streak",
     metric: "steps",
     scoring_mode: "goal_days",
-    label: "Step Streak",
+    label: "Step Goal Days",
     group: "movement",
   },
   {
@@ -103,7 +103,7 @@ export const CHALLENGE_TYPES = [
     id: "distance-streak",
     metric: "distance",
     scoring_mode: "goal_days",
-    label: "Distance Streak",
+    label: "Distance Goal Days",
     group: "movement",
   },
   {
@@ -124,7 +124,7 @@ export const CHALLENGE_TYPES = [
     id: "move-streak",
     metric: "active_calories",
     scoring_mode: "goal_days",
-    label: "Move Goal Streak",
+    label: "Move Goal Days",
     group: "movement",
   },
   {
@@ -145,7 +145,7 @@ export const CHALLENGE_TYPES = [
     id: "workout-minutes-streak",
     metric: "workout_time",
     scoring_mode: "goal_days",
-    label: "Workout Minutes Streak",
+    label: "Workout Minute Goal Days",
     group: "workout",
   },
   {
@@ -166,7 +166,7 @@ export const CHALLENGE_TYPES = [
     id: "workout-calorie-streak",
     metric: "workout_calories",
     scoring_mode: "goal_days",
-    label: "Workout Calorie Streak",
+    label: "Workout Calorie Goal Days",
     group: "workout",
   },
   {
@@ -187,7 +187,7 @@ export const CHALLENGE_TYPES = [
     id: "hydration-streak",
     metric: "hydration",
     scoring_mode: "goal_days",
-    label: "Hydration Streak",
+    label: "Hydration Goal Days",
     group: "hydration",
   },
 ] as const satisfies readonly {
