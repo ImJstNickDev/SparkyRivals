@@ -32,24 +32,17 @@ struct WatchChallenge: Codable, Equatable, Identifiable {
     var metric: ChallengeMetric? = nil
     var scoringMode: String? = nil
     var scoreUnit: String? = nil
-    var unit: String { scoreUnit ?? (metric == .workoutTime ? "seconds" : "steps") }
+    var displayUnit: String? = nil
+    var unit: String { scoreUnit ?? (metric ?? .steps).unit }
     var metricLabel: String { (metric ?? .steps).label }
     var noData: String {
         if [.workoutTime, .workoutCalories, .workoutDistance].contains(metric ?? .steps) { return String(localized: "No workout recorded") }
         return metric == nil || metric == .steps ? String(localized: "No step data") : String(localized: "No data recorded")
     }
     func formattedScore(_ value: Double) -> String {
-        let number = value.formatted(.number.precision(.fractionLength(0...6)))
-        switch unit {
-        case "seconds": return ChallengeDurationFormat.string(value)
-        case "meters": return "\((value / 1000).formatted(.number.precision(.fractionLength(0...6)))) km"
-        case "kcal": return "\(number) kcal"
-        case "milliliters": return "\(number) ml"
-        case "points": return String(localized: "\(number) pts")
-        case "goal_days": return String(localized: "\(number) goal days")
-        default: return String(localized: "\(number) steps")
-        }
+        ChallengePresentationFormat.score(value, unit: unit, displayUnit: displayUnit)
     }
+
     var isWorkoutTime: Bool { metric == .workoutTime }
     var ownRow: ChallengeParticipant? { rows.first(where: \.isSelf) }
     var isVersus: Bool { participantCount == 2 && rows.count == 2 && ownRow != nil }
@@ -98,6 +91,15 @@ enum ChallengeMetric: String, Codable {
         case .hydration: return "milliliters"
         }
     }
+    var symbol: String {
+        switch self {
+        case .steps: return "figure.walk"
+        case .distance, .workoutDistance: return "location"
+        case .activeCalories, .workoutCalories: return "flame"
+        case .workoutTime: return "timer"
+        case .hydration: return "drop"
+        }
+    }
     var label: String {
         switch self {
         case .steps: return String(localized: "Steps")
@@ -114,10 +116,9 @@ enum ChallengeMetric: String, Codable {
 /// Formatting only; integer seconds remain authoritative server values.
 enum ChallengeDurationFormat {
     static func string(_ seconds: Double) -> String {
-        let formatter = DateComponentsFormatter()
-        formatter.allowedUnits = [.hour, .minute, .second]
-        formatter.unitsStyle = .abbreviated
-        formatter.zeroFormattingBehavior = .dropAll
-        return formatter.string(from: max(0, seconds)) ?? "0s"
+        // Compact magnitude-aware duration; no conversion to 32-bit Int.
+        if seconds >= 3600 { return ChallengePresentationFormat.measurement(seconds / 3600, unit: UnitDuration.hours, decimals: 1) }
+        if seconds >= 60 { return ChallengePresentationFormat.measurement(seconds / 60, unit: UnitDuration.minutes, decimals: 1) }
+        return ChallengePresentationFormat.measurement(max(0, seconds), unit: UnitDuration.seconds, decimals: 0)
     }
 }

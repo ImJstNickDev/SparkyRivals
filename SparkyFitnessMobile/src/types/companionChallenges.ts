@@ -30,6 +30,8 @@ export interface CompanionChallengeItem {
   metric?: ChallengeMetric;
   scoringMode?: ChallengeScoringMode;
   scoreUnit?: ChallengeScoreUnit;
+  /** Optional presentation-only unit. Older receivers safely ignore it. */
+  displayUnit?: 'km' | 'mi' | 'kcal' | 'kJ' | 'ml' | 'L' | 'fl_oz';
   id: string;
   name: string;
   lifecycle: 'upcoming' | 'active' | 'completed' | 'lobby';

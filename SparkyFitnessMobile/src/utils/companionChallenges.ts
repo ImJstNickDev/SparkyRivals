@@ -1,5 +1,6 @@
-import { challengeScoreUnit } from '@workspace/shared';
-import type {
+import {
+  challengeScoreUnit,
+  type ChallengeDisplayPreferences,
   ChallengeLeaderboardResponse,
   ChallengeResponse,
 } from '@workspace/shared';
@@ -77,6 +78,7 @@ export function buildCompanionChallenges(input: {
   challenges: readonly ChallengeResponse[];
   listUpdatedAt: number;
   hasMore: boolean;
+  displayPreferences?: ChallengeDisplayPreferences;
   results: ReadonlyMap<string, CompanionChallengeResult>;
 }): CompanionChallengeSnapshot {
   if (!input.accountKey || !input.actor || !input.listUpdatedAt)
@@ -129,6 +131,23 @@ export function buildCompanionChallenges(input: {
         : metadata.metric === 'workout_time'
           ? { metric: 'workout_time' as const, scoreUnit: 'seconds' as const }
           : {}),
+      ...(metadata.scoring_mode === 'sum' && input.displayPreferences
+        ? ['distance', 'workout_distance'].includes(metadata.metric)
+          ? {
+              displayUnit:
+                input.displayPreferences.distance === 'miles'
+                  ? ('mi' as const)
+                  : ('km' as const),
+            }
+          : ['active_calories', 'workout_calories'].includes(metadata.metric)
+            ? {
+                displayUnit:
+                  input.displayPreferences.energy === 'kJ'
+                    ? ('kJ' as const)
+                    : ('kcal' as const),
+              }
+            : {}
+        : {}),
       id: challenge.id,
       name: clip(metadata.name),
       lifecycle: challenge.lifecycle,

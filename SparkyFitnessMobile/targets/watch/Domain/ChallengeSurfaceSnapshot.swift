@@ -38,7 +38,7 @@ struct ChallengeSurfaceSnapshot: Codable, Equatable {
         let rank = scored ? own?.rank.map { String(localized: "Rank \($0)") } ?? "" : ""
         let status: String
         if item.isInvitation { status = String(localized: "Accept on iPhone") }
-        else if item.lifecycle == .lobby { status = String(localized: "Ready on iPhone") }
+        else if item.lifecycle == .lobby { status = String(localized: "Review readiness on iPhone") }
         else if item.lifecycle == .upcoming { status = String(localized: "Starts \(item.startDate)") }
         else if item.lifecycle == .completed { status = String(localized: "Completed") }
         else if own?.leader == true {

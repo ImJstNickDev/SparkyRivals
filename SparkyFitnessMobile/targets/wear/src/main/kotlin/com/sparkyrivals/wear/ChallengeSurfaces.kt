@@ -31,8 +31,7 @@ fun surfaceText(context: Context): SurfaceText {
         own?.leader==true -> if(item.leadMargin?.toDouble()==0.0) context.getString(R.string.surface_tied) else item.leadMargin?.let { context.getString(R.string.surface_ahead,score(it)) } ?: context.getString(R.string.surface_leading)
         else -> own?.gapToLeader?.let { context.getString(R.string.surface_behind,score(it)) } ?: context.getString(R.string.not_synced)
     }
-    val unit=item?.let { metricLabel(context,it) } ?: ""
-    return SurfaceText(title,value,rank,status,"$title, $rank, $value $unit, $status",model)
+    return SurfaceText(title,value,rank,status,"$title, $rank, $value, $status",model)
 }
 object ChallengeSurfaceLinks {
     const val ID="challengeId"

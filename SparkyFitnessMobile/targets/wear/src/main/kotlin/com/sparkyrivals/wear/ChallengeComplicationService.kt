@@ -16,7 +16,7 @@ class ChallengeComplicationService : ComplicationDataSourceService() {
         val data=when(request.complicationType) {
             ComplicationType.SHORT_TEXT -> ShortTextComplicationData.Builder(
                 PlainComplicationText.Builder(value.model.own?.rank?.let { "#$it" } ?: when { value.model.item?.membership=="pending" -> getString(R.string.surface_invite_short); value.model.item?.lifecycle=="upcoming" -> getString(R.string.surface_soon_short); else -> "—" }).build(),description)
-                .setTitle(PlainComplicationText.Builder(if(value.model.stale) getString(R.string.surface_stale_short) else getString(if(value.model.item?.metric=="workout_time") R.string.surface_time_short else R.string.steps_label)).build()).setTapAction(tap).build()
+                .setTitle(PlainComplicationText.Builder(if(value.model.stale) getString(R.string.surface_stale_short) else surfaceUnit(this, value.model.item)).build()).setTapAction(tap).build()
             ComplicationType.LONG_TEXT -> LongTextComplicationData.Builder(
                 PlainComplicationText.Builder("${value.rank} · ${value.score} · ${value.status}").build(),description)
                 .setTitle(PlainComplicationText.Builder(value.title).build()).setTapAction(tap).build()

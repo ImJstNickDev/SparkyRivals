@@ -12,28 +12,27 @@ struct ChallengeView: View {
                     ChallengeDetailView(challengeId: item.id, accountKey: snapshot.accountKey)
                 } else if snapshot.items.isEmpty {
                     ChallengeMessageView(
-                        title: snapshot.hasMore ? "More challenges on iPhone" : "No challenges yet", symbol: "figure.walk",
+                        title: snapshot.hasMore ? "More challenges on iPhone" : "No challenges yet", symbol: "flag.checkered",
                         message: snapshot.hasMore ? "Open Challenges on your iPhone to see older items." : "Create a challenge on your iPhone.",
                         updatedAt: snapshot.generatedAt
                     )
                 } else {
-                    ScrollView {
-                        VStack(spacing: 8) {
+                    List {
                             ForEach(snapshot.items) { item in
                                 NavigationLink {
                                     ChallengeDetailView(challengeId: item.id, accountKey: snapshot.accountKey)
                                 } label: {
                                     ChallengeSummary(item: item)
                                 }
-                                .buttonStyle(.bordered)
+                                .listRowInsets(EdgeInsets(top: 8, leading: 10, bottom: 8, trailing: 10))
                             }
                             if snapshot.hasMore {
                                 Text("More challenges on iPhone")
                                     .font(.caption2).foregroundStyle(.secondary)
                             }
                             ChallengeFreshness(updatedAt: snapshot.generatedAt)
-                        }
                     }
+                    .listStyle(.carousel)
                     .navigationTitle("Challenges")
                 }
             } else {
@@ -53,14 +52,15 @@ private struct ChallengeSummary: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Label(item.statusLabel, systemImage: item.isInvitation ? "envelope" : item.isWorkoutTime ? "timer" : "figure.walk")
+            Label(item.statusLabel, systemImage: item.isInvitation ? "envelope" : item.metricSymbol)
                 .font(.caption2).foregroundStyle(.secondary)
             Text(item.name).font(.headline).lineLimit(2)
-            if let own = item.ownRow {
-                Text(ChallengeFormat.score(own.total, item: item))
+                .fixedSize(horizontal: false, vertical: true)
+            if !item.isInvitation, [.active, .completed].contains(item.lifecycle), let own = item.ownRow {
+                Text(own.dataDays > 0 ? ChallengeFormat.score(own.total, item: item) : item.noData)
                     .font(.system(.title3, design: .rounded, weight: .semibold))
                     .monospacedDigit()
-                Text(ChallengeFormat.rank(own)).font(.caption2)
+                Text(ChallengeFormat.rank(own)).font(.caption2).foregroundStyle(.secondary)
             } else if item.isInvitation {
                 Text("Review on iPhone").font(.caption2)
             } else if item.lifecycle == .upcoming {
@@ -99,10 +99,10 @@ struct ChallengeFreshness: View {
     var body: some View {
         TimelineView(.periodic(from: .now, by: 60)) { timeline in
             VStack(spacing: 3) {
-                if timeline.date.timeIntervalSince(updatedAt) >= 15 * 60 {
+                if (timeline.date.timeIntervalSince(updatedAt) >= 15 * 60 || timeline.date.timeIntervalSince(updatedAt) < -5 * 60) {
                     Label("May be out of date", systemImage: "clock.arrow.circlepath")
                 }
-                Text("Updated \(updatedAt, style: .relative) ago")
+                Text(ChallengePresentationFormat.updated(updatedAt, now: timeline.date))
             }
             .font(.caption2).foregroundStyle(.secondary)
             .multilineTextAlignment(.center)
@@ -113,6 +113,10 @@ struct ChallengeFreshness: View {
 
 // Presentation only. The server's lifecycle/rank is never derived from a clock.
 extension WatchChallenge {
+    var metricSymbol: String {
+        (metric ?? .steps).symbol
+    }
+
     var statusLabel: String {
         if isInvitation { return String(localized: "Invitation") }
         switch lifecycle {

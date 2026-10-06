@@ -1,8 +1,5 @@
-import {
-  formatChallengeDuration,
-  formatChallengeValue,
-  challengeTypeLabel,
-} from '@workspace/shared';
+import type { ChallengeDisplayPreferences } from '@workspace/shared';
+import { challengeTypeText, formatChallengeDisplay } from '@workspace/shared';
 import type { TFunction } from 'i18next';
 import type {
   CompanionChallengeItem,
@@ -36,7 +33,8 @@ export function selectPrimaryChallengeSurface(
 export function buildChallengeWidget(
   snapshot: CompanionChallengeSnapshot,
   t: TFunction,
-  locale: string
+  locale: string,
+  preferences: ChallengeDisplayPreferences = {}
 ) {
   const item =
     snapshot.state === 'ready'
@@ -52,20 +50,22 @@ export function buildChallengeWidget(
       : t('challenges.surfaces.notSynced', {
           defaultValue: 'Open the app to sync Challenges.',
         });
-  const metric = item?.scoringMode
-    ? challengeTypeLabel(item.metric ?? 'steps', item.scoringMode)
-    : item?.metric === 'workout_time'
-      ? t('challenges.workoutTime', { defaultValue: 'Workout time' })
-      : t('challenges.stepsMetric', { defaultValue: 'Steps' });
+  const metric = challengeTypeText(
+    t,
+    item?.metric ?? 'steps',
+    item?.scoringMode ?? 'sum'
+  );
   const score = (value: number) =>
-    item?.scoringMode
-      ? formatChallengeValue(value, item.scoreUnit ?? 'steps', locale)
-      : item?.metric === 'workout_time'
-        ? formatChallengeDuration(value, locale)
-        : t('challenges.surfaces.steps', {
-            defaultValue: '{{value}} steps',
-            value: new Intl.NumberFormat(locale).format(value),
-          });
+    formatChallengeDisplay(
+      value,
+      item?.scoreUnit ??
+        (item?.metric === 'workout_time' ? 'seconds' : 'steps'),
+      locale,
+      t,
+      preferences,
+      true,
+      item?.scoreUnit === 'points' ? 1 : undefined
+    );
   const own = item?.rows.find((r) => r.isSelf);
   const leader =
     item?.rows.find((r) => r.leader && !r.isSelf) ??
@@ -99,7 +99,7 @@ export function buildChallengeWidget(
         })
       : item.lifecycle === 'lobby'
         ? t('challenges.surfaces.lobby', {
-            defaultValue: 'Waiting for players · Ready in the app',
+            defaultValue: 'Waiting for players · Review in the app',
           })
         : item.lifecycle === 'upcoming'
           ? t('challenges.surfaces.upcoming', {

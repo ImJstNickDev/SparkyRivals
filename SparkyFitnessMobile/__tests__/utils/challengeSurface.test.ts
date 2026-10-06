@@ -58,7 +58,7 @@ it.each([false, true])(
     const value = buildChallengeWidget(snapshot(workout), i18n.t, 'en');
     expect(value.generatedAt).toBe(1000);
     expect(value.rank).toBe('Rank 1 of 2');
-    expect(value.score).toBe(workout ? '3h 42m' : '54,280 steps');
+    expect(value.score).toBe(workout ? '3.7 h' : '54,280 steps');
     expect(value.url).toContain('account=');
     expect(value).not.toHaveProperty('daily');
   }
@@ -68,7 +68,7 @@ it('zero differs from absent steps and workouts', () => {
     const state = snapshot(workout);
     state.items[0].rows[0].total = 0;
     expect(buildChallengeWidget(state, i18n.t, 'en').score).toBe(
-      workout ? '0m' : '0 steps'
+      workout ? '0 min' : '0 steps'
     );
     state.items[0].rows[0].daysWithData = 0;
     state.items[0].rows[0].daysWithSteps = 0;
@@ -122,7 +122,7 @@ it('formats one remaining day and calendar labels without shifting buckets', () 
 });
 
 it.each([
-  ['steps', 'goal_progress', 'points', 140, '140 pts'],
+  ['steps', 'goal_progress', 'points', 140, '140 points'],
   ['distance', 'sum', 'meters', 12400, '12.4 km'],
   ['active_calories', 'sum', 'kcal', 320, '320 kcal'],
   ['hydration', 'goal_days', 'goal_days', 2, '2 goal days'],

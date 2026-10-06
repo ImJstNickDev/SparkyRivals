@@ -52,7 +52,7 @@ private struct ChallengeComplicationView: View {
                 case .accessoryInline:
                     Text(value.rank.isEmpty ? value.status : "\(stale ? "↻ " : "")\(value.rank) · \(value.score)")
                 case .accessoryCircular:
-                    VStack(spacing: 1) { Image(systemName: stale ? "clock" : "trophy"); if value.rank.isEmpty { Text(value.status).font(.caption2).lineLimit(2) } else { Text(value.rank).font(.caption2); Text(value.score).font(.caption2).minimumScaleFactor(0.6) } }
+                    VStack(spacing: 1) { Image(systemName: stale ? "clock" : "trophy"); if value.rank.isEmpty { Text(value.status).font(.caption2).lineLimit(2) } else { Text(value.rank).font(.caption2).lineLimit(2) } }
                 default:
                     VStack(alignment: .leading, spacing: 1) {
                         Text(value.title).font(.headline).lineLimit(1)
@@ -66,7 +66,7 @@ private struct ChallengeComplicationView: View {
         .widgetURL(ComplicationLink.challenge.url)
         .containerBackground(.clear, for: .widget)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(entry.snapshot.map { "\($0.title), \($0.rank), \($0.score) \($0.metric ?? ""), \($0.status)" } ?? String(localized: "Challenges not synced yet"))
+        .accessibilityLabel(entry.snapshot.map { "\($0.title), \($0.rank), \($0.score), \($0.status)" } ?? String(localized: "Challenges not synced yet"))
         .accessibilityHint(stale ? String(localized: "May be out of date") : "")
     }
 }

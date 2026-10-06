@@ -105,8 +105,9 @@ it('renders supplied scores/ranks without HealthKit, HTTP or local ranking code'
     );
   }
   const scores = watch('Presentation/ChallengeScoresView.swift');
-  expect(scores).toContain('own.gapToLeader');
-  expect(scores).toContain('item.leadMargin');
+  expect(scores).toContain('ForEach(item.rows)');
+  expect(scores).toContain('ChallengeFormat.rank(own)');
+  expect(scores).toContain('row.tied');
   expect(scores).toContain('point.eligible && point.present');
   expect(scores).toContain('item.noData');
   expect(watch('Domain/ChallengeModels.swift')).toContain('No step data');
@@ -173,8 +174,8 @@ it('maps workout units through typed models and preserves legacy Steps defaults'
   expect(mapper).toContain('[1, 2, 3].contains(version)');
   for (const key of ['metric', 'scoreUnit', 'workoutCount', 'daysWithData'])
     expect(mapper).toContain(`["${key}"]`);
-  expect(watch('Domain/ChallengeModels.swift')).toContain(
-    'DateComponentsFormatter'
+  expect(watch('Domain/ChallengePresentationFormat.swift')).toContain(
+    'MeasurementFormatter'
   );
   expect(watch('Domain/ChallengeModels.swift')).toContain(
     'No workout recorded'

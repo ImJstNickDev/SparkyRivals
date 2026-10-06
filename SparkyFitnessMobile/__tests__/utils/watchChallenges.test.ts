@@ -364,3 +364,26 @@ it('refuses cached results whose scoring mode disagrees with the current Challen
   const state = build({ challenges: [goalResults.challenge] });
   expect(state.items[0].rows).toEqual([]);
 });
+
+it('publishes optional preferred display units without changing canonical values, ranks or freshness', () => {
+  const distance = { ...challenge, metric: 'distance' as const };
+  const data = { ...results, challenge: distance };
+  const snapshot = build({
+    challenges: [distance],
+    results: new Map([[distance.id, { data, dataUpdatedAt: 1000 }]]),
+    displayPreferences: { distance: 'miles', energy: 'kJ' },
+  });
+  expect(snapshot.items[0]).toMatchObject({
+    displayUnit: 'mi',
+    scoreUnit: 'meters',
+  });
+  expect(snapshot.items[0].rows[0].total).toBe(results.entries[0].total_score);
+  expect(snapshot.items[0].rows[0].rank).toBe(results.entries[0].rank);
+  expect(snapshot.generatedAt).toBe(1000);
+  expect(
+    build({ displayPreferences: { distance: 'miles' } }).items[0]
+  ).not.toHaveProperty('displayUnit');
+  expect(
+    build({ accountKey: '', displayPreferences: { distance: 'miles' } }).items
+  ).toEqual([]);
+});
