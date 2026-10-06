@@ -1,6 +1,6 @@
 # AGENTS.md
 
-_Last updated: 2026-10-04_
+_Last updated: 2026-10-06_
 
 SparkyFitness Mobile is a React Native 0.86 + Expo SDK 57 app for syncing Apple Health / Health Connect data with the SparkyFitness backend, tracking nutrition, hydration, fasting, measurements, exercise, saved foods, meal templates, custom exercises, workout presets, iOS / Android widgets, the active workout HUD, and the Sparky AI chat.
 
@@ -368,6 +368,8 @@ When reviewing an API issue, trace screen/hook -> API client -> server route -> 
 - Pass `t` through every presentation helper and include it in `useMemo` / `useCallback` dependencies when the derived result contains localized text; this keeps mounted UI correct after a runtime language switch.
 - Translation keys are semantic and statically analyzable. Every static `defaultValue` is the English source fallback and must exactly match the EN catalog entry.
 - A key used with `count` is a plural family: EN requires `_one` and `_other`; PL requires `_one`, `_few`, `_many`, and `_other`. Use grammatically correct forms rather than duplicating suffixes blindly.
+- Ordinal positions use numeric `count` with `ordinal: true` and `_ordinal_*` keys, not cardinal forms or hand-built suffixes. The audit validates each locale's ordinal categories, placeholders and explicit English fallbacks separately.
+- `localization/i18n.ts` loads `intl-pluralrules` before initializing the existing i18next resolver for Hermes. Keep the fractional-plural compatibility shim; native-runtime tests cover missing Intl support as well as ordinals.
 - Run `pnpm run i18n:audit` after localization work. `pnpm run validate` includes typecheck, lint with zero warnings, and this audit.
 - Keep canonical storage/API values and user-generated content literal; localize only application-owned presentation labels.
 
@@ -473,4 +475,32 @@ const androidService = require('../../src/services/healthConnectService.ts');
 
 ## M8A.6 Challenge domain source map
 
-Challenge type labels live in `utils/challengeLabels.ts`; canonical formatting/contracts in shared. `ChallengeLobby` implements self target/Ready and creator pending withdrawal. `PersonalGoalsScreen` edits the existing dated goal API. `modules/move-goal` reads Apple Activity Summary only on demand; Use and Save are separate explicit actions. No Health Connect generic goal import. Companion snapshot v3 carries metric/mode/unit/lobby through existing transports. See `docs/fork/CHALLENGE_TYPES.md`.
+Challenge type labels and canonical presentation helpers live in shared
+`challenges/presentation/`. `ChallengeLobby` implements self target/Ready, pending
+withdrawal and the authorized creator removal before lobby lock.
+`PersonalGoalsScreen` edits the existing dated goal API. `modules/move-goal` reads
+Apple Activity Summary only on demand; Use and Save are separate explicit actions.
+No Health Connect generic goal import. Companion snapshot v3 carries
+metric/mode/unit/lobby through existing transports. See `docs/fork/CHALLENGE_TYPES.md`.
+
+M8A.7 uses the existing `SegmentedControl`, native header descriptors, picker and
+form primitives. `ChallengeTargetForm` saves on blur/Back and awaits the returned
+revision before Ready; `useUnsavedFormGuard` protects ordinary dirty forms and
+does not silently save personal goals. List filters are server-side; never infer
+whole-collection counts from loaded pages. `ChallengeResultSummary` preserves
+server ranks when display values coincide. The Dashboard card is reorderable and
+hideable; the Library header remains an independent access path. Watch catalogs
+and Wear strings are checked by `validate-native-challenge-locales.mjs` as well as
+the existing phone-widget checks. See `../docs/fork/CHALLENGE_UX.md`.
+
+## Fork translation sources (M8A.7)
+
+The maintainer approved repository-local ownership of fork-only translations.
+`localization/fork/ownership.json` (relative to the repository root) restricts
+imports to Challenge keys and explicitly listed activity-goal keys. Edit Italian
+source files under `localization/fork/`, then run root `pnpm i18n:fork:import`.
+Do not hand-edit other non-English catalog entries. English remains canonical;
+run `pnpm i18n:fork:export` after owned English changes and retain existing package
+plural/placeholder/registry checks. This narrow approved exception does not
+transfer ownership of upstream translations. Keep the upstream translation
+workflow guarded; do not create external translation resources without approval.

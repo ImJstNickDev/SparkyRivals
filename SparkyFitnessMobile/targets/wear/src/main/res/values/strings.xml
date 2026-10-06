@@ -2,7 +2,7 @@
     <string name="challenges">Challenges</string>
     <string name="steps_rule">Steps · highest total</string>
     <string name="you">You</string>
-    <string name="steps">%1$s steps</string>
+    <string name="steps">Steps: %1$s</string>
     <string name="rank">Rank %1$s</string>
     <string name="tied">Tied</string>
     <string name="leader">Leading</string>
@@ -23,8 +23,8 @@
     <string name="review_phone">Review on phone</string>
     <string name="start_date">Starts %1$s</string>
     <string name="date_range">%1$s – %2$s</string>
-    <string name="empty_title">A little friendly competition</string>
-    <string name="empty_hint">No active challenges. Create one on your phone and invite someone.</string>
+    <string name="empty_title">No Challenges yet</string>
+    <string name="empty_hint">Create a Challenge on your phone.</string>
     <string name="not_synced">Challenges not synced yet</string>
     <string name="open_phone">Open the app on your Android phone to sync Challenges.</string>
     <string name="phone_unavailable">Phone companion unavailable</string>
@@ -64,14 +64,31 @@
     <string name="hydration_label">Hydration</string>
     <string name="no_metric_data">No data recorded</string>
     <string name="lobby">Waiting for players</string>
-    <string name="ready_phone">Set target and Ready on phone</string>
+    <string name="ready_phone">Review readiness on phone</string>
     <string name="sum_rule">Highest accumulated total wins</string>
     <string name="goal_progress_rule">Personal target progress earns uncapped points</string>
     <string name="goal_days_rule">Each day reaching your target counts once</string>
-    <string name="metric_coverage">Missing data does not mean all devices have synced.</string>
+    <string name="metric_coverage">Some days have no data yet.</string>
     <string name="distance_value">%1$s km</string>
     <string name="calorie_value">%1$s kcal</string>
     <string name="hydration_value">%1$s ml</string>
     <string name="points_value">%1$s pts</string>
     <string name="goal_days_value">%1$s goal days</string>
+<plurals name="goal_days"><item quantity="one">%d goal day</item><item quantity="other">%d goal days</item></plurals>
+    <string name="your_total">Your total</string>
+    <string name="tied_rank">Tied at rank %1$s</string>
+    <string name="ranked_name">%1$s · %2$s</string>
+    <string name="dated_value">%1$s: %2$s</string>
+    <string name="miles_value">%1$s mi</string>
+    <string name="kilojoules_value">%1$s kJ</string>
+    <string name="liters_value">%1$s L</string>
+    <string name="ounces_value">%1$s fl oz</string>
+    <string name="less_than">Less than %1$s</string>
+    <string name="surface_points_short">Points</string>
+    <string name="surface_days_short">Days</string>
+    <string name="surface_km_short">km</string>
+    <string name="surface_miles_short">mi</string>
+    <string name="surface_kcal_short">kcal</string>
+    <string name="surface_kj_short">kJ</string>
+    <string name="surface_ml_short">ml</string>
 </resources>

@@ -218,7 +218,9 @@ function getExplicitFallbacks(node) {
     if (
       !name ||
       (name !== 'defaultValue' &&
-        !/^defaultValue_(?:zero|one|two|few|many|other)$/.test(name))
+        !/^defaultValue_(?:ordinal_)?(?:zero|one|two|few|many|other)$/.test(
+          name
+        ))
     )
       continue;
     const value = staticLiteralText(prop.initializer);
@@ -239,6 +241,20 @@ function hasCountOption(node) {
       (ts.isPropertyAssignment(prop) &&
         propertyNameText(prop.name) === 'count') ||
       (ts.isShorthandPropertyAssignment(prop) && prop.name.text === 'count')
+  );
+}
+
+function hasOrdinalOption(node) {
+  const second = node.arguments[1];
+  return (
+    second &&
+    ts.isObjectLiteralExpression(second) &&
+    second.properties.some(
+      (prop) =>
+        ts.isPropertyAssignment(prop) &&
+        propertyNameText(prop.name) === 'ordinal' &&
+        prop.initializer.kind === ts.SyntaxKind.TrueKeyword
+    )
   );
 }
 
@@ -679,6 +695,7 @@ function visitSourceFile(filePath, rootDir) {
               key,
               fallbacks,
               hasCount,
+              ordinal: hasOrdinalOption(node),
             });
             if (!hasExplicitFallback(node)) {
               recordFinding(relPath, line, key, 'missing-fallback-key', {

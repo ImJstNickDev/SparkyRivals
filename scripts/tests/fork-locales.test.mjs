@@ -1,0 +1,79 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import {
+  flatten,
+  mergeTranslation,
+  selectOwned,
+} from "../sync-fork-locales.mjs";
+
+const english = {
+  challenges: {
+    title: "Challenges",
+    days_one: "{{count}} day",
+    days_other: "{{count}} days",
+  },
+};
+test("imports only owned keys without replacing other translated content", () => {
+  const catalog = {
+    common: { save: "Salva" },
+    challenges: { existing: "Esistente" },
+  };
+  const next = mergeTranslation(
+    catalog,
+    { challenges: { title: "Sfide" } },
+    english,
+    ["challenges"],
+  );
+  assert.deepEqual(next, {
+    ...catalog,
+    challenges: { existing: "Esistente", title: "Sfide" },
+  });
+  assert.equal(catalog.challenges.title, undefined);
+  assert.deepEqual(
+    mergeTranslation(next, { challenges: { title: "Sfide" } }, english, [
+      "challenges",
+    ]),
+    next,
+  );
+});
+test("preserves fallback for missing translations and supports locale plural categories", () => {
+  const next = mergeTranslation(
+    {},
+    { challenges: { days_many: "{{count}} giorni" } },
+    english,
+    ["challenges"],
+  );
+  assert.equal(next.challenges.title, undefined);
+  assert.equal(next.challenges.days_many, "{{count}} giorni");
+});
+test("rejects unowned, unknown, empty and malformed translations", () => {
+  for (const source of [
+    { common: { save: "Salva" } },
+    { challenges: { unknown: "Test" } },
+    { challenges: { title: "" } },
+    { challenges: { days_one: "Un giorno" } },
+    { challenges: { title: "{{secret}}" } },
+  ])
+    assert.throws(() => mergeTranslation({}, source, english, ["challenges"]));
+});
+test("exports only expressly owned goal fields", () => {
+  assert.deepEqual(
+    selectOwned(
+      { goals: { calories: "Nutrition", steps: "Steps" }, ...english },
+      ["challenges", "goals.steps"],
+    ),
+    { ...english, goals: { steps: "Steps" } },
+  );
+});
+test("rejects unsafe catalog paths and scalar/object collisions", () => {
+  assert.throws(() => flatten(JSON.parse('{"__proto__":{"polluted":"true"}}')));
+  assert.throws(() => flatten({ "challenges.title": "Test" }));
+  assert.throws(() =>
+    mergeTranslation(
+      { challenges: "old" },
+      { challenges: { title: "Sfide" } },
+      english,
+      ["challenges"],
+    ),
+  );
+});

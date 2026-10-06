@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "components": [
+    {
+      "name": "mobile",
+      "source": "localization/fork/mobile",
+      "destination": "SparkyFitnessMobile/src/localization/locales",
+      "locales": ["it"],
+      "paths": [
+        "challenges",
+        "goals.personal",
+        "goals.moveExplanation",
+        "goals.readMove",
+        "goals.useMove",
+        "goals.moveUnavailable",
+        "goals.activityExplanation",
+        "goals.invalid",
+        "goals.saveError",
+        "goals.saved",
+        "goals.steps_goal",
+        "goals.distance_goal_meters",
+        "goals.active_calories_goal",
+        "goals.target_exercise_duration_minutes",
+        "goals.target_exercise_calories_burned",
+        "goals.water_goal_ml",
+        "goals.waitForSave",
+        "goals.discardTitle",
+        "goals.minutesUnit",
+        "goals.fieldWithUnit"
+      ]
+    },
+    {
+      "name": "web",
+      "source": "localization/fork/web",
+      "destination": "SparkyFitnessFrontend/public/locales",
+      "locales": ["it"],
+      "paths": [
+        "challenges",
+        "goals.steps_goal",
+        "goals.distance_goal_meters",
+        "goals.active_calories_goal"
+      ]
+    }
+  ]
+}

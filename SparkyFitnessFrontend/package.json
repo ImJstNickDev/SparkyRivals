@@ -10,18 +10,19 @@
     "knip": "knip",
     "typecheck": "tsc -b",
     "format:check": "prettier . --check",
-    "validate": "pnpm run typecheck && pnpm run lint && pnpm run format:check && pnpm run knip",
+    "validate": "pnpm run i18n:fork:check && pnpm run typecheck && pnpm run lint && pnpm run format:check && pnpm run knip",
     "build": "pnpm run validate && vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint . --max-warnings 0",
     "preview": "vite preview",
     "test": "jest",
     "test:ci": "jest --ci --coverage --maxWorkers=2",
-    "format": "prettier . --write --log-level warn"
+    "format": "prettier . --write --log-level warn",
+    "i18n:fork:check": "node ../scripts/sync-fork-locales.mjs --check"
   },
   "jest": {
     "preset": "ts-jest",
-    "testEnvironment": "jsdom",
+    "testEnvironment": "<rootDir>/src/tests/browserEnvironment.cjs",
     "setupFilesAfterEnv": [
       "<rootDir>/src/tests/setupTests.ts"
     ],
@@ -52,7 +53,8 @@
               "@testing-library/jest-dom",
               "node"
             ],
-            "isolatedModules": true
+            "isolatedModules": true,
+            "target": "ES2022"
           }
         }
       ],
@@ -66,7 +68,8 @@
             "module": "ESNext",
             "moduleResolution": "bundler",
             "rootDir": ".",
-            "isolatedModules": true
+            "isolatedModules": true,
+            "target": "ES2022"
           }
         }
       ]

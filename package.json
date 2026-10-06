@@ -4,7 +4,11 @@
   "scripts": {
     "prepare": "husky",
     "set-version": "node scripts/set-version.js",
-    "reset-dev": "./scripts/reset-dev.sh"
+    "reset-dev": "./scripts/reset-dev.sh",
+    "i18n:fork:export": "node scripts/sync-fork-locales.mjs --export-en",
+    "i18n:fork:import": "node scripts/sync-fork-locales.mjs --write",
+    "i18n:fork:check": "node scripts/sync-fork-locales.mjs --check",
+    "i18n:fork:test": "node --test scripts/tests/fork-locales.test.mjs"
   },
   "devDependencies": {
     "husky": "^9.1.7",
