@@ -1,3 +1,4 @@
+import { challengeReadBlocked, challengeReadRetry } from '@workspace/shared';
 import { useCallback, useRef } from 'react';
 import { AppState } from 'react-native';
 import { useFocusEffect, useIsFocused } from '@react-navigation/native';
@@ -10,8 +11,11 @@ import {
 import type {
   CreateChallengeRequest,
   ChallengeResponse,
+  ChallengeListQuery,
 } from '@workspace/shared';
 import { challengesApi } from '../services/api/challengesApi';
+import { getCompanionChallengeSession } from '../services/companionChallengeSession';
+import { confirmChallengeReady } from '../utils/confirmChallengeReady';
 import { challengeKeys } from './queryKeys';
 import { useProfile } from './useProfile';
 import { useRefetchOnFocus } from './useRefetchOnFocus';
@@ -31,37 +35,57 @@ export function useChallengeIdentity() {
   };
 }
 const freshness = { staleTime: 30_000, refetchOnReconnect: true } as const;
-export function useChallenges() {
+export function useChallenges(view?: ChallengeListQuery['view']) {
   const { actor, enabled } = useChallengeIdentity();
   const focused = useIsFocused();
-  return useInfiniteQuery({
-    ...challengeListOptions(actor),
+  const query = useInfiniteQuery({
+    ...challengeListOptions(actor, view),
     enabled: enabled && focused,
     ...freshness,
+    retry: challengeReadRetry,
   });
+  return {
+    ...query,
+    data:
+      !enabled || challengeReadBlocked(query.error) ? undefined : query.data,
+  };
 }
 export function useChallengeDetail(id: string) {
   const { actor, enabled } = useChallengeIdentity();
   const focused = useIsFocused();
-  return useQuery({
+  const query = useQuery({
     queryKey: challengeKeys.detail(actor, id),
-    queryFn: () => challengesApi.detail(id),
+    queryFn: ({ signal }) => challengesApi.detail(id, signal),
     enabled: enabled && focused && !!id,
     ...freshness,
+    retry: challengeReadRetry,
   });
+  return {
+    ...query,
+    data:
+      !enabled || challengeReadBlocked(query.error) ? undefined : query.data,
+  };
 }
 export function useChallengeResults(challenge?: ChallengeResponse) {
   const { actor, enabled } = useChallengeIdentity();
   const focused = useIsFocused();
-  return useQuery({
+  const mayReadResults =
+    enabled &&
+    challenge?.my_membership === 'accepted' &&
+    ['active', 'completed'].includes(challenge.lifecycle);
+  const query = useQuery({
     ...challengeResultsOptions(actor, challenge?.id ?? ''),
-    enabled:
-      enabled &&
-      focused &&
-      challenge?.my_membership === 'accepted' &&
-      challenge.lifecycle !== 'cancelled',
+    enabled: mayReadResults && focused,
     ...freshness,
+    retry: challengeReadRetry,
   });
+  return {
+    ...query,
+    data:
+      !mayReadResults || challengeReadBlocked(query.error)
+        ? undefined
+        : query.data,
+  };
 }
 export function useChallengeConnections() {
   const { actor, enabled } = useChallengeIdentity();
@@ -110,22 +134,43 @@ export function useChallengeScreenRefresh() {
   return refresh;
 }
 type ChallengeCommand =
+  | {
+      action: 'confirmReady';
+      id: string;
+      target: number;
+      savedTarget: number | null;
+      revision: number;
+    }
   | { action: 'create'; body: CreateChallengeRequest }
   | { action: 'target'; id: string; target: number; revision: number }
   | { action: 'ready'; id: string; ready: boolean; revision: number }
-  | { action: 'withdraw'; id: string; userId: string }
+  | { action: 'withdraw' | 'removeParticipant'; id: string; userId: string }
   | { action: 'rename'; id: string; name: string }
   | { action: 'invite'; id: string; userId: string }
   | { action: 'accept' | 'decline' | 'leave' | 'cancel'; id: string };
 export function useChallengeMutation() {
   const client = useQueryClient();
   const { actor, enabled } = useChallengeIdentity();
+  const session = getCompanionChallengeSession();
+  const current = () =>
+    !session.blocked && getCompanionChallengeSession() === session;
   return useMutation({
     retry: false,
     networkMode: 'always',
     mutationFn: async (command: ChallengeCommand) => {
-      if (!enabled) throw new Error('Challenge identity unavailable');
+      if (!enabled || !current())
+        throw new Error('Challenge identity unavailable');
       switch (command.action) {
+        case 'confirmReady':
+          return confirmChallengeReady({
+            actor,
+            ...command,
+            current,
+            save: (target, revision) =>
+              challengesApi.target(command.id, target, revision),
+            ready: (revision) =>
+              challengesApi.ready(command.id, true, revision),
+          });
         case 'create':
           return challengesApi.create(command.body);
         case 'rename':
@@ -142,6 +187,8 @@ export function useChallengeMutation() {
             command.ready,
             command.revision
           );
+        case 'removeParticipant':
+          return challengesApi.removeParticipant(command.id, command.userId);
         case 'withdraw':
           return challengesApi.withdraw(command.id, command.userId);
         case 'invite':
@@ -151,6 +198,7 @@ export function useChallengeMutation() {
       }
     },
     onSuccess: async (_data, command) => {
+      if (!current()) return;
       if (command.action === 'leave' || command.action === 'decline') {
         client.removeQueries({
           queryKey: challengeKeys.detail(actor, command.id),
@@ -162,6 +210,7 @@ export function useChallengeMutation() {
       await client.invalidateQueries({ queryKey: challengeKeys.all(actor) });
     },
     onError: () => {
+      if (!current()) return;
       void client.invalidateQueries({ queryKey: challengeKeys.all(actor) });
     },
   });

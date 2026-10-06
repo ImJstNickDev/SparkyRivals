@@ -170,6 +170,7 @@ describe('appPreferencesStore', () => {
       const state = useAppPreferencesStore.getState();
       expect(state.dashboardCardOrder).toEqual([
         'calorieRing',
+        'challenges',
         'askSparky',
         'macros',
         'exercise',

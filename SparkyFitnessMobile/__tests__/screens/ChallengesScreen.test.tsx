@@ -1,11 +1,23 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useScreenHeader } from '../../src/hooks/useScreenHeader';
 import { fetchDailyGoals } from '../../src/services/api/goalsApi';
+import {
+  ChallengeResultSummary,
+  ChallengeResultSummary as ChallengeScores,
+} from '../../src/components/challenges/ChallengeResultSummary';
 import { ChallengeLobby } from '../../src/components/challenges/ChallengeLobby';
 import i18n from '../../src/localization/i18n';
 import english from '../../src/localization/locales/en/translation.json';
 import React from 'react';
-import { Alert } from 'react-native';
-import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
+import { invalidateCompanionChallengeSession } from '../../src/services/companionChallengeSession';
+import { Alert, Text } from 'react-native';
+import {
+  act,
+  fireEvent,
+  render,
+  waitFor,
+  within,
+} from '@testing-library/react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import type {
   ChallengeDetailResponse,
@@ -19,8 +31,8 @@ import ChallengeDashboardEntry from '../../src/components/challenges/ChallengeDa
 import { ChallengeActions } from '../../src/components/challenges/ChallengeActions';
 import { ChallengeInvitees } from '../../src/components/challenges/ChallengeInvitees';
 import {
-  ChallengeScores,
   ChallengeDailyHistory,
+  ChallengeResultFacts,
 } from '../../src/components/challenges/ChallengeScores';
 import * as hooks from '../../src/hooks/useChallenges';
 import { usePreferences } from '../../src/hooks/usePreferences';
@@ -41,7 +53,7 @@ jest.mock('../../src/hooks/useChallenges');
 jest.mock('../../src/services/api/goalsApi');
 jest.mock('../../src/hooks/usePreferences');
 jest.mock('../../src/hooks/useScreenHeader', () => ({
-  useScreenHeader: () => null,
+  useScreenHeader: jest.fn(() => null),
 }));
 jest.mock('../../src/services/nativeTabBarPreference', () => ({
   useNativeIOSHeadersActive: () => false,
@@ -53,6 +65,21 @@ jest.mock('../../src/components/CalendarSheet', () => {
   const React = jest.requireActual<typeof import('react')>('react');
   return { __esModule: true, default: React.forwardRef(() => null) };
 });
+const mockDispatch = jest.fn();
+let mockRemovalGuard: {
+  enabled: boolean;
+  callback: (event: { data: { action: { type: string } } }) => void;
+};
+jest.mock('@react-navigation/native', () => ({
+  useIsFocused: () => true,
+  useNavigation: () => ({ dispatch: mockDispatch }),
+  usePreventRemove: (
+    enabled: boolean,
+    callback: typeof mockRemovalGuard.callback
+  ) => {
+    mockRemovalGuard = { enabled, callback };
+  },
+}));
 const h = jest.mocked(hooks);
 const nav = {
   navigate: jest.fn(),
@@ -138,6 +165,7 @@ beforeAll(() => {
 });
 beforeEach(() => {
   jest.clearAllMocks();
+  jest.spyOn(Alert, 'alert').mockImplementation(() => {});
   mutateAsync.mockResolvedValue(detail);
   refresh.mockResolvedValue(undefined);
   h.useChallengeIdentity.mockReturnValue({
@@ -179,50 +207,42 @@ it('provides a labelled one-tap Dashboard entry', () => {
   fireEvent.press(view.getByRole('button', { name: 'Challenges' }));
   expect(press).toHaveBeenCalledTimes(1);
 });
-it('groups invitations, active, upcoming, completed and cancelled without invitation scores', () => {
-  setList(
-    ['pending', 'active', 'upcoming', 'completed', 'cancelled'].map(
-      (state, index) => ({
-        ...challenge,
-        id: `${challenge.id}-${index}`,
-        name: state,
-        lifecycle:
-          state === 'pending'
-            ? 'active'
-            : (state as ChallengeResponse['lifecycle']),
-        my_membership: state === 'pending' ? 'pending' : 'accepted',
-      })
-    )
-  );
+it('requests the selected server collection and keeps rows free of score queries', () => {
+  setList([challenge]);
   const view = screen('Challenges');
-  expect(view.getByText('Invitations')).toBeTruthy();
-  expect(
-    view.getAllByText(`${challenge.progress.days_remaining} days left`).length
-  ).toBeGreaterThan(0);
-  expect(view.getAllByText('Completed')[0]).toBeTruthy();
-  expect(view.getByText('Scores are visible after you accept.')).toBeTruthy();
-  expect(view.getByText('Cancelled. Step sharing has stopped.')).toBeTruthy();
-  fireEvent.press(view.getByRole('button', { name: 'Open active' }));
+  expect(h.useChallenges).toHaveBeenLastCalledWith('mine');
+  expect(h.useChallengeResults).not.toHaveBeenCalled();
+  fireEvent.press(view.getByRole('tab', { name: 'Invitations' }));
+  expect(h.useChallenges).toHaveBeenLastCalledWith('invitations');
+  fireEvent.press(view.getByRole('tab', { name: 'History' }));
+  expect(h.useChallenges).toHaveBeenLastCalledWith('history');
+  fireEvent.press(view.getByRole('button', { name: `Open ${challenge.name}` }));
   expect(nav.navigate).toHaveBeenCalledWith('ChallengeDetail', {
-    id: `${challenge.id}-1`,
+    id: challenge.id,
   });
 });
-it('opens creation from the hub', () => {
-  const view = screen('Challenges');
-  fireEvent.press(view.getByText('Create Challenge'));
+it('opens creation from the shared header', () => {
+  screen('Challenges');
+  const config = jest.mocked(useScreenHeader).mock.calls.at(-1)?.[0];
+  const action = config?.right;
+  expect(action).toMatchObject({
+    kind: 'primary',
+    label: 'Create',
+    disabled: false,
+  });
+  if (action && !Array.isArray(action) && 'onPress' in action)
+    act(() => action.onPress());
   expect(nav.navigate).toHaveBeenCalledWith('CreateChallenge');
 });
 it('refreshes the entire Challenge domain on pull', async () => {
   const view = screen('Challenges');
-  await act(async () =>
-    view.getByTestId('challenge-scroll').props.refreshControl.props.onRefresh()
-  );
+  await act(async () => view.getByTestId('challenge-list').props.onRefresh());
   expect(refresh).toHaveBeenCalledTimes(1);
 });
 it('shows an empty hub', () => {
   setList([]);
   const view = screen('Challenges');
-  expect(view.getByText('Go a little further, together')).toBeTruthy();
+  expect(view.getByText('Your Challenges will appear here.')).toBeTruthy();
 });
 it('shows loading and retryable errors', () => {
   h.useChallenges.mockReturnValue({
@@ -250,16 +270,47 @@ it('does not allow creation before account identity resolves', () => {
   } as unknown as ReturnType<typeof hooks.useChallengeIdentity>);
   expect(screen('Challenges').queryByText('Create Challenge')).toBeNull();
 });
-it('renders authoritative versus totals, ranks, gap and distinct missing/zero points', () => {
+it('renders authoritative versus totals, ranks and distinct missing/zero points', () => {
   const view = screen('ChallengeDetail');
+  expect(view.getByTestId('challenge-scroll')).toHaveStyle({ flex: 1 });
   expect(view.getByText('54,280')).toBeTruthy();
-  expect(view.getByText('51,993')).toBeTruthy();
-  expect(view.getByText('Nico leads by 2,287 steps')).toBeTruthy();
-  expect(view.getByText('Rank 2')).toBeTruthy();
+  expect(view.getByText('51,993 steps')).toBeTruthy();
+  expect(view.getByText('2')).toBeTruthy();
+  expect(view.queryByText('Not started')).toBeNull();
+  fireEvent.press(view.getByText('Daily history'));
   expect(view.getByText('0 steps')).toBeTruthy();
-  expect(view.getAllByText('No step data').length).toBeGreaterThan(0);
+  expect(view.getAllByText('No data recorded').length).toBeGreaterThan(0);
   expect(view.getAllByText('Not started').length).toBeGreaterThan(0);
 });
+it.each([
+  'steps',
+  'distance',
+  'active_calories',
+  'workout_time',
+  'workout_calories',
+  'workout_distance',
+  'hydration',
+] as const)(
+  'describes leaving %s without promising a different metric is shared',
+  (metric) => {
+    const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+    const view = display(
+      <ChallengeActions
+        detail={{
+          ...detail,
+          challenge: { ...challenge, metric, creator_user_id: peer },
+        }}
+        onDepart={jest.fn()}
+      />
+    );
+    fireEvent.press(view.getByText('Leave Challenge'));
+    expect(alert.mock.calls[0]?.[1]).toBe(
+      'Leave this Challenge? Your results will be removed and you cannot rejoin.'
+    );
+    expect(mutateAsync).not.toHaveBeenCalled();
+    alert.mockRestore();
+  }
+);
 it('uses server rank and tie fields without recalculation', () => {
   setResults({
     ...results,
@@ -273,8 +324,8 @@ it('uses server rank and tie fields without recalculation', () => {
     })),
   });
   const view = screen('ChallengeDetail');
-  expect(view.getByText('Nico, Marta share the lead')).toBeTruthy();
-  expect(view.getAllByText(/Rank 1/)).toHaveLength(2);
+  expect(view.getAllByText('Tied')).toHaveLength(2);
+  expect(view.getAllByText('1')).toHaveLength(2);
 });
 it('supports a group leaderboard and participant history picker', () => {
   setResults({
@@ -286,7 +337,8 @@ it('supports a group leaderboard and participant history picker', () => {
   });
   const view = screen('ChallengeDetail');
   expect(view.getAllByText('Alex')[0]).toBeTruthy();
-  expect(view.getByText('Rank 3')).toBeTruthy();
+  expect(view.getByText('3')).toBeTruthy();
+  fireEvent.press(view.getByText('Daily history'));
   expect(view.getByLabelText('Participant')).toBeTruthy();
 });
 it('bounds large participant rendering with show more', () => {
@@ -315,7 +367,7 @@ it('renders a single competitor without an invented gap', () => {
       actor={actor}
     />
   );
-  expect(view.getByText('Your next step starts here')).toBeTruthy();
+  expect(view.getByText('Your total')).toBeTruthy();
   expect(view.queryByText(/leads by/)).toBeNull();
 });
 it.each(['completed', 'cancelled', 'upcoming'] as const)(
@@ -326,14 +378,18 @@ it.each(['completed', 'cancelled', 'upcoming'] as const)(
     if (state === 'completed')
       expect(
         view.getByText(
-          'Results can change when step data arrives late or is corrected.'
+          'Results can change when canonical data arrives late, is corrected or deleted. Locked targets stay unchanged.'
         )
       ).toBeTruthy();
     if (state === 'cancelled') {
       expect(view.queryByText('54,280')).toBeNull();
       expect(view.queryByText('Cancel Challenge')).toBeNull();
     }
-    if (state === 'upcoming') expect(view.getByText('Rename')).toBeTruthy();
+    if (state === 'upcoming') {
+      expect(view.queryByText('Rename')).toBeNull();
+      fireEvent.press(view.getByText('Details and actions'));
+      expect(view.getByText('Rename')).toBeTruthy();
+    }
   }
 );
 it('withholds stale scores from pending members and shows consent', () => {
@@ -348,7 +404,9 @@ it('withholds stale scores from pending members and shows consent', () => {
   });
   const view = screen('ChallengeDetail');
   expect(view.queryByText('54,280')).toBeNull();
-  expect(view.getByText(/Accept to share your daily step totals/)).toBeTruthy();
+  expect(view.getByText('What you share')).toBeTruthy();
+  expect(view.getByText('Steps')).toBeTruthy();
+  expect(view.getByText('Other health data stays private.')).toBeTruthy();
   expect(view.getByText('Invited by Marta')).toBeTruthy();
 });
 it.each(['accept', 'decline'] as const)(
@@ -492,9 +550,11 @@ it('creates in the account timezone with selected Family & Friends', async () =>
       }),
     })
   );
-  expect(nav.replace).toHaveBeenCalledWith('ChallengeDetail', {
-    id: challenge.id,
-  });
+  await waitFor(() =>
+    expect(nav.replace).toHaveBeenCalledWith('ChallengeDetail', {
+      id: challenge.id,
+    })
+  );
 });
 it('validates the creation form and timezone without crashing', () => {
   const view = screen('CreateChallenge');
@@ -582,10 +642,9 @@ it('uses English singular forms without leaking placeholders', () => {
       <ChallengeDailyHistory result={result} actor={actor} />
     </>
   );
-  expect(view.getByText('Nico leads by 1 step')).toBeTruthy();
   expect(view.getAllByText('1 step')).toHaveLength(2);
 });
-it('keeps your position visible below the compact top three', () => {
+it('keeps your supplied position visible in the ranked list', () => {
   const group = {
     ...results,
     entries: Array.from({ length: 4 }, (_, i) => ({
@@ -595,30 +654,32 @@ it('keeps your position visible below the compact top three', () => {
       rank: i + 1,
     })),
   };
-  const view = display(
-    <ChallengeScores result={group} actor={actor} compact />
-  );
+  const view = display(<ChallengeScores result={group} actor={actor} />);
   expect(view.getByText('Friend 3 (you)')).toBeTruthy();
-  expect(view.getByText('Rank 4')).toBeTruthy();
+  expect(view.getByText('4')).toBeTruthy();
 });
-it.each([false, true])('labels completed current winners (tie=%s)', (tied) => {
-  const result = {
-    ...results,
-    challenge: { ...challenge, lifecycle: 'completed' as const },
-    leader_user_ids: tied ? [actor, peer] : [actor],
-  };
-  const view = display(<ChallengeScores result={result} actor={actor} />);
-  expect(
-    view.getByText(
-      tied ? 'Current tied winners: Nico, Marta' : 'Current winner: Nico'
-    )
-  ).toBeTruthy();
-});
+it.each([false, true])(
+  'preserves completed server ranks and ties (tie=%s)',
+  (tied) => {
+    const result = {
+      ...results,
+      challenge: { ...challenge, lifecycle: 'completed' as const },
+      entries: results.entries.map((entry, index) => ({
+        ...entry,
+        rank: tied ? 1 : index + 1,
+        is_tied: tied,
+      })),
+    };
+    const view = display(<ChallengeScores result={result} actor={actor} />);
+    expect(view.getAllByText('1')).toHaveLength(tied ? 2 : 1);
+    expect(view.queryAllByText('Tied')).toHaveLength(tied ? 2 : 0);
+  }
+);
 
 describe('Workout time', () => {
   it('selects the workout metric on creation', async () => {
     const view = screen('CreateChallenge');
-    fireEvent.press(view.getByLabelText('Workout Minutes'));
+    fireEvent.press(view.getByLabelText('Workout time'));
     fireEvent.changeText(
       view.getByLabelText('Challenge name'),
       'Time together'
@@ -635,17 +696,20 @@ describe('Workout time', () => {
     'renders %s workout duration and secondary counts',
     (lifecycle) => {
       const view = display(
-        <ChallengeScores
-          actor={actor}
-          result={{
-            ...workoutResults,
-            challenge: { ...workoutResults.challenge, lifecycle },
-          }}
-        />
+        <>
+          <ChallengeScores
+            actor={actor}
+            result={{
+              ...workoutResults,
+              challenge: { ...workoutResults.challenge, lifecycle },
+            }}
+          />
+          <ChallengeResultFacts result={workoutResults} />
+        </>
       );
-      expect(view.getAllByText('3h 42m').length).toBeGreaterThan(0);
+      expect(view.getAllByText('3.7').length).toBeGreaterThan(0);
       expect(view.getAllByText(/4 workouts/).length).toBeGreaterThan(0);
-      expect(view.getAllByText(/24m/).length).toBeGreaterThan(0);
+      expect(view.getAllByText(/h/).length).toBeGreaterThan(0);
     }
   );
   it('renders original group ranks and workout counts', () => {
@@ -661,7 +725,7 @@ describe('Workout time', () => {
       },
     ];
     const view = display(
-      <ChallengeScores actor={actor} result={{ ...workoutResults, entries }} />
+      <ChallengeResultFacts result={{ ...workoutResults, entries }} />
     );
     expect(view.getByText('Luca')).toBeTruthy();
     expect(view.getByText('1 workout')).toBeTruthy();
@@ -670,14 +734,14 @@ describe('Workout time', () => {
     const view = display(
       <ChallengeDailyHistory actor={actor} result={workoutResults} />
     );
-    expect(view.getAllByText('0m').length).toBeGreaterThan(0);
+    expect(view.getAllByText('0 min').length).toBeGreaterThan(0);
     expect(view.getAllByText('No workout recorded').length).toBeGreaterThan(0);
     expect(view.queryByText('No step data')).toBeNull();
   });
   it('shows a workout invitation without totals', () => {
     setList([{ ...workoutResults.challenge, my_membership: 'pending' }]);
     const view = screen('Challenges');
-    expect(view.getAllByText(/Workout time/).length).toBeGreaterThan(0);
+    expect(view.getAllByText('Workout Minutes').length).toBeGreaterThan(0);
     expect(view.queryByText('3h 42m')).toBeNull();
   });
 });
@@ -762,7 +826,7 @@ describe('Goal Challenge functional flows', () => {
   };
   it('creates a duration-based goal lobby with immediate start as default', async () => {
     const view = screen('CreateChallenge');
-    fireEvent.press(view.getByLabelText('Step Goal'));
+    fireEvent.press(view.getByRole('tab', { name: 'Goal points' }));
     fireEvent.changeText(view.getByLabelText('Challenge name'), 'Our goal');
     expect(view.getByLabelText('Start on next full day').props.value).toBe(
       false
@@ -793,7 +857,7 @@ describe('Goal Challenge functional flows', () => {
       view.getByLabelText('Your daily target (steps)'),
       '9000'
     );
-    fireEvent.press(view.getByText('Save target'));
+    fireEvent(view.getByLabelText('Your daily target (steps)'), 'blur');
     expect(mutateAsync).toHaveBeenCalledWith({
       action: 'target',
       id: challenge.id,
@@ -809,7 +873,7 @@ describe('Goal Challenge functional flows', () => {
     await waitFor(() =>
       expect(view.getByLabelText('Your daily target (steps)')).toBeTruthy()
     );
-    fireEvent.press(view.getByText('Save target'));
+    fireEvent.press(view.getByText('Ready'));
     expect(mutateAsync).not.toHaveBeenCalled();
     expect(view.getByRole('alert')).toBeTruthy();
   });
@@ -827,20 +891,27 @@ describe('Goal Challenge functional flows', () => {
       };
       const view = display(<ChallengeLobby detail={value} />);
       await waitFor(() =>
-        expect(view.getByLabelText('Your daily target (steps)')).toBeTruthy()
+        expect(
+          view.getByRole('button', {
+            name: ready ? 'Not ready' : 'Ready',
+          })
+        ).toBeTruthy()
       );
       fireEvent.press(
-        view.getByRole('button', { name: ready ? 'Not ready' : 'Ready' })
+        view.getByRole('button', {
+          name: ready ? 'Not ready' : 'Ready',
+        })
       );
-      expect(mutateAsync).toHaveBeenCalledWith({
-        action: 'ready',
-        id: challenge.id,
-        ready: !ready,
-        revision: 2,
-      });
+      await waitFor(() =>
+        expect(mutateAsync).toHaveBeenCalledWith(
+          ready
+            ? { action: 'ready', id: challenge.id, ready: false, revision: 2 }
+            : { action: 'ready', id: challenge.id, ready: true, revision: 2 }
+        )
+      );
     }
   );
-  it('offers creator withdrawal only for pending participants', async () => {
+  it('confirms creator withdrawal for a pending participant', async () => {
     const value = {
       ...lobby,
       participants: lobby.participants.map((p) =>
@@ -848,12 +919,121 @@ describe('Goal Challenge functional flows', () => {
       ),
     };
     const view = display(<ChallengeLobby detail={value} />);
-    fireEvent.press(view.getByText('Withdraw invitation'));
+    fireEvent.press(view.getByText('Delete'));
+    expect(mutateAsync).not.toHaveBeenCalled();
+    const options = jest.mocked(Alert.alert).mock.calls.at(-1)?.[2];
+    options?.find((option) => option.style === 'destructive')?.onPress?.();
     expect(mutateAsync).toHaveBeenCalledWith({
       action: 'withdraw',
       id: challenge.id,
       userId: peer,
     });
+  });
+  const saved = (value: number, revision: number) => ({
+    ...lobby,
+    participants: lobby.participants.map((p) =>
+      p.user_id === actor
+        ? { ...p, target_value: value, target_revision: revision }
+        : p
+    ),
+  });
+  it('serializes blur and Ready and uses the returned target revision', async () => {
+    let finish!: (d: ChallengeDetailResponse) => void;
+    mutateAsync.mockImplementationOnce(
+      () =>
+        new Promise<ChallengeDetailResponse>((resolve) => {
+          finish = resolve;
+        })
+    );
+    const view = display(<ChallengeLobby detail={lobby} />);
+    const field = await view.findByLabelText('Your daily target (steps)');
+    fireEvent.changeText(field, '9000');
+    fireEvent(field, 'blur');
+    fireEvent.press(view.getByText('Ready'));
+    expect(mutateAsync).toHaveBeenCalledTimes(1);
+    await act(async () => finish(saved(9000, 7)));
+    await waitFor(() =>
+      expect(mutateAsync).toHaveBeenLastCalledWith({
+        action: 'ready',
+        id: challenge.id,
+        ready: true,
+        revision: 7,
+      })
+    );
+  });
+  it('saves a dirty draft before dispatching Back, without becoming Ready', async () => {
+    let finish!: (d: ChallengeDetailResponse) => void;
+    mutateAsync.mockImplementationOnce(
+      () =>
+        new Promise<ChallengeDetailResponse>((resolve) => {
+          finish = resolve;
+        })
+    );
+    const view = display(<ChallengeLobby detail={lobby} />);
+    fireEvent.changeText(
+      await view.findByLabelText('Your daily target (steps)'),
+      '9500'
+    );
+    expect(mockRemovalGuard.enabled).toBe(true);
+    act(() =>
+      mockRemovalGuard.callback({ data: { action: { type: 'GO_BACK' } } })
+    );
+    expect(mockDispatch).not.toHaveBeenCalled();
+    await act(async () => finish(saved(9500, 1)));
+    expect(mockDispatch).toHaveBeenCalledWith({ type: 'GO_BACK' });
+    expect(mutateAsync).toHaveBeenCalledTimes(1);
+  });
+  it('retains invalid or failed autosave input and does not leave', async () => {
+    const view = display(<ChallengeLobby detail={lobby} />);
+    const field = await view.findByLabelText('Your daily target (steps)');
+    fireEvent.changeText(field, 'invalid');
+    act(() =>
+      mockRemovalGuard.callback({ data: { action: { type: 'GO_BACK' } } })
+    );
+    expect(mutateAsync).not.toHaveBeenCalled();
+    mutateAsync.mockRejectedValueOnce(new Error('offline'));
+    fireEvent.changeText(field, '9000');
+    fireEvent(field, 'blur');
+    await waitFor(() =>
+      expect(view.getAllByRole('alert').length).toBeGreaterThan(0)
+    );
+    expect(view.getByDisplayValue('9000')).toBeTruthy();
+    expect(mockDispatch).not.toHaveBeenCalled();
+  });
+  it('does not navigate or issue Ready after a session changes during save', async () => {
+    let finish!: (d: ChallengeDetailResponse) => void;
+    mutateAsync.mockImplementationOnce(
+      () =>
+        new Promise<ChallengeDetailResponse>((resolve) => {
+          finish = resolve;
+        })
+    );
+    const view = display(<ChallengeLobby detail={lobby} />);
+    fireEvent.changeText(
+      await view.findByLabelText('Your daily target (steps)'),
+      '9000'
+    );
+    fireEvent.press(view.getByText('Ready'));
+    invalidateCompanionChallengeSession(false);
+    await act(async () => finish(saved(9000, 1)));
+    expect(mutateAsync).toHaveBeenCalledTimes(1);
+    expect(mockDispatch).not.toHaveBeenCalled();
+  });
+  it('reports that target saved when the subsequent Ready request fails', async () => {
+    mutateAsync
+      .mockResolvedValueOnce(saved(9000, 1))
+      .mockRejectedValueOnce(new Error('offline'));
+    const view = display(<ChallengeLobby detail={lobby} />);
+    fireEvent.changeText(
+      await view.findByLabelText('Your daily target (steps)'),
+      '9000'
+    );
+    fireEvent.press(view.getByText('Ready'));
+    expect(
+      await view.findByText(
+        'Target saved. Ready was not confirmed. Review the saved target and try again.'
+      )
+    ).toBeTruthy();
   });
   it('shows locked targets without mutation controls', () => {
     const value = {
@@ -877,20 +1057,146 @@ describe('Goal Challenge functional flows', () => {
 describe('Goal result units', () => {
   it('shows uncapped points and each participant target without inventing a tiebreak', () => {
     const view = display(
-      <ChallengeScores actor={actor} result={goalResults} />
+      <>
+        <ChallengeScores actor={actor} result={goalResults} />
+        <ChallengeResultFacts result={goalResults} />
+      </>
     );
-    expect(view.getAllByText('140 pts')).toHaveLength(2);
+    expect(view.getAllByText('140').length).toBeGreaterThanOrEqual(2);
     expect(view.getByText('Daily target: 8,000 steps')).toBeTruthy();
     expect(view.getByText('Daily target: 16,000 steps')).toBeTruthy();
-    expect(view.getAllByText(/Rank 1.*Tied/)).toHaveLength(2);
+    expect(view.getAllByText('1')).toHaveLength(2);
+    expect(view.getAllByText('Tied')).toHaveLength(2);
   });
   it('keeps canonical actuals and percentage in daily history', () => {
     const view = display(
       <ChallengeDailyHistory actor={actor} result={goalResults} />
     );
     expect(
-      view.getAllByText(/11,200 steps.*8,000 steps.*140%/).length
+      view.getAllByText(/11,200.*8,000 steps.*140%/).length
     ).toBeGreaterThan(0);
     expect(view.getAllByText('No data recorded').length).toBeGreaterThan(0);
+  });
+});
+
+describe('Goal result visual summary', () => {
+  it.each([
+    [1, '1st'],
+    [2, '2nd'],
+    [3, '3rd'],
+    [4, '4th'],
+    [11, '11th'],
+    [12, '12th'],
+    [13, '13th'],
+    [21, '21st'],
+    [22, '22nd'],
+    [23, '23rd'],
+    [100, '100th'],
+  ] as const)(
+    'groups the total with the server-supplied %s place',
+    (rank, ordinal) => {
+      const result = {
+        ...goalResults,
+        entries: Array.from({ length: Math.max(2, rank) }, (_, index) => ({
+          ...goalResults.entries[0]!,
+          user_id: index === rank - 1 ? actor : `synthetic-${index}`,
+          rank: index + 1,
+          is_tied: false,
+        })),
+      };
+      const view = display(
+        <ChallengeResultSummary actor={actor} result={result} />
+      );
+      const card = within(view.getByTestId('challenge-own-result'));
+      expect(card.getByText('Your total')).toBeTruthy();
+      expect(card.getByText('points')).toBeTruthy();
+      expect(
+        card.getByText(`${ordinal} place · ${result.entries.length} players`)
+      ).toBeTruthy();
+      expect(card.queryByText('Today 140%')).toBeNull();
+      expect(view.getByText('Today 140%')).toBeTruthy();
+    }
+  );
+  it('keeps a true server tie explicit in the summary card', () => {
+    const view = display(
+      <ChallengeResultSummary actor={actor} result={goalResults} />
+    );
+    expect(view.getByText('Joint 1st place · 2 players')).toBeTruthy();
+  });
+  it('uses a singular player count and omits position when unranked', () => {
+    const entry = { ...goalResults.entries[0]!, rank: 1, is_tied: false };
+    const view = display(
+      <ChallengeResultSummary
+        actor={actor}
+        result={{ ...goalResults, entries: [entry] }}
+      />
+    );
+    expect(view.getByText('1st place · 1 player')).toBeTruthy();
+    view.unmount();
+    const unranked = display(
+      <ChallengeResultSummary
+        actor={actor}
+        result={{ ...goalResults, entries: [{ ...entry, rank: null }] }}
+      />
+    );
+    expect(
+      within(unranked.getByTestId('challenge-own-result')).queryByText(/place/)
+    ).toBeNull();
+  });
+  it('keeps the centered freshness label last, including after expanding details', () => {
+    setDetail({ ...detail, challenge: goalResults.challenge });
+    setResults(goalResults);
+    const view = screen('ChallengeDetail');
+    const expectFooterLast = () => {
+      const footer = view.getByText(/^Updated /);
+      expect(footer.props.className).toContain('text-center');
+      const texts = view.getByTestId('challenge-scroll').findAllByType(Text);
+      expect(texts.at(-1)?.props.children).toBe(footer.props.children);
+    };
+    expectFooterLast();
+    fireEvent.press(view.getByText('Details and actions'));
+    expect(view.getByText(goalResults.challenge.timezone)).toBeTruthy();
+    expectFooterLast();
+  });
+  it.each([50, 100, 140, 200])(
+    'presents %s points without capping or duplicating units',
+    (points) => {
+      const result = {
+        ...goalResults,
+        entries: goalResults.entries.map((e) => ({
+          ...e,
+          total_score: points,
+          total_score_scaled: String(points * 1_000_000),
+        })),
+      };
+      const view = display(
+        <ChallengeResultSummary actor={actor} result={result} />
+      );
+      expect(view.getAllByText(String(points)).length).toBeGreaterThan(0);
+      expect(view.getByText('points')).toBeTruthy();
+      expect(view.queryByText(`${points} pts`)).toBeNull();
+    }
+  );
+  it('preserves distinct server ranks when presentation rounds values alike', () => {
+    const result = {
+      ...goalResults,
+      entries: goalResults.entries.map((e, i) => ({
+        ...e,
+        total_score: 140.000002 - i * 0.000001,
+        total_score_scaled: String(140000002 - i),
+        rank: i + 1,
+        is_tied: false,
+      })),
+    };
+    const view = display(
+      <ChallengeResultSummary actor={actor} result={result} />
+    );
+    expect(view.getByText('1')).toBeTruthy();
+    expect(view.getByText('2')).toBeTruthy();
+    expect(view.queryByText('Tied')).toBeNull();
+    expect(view.queryByText('Exact values')).toBeNull();
+    fireEvent.press(view.getByLabelText(/Nico, rank 1/));
+    expect(view.getByText('11,200 steps')).toBeTruthy();
+    expect(view.getByText('2')).toBeTruthy();
   });
 });

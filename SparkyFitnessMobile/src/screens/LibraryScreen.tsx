@@ -17,6 +17,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useActiveWorkoutBarPadding } from '../components/ActiveWorkoutBar';
 import { useNativeIOSTabsActive } from '../services/nativeTabBarPreference';
 import { useNavigationActionGuard } from '../hooks/useNavigationActionGuard';
+import { useScreenHeader } from '../hooks/useScreenHeader';
 import Button from '../components/ui/Button';
 import CreateTile from '../components/CreateTile';
 import FoodLibraryRow from '../components/FoodLibraryRow';
@@ -63,6 +64,17 @@ const LibraryScreen: React.FC<LibraryScreenProps> = ({ navigation }) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { isNavigationLocked, runNavigationAction } =
     useNavigationActionGuard(navigation);
+  const header = useScreenHeader({
+    title: t('screens.library.title', { defaultValue: 'Library' }),
+    right: {
+      kind: 'icon',
+      sfSymbol: 'trophy',
+      ionicon: 'trophy-outline',
+      accessibilityLabel: t('challenges.title', { defaultValue: 'Challenges' }),
+      onPress: () =>
+        runNavigationAction(() => navigation.navigate('Challenges')),
+    },
+  });
   const { isConnected, isLoading: isConnectionLoading } = useServerConnection();
   const { favoriteFoods, favoriteMeals } = useFavorites({
     enabled: isConnected,
@@ -199,6 +211,7 @@ const LibraryScreen: React.FC<LibraryScreenProps> = ({ navigation }) => {
         className="flex-1 bg-background"
         style={usesNativeTabs ? undefined : { paddingTop: insets.top }}
       >
+        {header}
         <StatusView
           icon="cloud-offline"
           iconTone="muted"
@@ -228,6 +241,7 @@ const LibraryScreen: React.FC<LibraryScreenProps> = ({ navigation }) => {
         className="flex-1 bg-background"
         style={usesNativeTabs ? undefined : { paddingTop: insets.top }}
       >
+        {header}
         <StatusView
           loading
           title={t('screens.library.loading', {
@@ -261,13 +275,7 @@ const LibraryScreen: React.FC<LibraryScreenProps> = ({ navigation }) => {
         />
       }
     >
-      {!usesNativeTabs && (
-        <View className="mb-6">
-          <Text className="text-2xl font-bold text-text-primary">
-            {t('screens.library.title', { defaultValue: 'Library' })}
-          </Text>
-        </View>
-      )}
+      {header}
 
       <View className="mb-3">
         <Text className="text-lg font-semibold text-text-primary">

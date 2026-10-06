@@ -22,7 +22,7 @@ const SegmentedControl = <T extends string>({
         <TouchableOpacity
           key={segment.key}
           onPress={() => onSelect(segment.key)}
-          className={`flex-1 py-2 rounded-md items-center ${
+          className={`flex-1 min-h-12 py-2 px-1 rounded-md items-center justify-center ${
             activeKey === segment.key ? 'bg-surface' : ''
           }`}
           activeOpacity={0.7}
@@ -30,10 +30,10 @@ const SegmentedControl = <T extends string>({
           accessibilityState={{ selected: activeKey === segment.key }}
         >
           <Text
-            className={`text-sm font-medium ${
+            className={`text-sm font-medium text-center ${
               activeKey === segment.key
                 ? 'text-text-primary'
-                : 'text-text-muted'
+                : 'text-text-secondary'
             }`}
           >
             {segment.label}

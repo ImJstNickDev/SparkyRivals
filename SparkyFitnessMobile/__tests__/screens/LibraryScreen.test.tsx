@@ -1,4 +1,5 @@
 import React from 'react';
+import { NavigationContext } from '@react-navigation/native';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -13,6 +14,11 @@ import {
 import { fetchExercisesCount } from '../../src/services/api/exerciseApi';
 import { fetchFoodsPage } from '../../src/services/api/foodsApi';
 import { fetchWorkoutPresetsPage } from '../../src/services/api/workoutPresetsApi';
+
+jest.mock('../../src/services/nativeTabBarPreference', () => ({
+  ...jest.requireActual('../../src/services/nativeTabBarPreference'),
+  useNativeIOSHeadersActive: () => false,
+}));
 
 jest.mock('../../src/hooks', () => ({
   useFoods: jest.fn(),
@@ -137,8 +143,10 @@ function createMeal(id: string, name: string, calories: number) {
 describe('LibraryScreen', () => {
   const navigation = {
     navigate: jest.fn(),
+    setOptions: jest.fn(),
+    goBack: jest.fn(),
     addListener: jest.fn(() => jest.fn()),
-  } as any;
+  } as unknown as React.ComponentProps<typeof LibraryScreen>['navigation'];
 
   const route = {
     key: 'Library-key',
@@ -166,11 +174,28 @@ describe('LibraryScreen', () => {
     return render(
       <QueryClientProvider client={queryClient}>
         <SafeAreaProvider initialMetrics={{ insets, frame }}>
-          <LibraryScreen navigation={navigation} route={route} />
+          <NavigationContext.Provider value={navigation}>
+            <LibraryScreen navigation={navigation} route={route} />
+          </NavigationContext.Provider>
         </SafeAreaProvider>
       </QueryClientProvider>
     );
   };
+
+  it('keeps Challenges reachable independently of library data and guards double presses', () => {
+    mockUseServerConnection.mockReturnValue({
+      isConnected: false,
+      isLoading: false,
+      isError: true,
+      error: new Error('offline'),
+      refetch: jest.fn(),
+    });
+    const view = renderScreen();
+    fireEvent.press(view.getByLabelText('Challenges'));
+    fireEvent.press(view.getByLabelText('Challenges'));
+    expect(navigation.navigate).toHaveBeenCalledTimes(1);
+    expect(navigation.navigate).toHaveBeenCalledWith('Challenges');
+  });
 
   beforeEach(() => {
     jest.clearAllMocks();

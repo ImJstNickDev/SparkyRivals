@@ -331,6 +331,9 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) => {
   const hydrationCardVisible = useAppPreferencesStore(
     (s) => s.hydrationCardVisible
   );
+  const challengesCardVisible = useAppPreferencesStore(
+    (s) => s.challengesCardVisible
+  );
   const caffeineCardVisible = useAppPreferencesStore(
     (s) => s.caffeineCardVisible
   );
@@ -508,11 +511,19 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) => {
             to `selectedDate`. Visibility is a local app setting toggled from
             Dashboard Settings. */}
         <FastingGoalReconciler />
-        <ChallengeDashboardEntry
-          onPress={() => navigation.navigate('Challenges')}
-        />
         {orderedDashboardCards.map((cardKey) => {
           switch (cardKey) {
+            case 'challenges':
+              return challengesCardVisible ? (
+                <ChallengeDashboardEntry
+                  key="challenges"
+                  onPress={(id) =>
+                    id
+                      ? navigation.navigate('ChallengeDetail', { id })
+                      : navigation.navigate('Challenges')
+                  }
+                />
+              ) : null;
             case 'calorieRing':
               return calorieRingCardVisible &&
                 (summary.foodEntries.length > 0 ||

@@ -182,6 +182,26 @@ function resolveRootStackScreenFiles(
   return screenFiles;
 }
 
+/** Resolve actual tab-local native stacks too; they have the same suppression rule. */
+function resolveTabScreenFiles(source: string): string[] {
+  const imports = extractDefaultImportPaths(source);
+  const safeComponents = extractSafeComponentNamesByScreen(source);
+  return extractScreenNames(source, 'NativeTab').flatMap((route) => {
+    const component = safeComponents.get(route);
+    const file = component ? imports.get(component) : undefined;
+    if (!file) return [];
+    const stackScreen = new RegExp(
+      `<${route}Stack\\.Screen[^>]*component=\\{Safe${route}(?: as React\\.ComponentType)?\\}`
+    );
+    if (!stackScreen.test(source)) {
+      throw new Error(
+        `Tab ${route} is missing its registered native stack screen`
+      );
+    }
+    return [file];
+  });
+}
+
 function missingFrom(expected: string[], actual: string[]): string[] {
   const actualSet = new Set(actual);
   return expected.filter((item) => !actualSet.has(item));
@@ -664,7 +684,10 @@ describe('native header navigation contract', () => {
       appSource,
       safeScreensSource
     );
-    const rootStackScreenFileSet = new Set(rootStackScreenFiles.values());
+    const rootStackScreenFileSet = new Set([
+      ...rootStackScreenFiles.values(),
+      ...resolveTabScreenFiles(tabsSource),
+    ]);
     const screensWithNativeItemsAndReactHeaders = [...rootStackScreenFileSet]
       .filter((relativePath) => {
         const source = readMobileFile(relativePath);
