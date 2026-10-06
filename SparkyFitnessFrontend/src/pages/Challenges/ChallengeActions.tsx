@@ -103,19 +103,22 @@ export function ChallengeActions({
             </Button>
           </>
         )}
-        {owner && open && (
+        {owner && open && challenge.my_membership === 'accepted' && (
           <>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setSelected([]);
-                mutation.reset();
-                setDialog('invite');
-              }}
-              disabled={capacity <= 0}
-            >
-              {labels.invite}
-            </Button>
+            {(challenge.scoring_mode === 'sum' ||
+              challenge.lifecycle === 'lobby') && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setSelected([]);
+                  mutation.reset();
+                  setDialog('invite');
+                }}
+                disabled={capacity <= 0}
+              >
+                {labels.invite}
+              </Button>
+            )}
             {['lobby', 'upcoming'].includes(challenge.lifecycle) && (
               <Button
                 variant="outline"
@@ -170,25 +173,15 @@ export function ChallengeActions({
             <DialogTitle>{dialog && labels[dialog]}</DialogTitle>
             <DialogDescription>
               {dialog === 'cancel'
-                ? challenge.metric === 'workout_time'
-                  ? t('challenges.workoutCancelConfirm', {
-                      defaultValue:
-                        'Cancel for everyone? Workout time sharing stops and this cannot be undone.',
-                    })
-                  : t(
-                      'challenges.cancelConfirm',
-                      'Cancel for everyone? Step sharing stops and this cannot be undone.'
-                    )
+                ? t('challenges.ux.cancelConfirm', {
+                    defaultValue:
+                      'Cancel for everyone? Challenge sharing stops. This cannot be undone.',
+                  })
                 : dialog === 'leave'
-                  ? challenge.metric === 'workout_time'
-                    ? t('challenges.workoutLeaveConfirm', {
-                        defaultValue:
-                          'Leave this Challenge? Your workout time will be removed from its results, and you cannot rejoin.',
-                      })
-                    : t(
-                        'challenges.leaveConfirm',
-                        'Leave this Challenge? Your steps will be removed from its results, and you cannot rejoin.'
-                      )
+                  ? t('challenges.ux.leaveConfirm', {
+                      defaultValue:
+                        'Leave this Challenge? Your results will be removed, and you cannot rejoin.',
+                    })
                   : t(
                       'challenges.rulesFixed',
                       'Dates, timezone and scoring stay the same.'

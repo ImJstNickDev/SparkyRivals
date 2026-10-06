@@ -4,6 +4,7 @@ import {
   challengeLeaderboardResponseSchema,
   challengeListResponseSchema,
   type CreateChallengeRequest,
+  type ChallengeListQuery,
 } from '@workspace/shared';
 import { apiCall } from '@/api/api';
 
@@ -17,17 +18,22 @@ const request = (
   });
 const path = (id: string) => `/v2/challenges/${encodeURIComponent(id)}`;
 export const challengeApi = {
-  list: async (offset = 0) =>
+  list: async (
+    offset = 0,
+    view?: ChallengeListQuery['view'],
+    signal?: AbortSignal
+  ) =>
     challengeListResponseSchema.parse(
       await request('/v2/challenges', {
-        params: { limit: 20, offset },
+        params: { limit: 20, offset, ...(view ? { view } : {}) },
+        signal,
       })
     ),
-  detail: async (id: string) =>
-    challengeDetailResponseSchema.parse(await request(path(id))),
-  results: async (id: string) =>
+  detail: async (id: string, signal?: AbortSignal) =>
+    challengeDetailResponseSchema.parse(await request(path(id), { signal })),
+  results: async (id: string, signal?: AbortSignal) =>
     challengeLeaderboardResponseSchema.parse(
-      await request(`${path(id)}/leaderboard`)
+      await request(`${path(id)}/leaderboard`, { signal })
     ),
   connections: async () =>
     challengeConnectionsSchema.parse(await apiCall('/identity/family-access')),
@@ -63,6 +69,12 @@ export const challengeApi = {
   withdraw: async (id: string, userId: string) =>
     challengeDetailResponseSchema.parse(
       await request(`${path(id)}/invitations/${encodeURIComponent(userId)}`, {
+        method: 'DELETE',
+      })
+    ),
+  removeParticipant: async (id: string, userId: string) =>
+    challengeDetailResponseSchema.parse(
+      await request(`${path(id)}/participants/${encodeURIComponent(userId)}`, {
         method: 'DELETE',
       })
     ),

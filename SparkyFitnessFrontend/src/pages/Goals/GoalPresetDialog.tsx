@@ -59,6 +59,7 @@ export const GoalPresetDialog = ({
 }: GoalPresetDialogProps) => {
   const { energyUnit, convertEnergy, getEnergyUnitString } = usePreferences();
   const { t } = useTranslation();
+  const [activityValid, setActivityValid] = useState(true);
   const { user } = useAuth();
   const { data: customNutrients } = useCustomNutrients();
   const { data: mealTypes = [] } = useMealTypes();
@@ -124,7 +125,7 @@ export const GoalPresetDialog = ({
   }, [formData, visibleMeals]);
 
   const handleSave = async () => {
-    if (!formData || !user) return;
+    if (!formData || !user || !activityValid) return;
 
     const toSave = { ...formData };
 
@@ -402,6 +403,7 @@ export const GoalPresetDialog = ({
             </div>
             <Separator />
             <WaterAndExerciseFields
+              onValidityChange={setActivityValid}
               state={formData}
               setState={(val) => setFormData(val)}
             />
@@ -426,7 +428,9 @@ export const GoalPresetDialog = ({
           <DialogFooter>
             <Button
               onClick={handleSave}
-              disabled={presetSaving || !isTotalPercentageValid}
+              disabled={
+                !activityValid || presetSaving || !isTotalPercentageValid
+              }
               className="w-full sm:w-auto"
             >
               {t('common.saveChanges')}

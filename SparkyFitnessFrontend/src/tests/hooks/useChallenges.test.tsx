@@ -156,3 +156,94 @@ it.each([
     queryKey: challengeKeys.all(actor),
   });
 });
+
+it('rejects an obsolete mutation even when self access returns before its response', async () => {
+  const context = setup();
+  const invalidate = jest.spyOn(context.client, 'invalidateQueries');
+  let resolve!: () => void;
+  api.respond.mockReturnValue(
+    new Promise((done) => {
+      resolve = done;
+    })
+  );
+  const { result, rerender } = renderHook(
+    () => useChallengeMutation(),
+    context
+  );
+  let finished!: Promise<unknown>;
+  act(() => {
+    finished = result.current
+      .mutateAsync({ action: 'accept', id: challenge.id })
+      .catch((error: unknown) => error);
+  });
+  await waitFor(() => expect(api.respond).toHaveBeenCalledTimes(1));
+  jest
+    .mocked(useActiveUser)
+    .mockReturnValue({ isActingOnBehalf: true } as ReturnType<
+      typeof useActiveUser
+    >);
+  rerender();
+  jest
+    .mocked(useActiveUser)
+    .mockReturnValue({ isActingOnBehalf: false } as ReturnType<
+      typeof useActiveUser
+    >);
+  rerender();
+  await act(async () => {
+    resolve();
+    await finished;
+  });
+  expect(await finished).toEqual(new Error('Challenge context changed'));
+  expect(invalidate).not.toHaveBeenCalled();
+});
+it('paginates the authorized selected view without downloading other tabs', async () => {
+  api.list.mockImplementation(async (offset = 0, view) => ({
+    challenges: Array.from({ length: 20 }, (_, i) => ({
+      ...challenge,
+      id: `${view}-${offset + i}`,
+      my_membership: 'pending' as const,
+    })),
+    limit: 20,
+    offset,
+    has_more: offset === 0,
+  }));
+  const { result } = renderHook(() => useChallenges('invitations'), setup());
+  await waitFor(() => expect(result.current.isSuccess).toBe(true));
+  expect(api.list).toHaveBeenCalledTimes(1);
+  await act(() => result.current.fetchNextPage());
+  await waitFor(() =>
+    expect(result.current.data?.pages[1]?.challenges[0]?.id).toBe(
+      'invitations-20'
+    )
+  );
+  expect(result.current.hasNextPage).toBe(false);
+  expect(api.list).toHaveBeenNthCalledWith(
+    2,
+    20,
+    'invitations',
+    expect.any(AbortSignal)
+  );
+  expect(api.results).not.toHaveBeenCalled();
+});
+
+it('hides cached result data as soon as access is denied or sharing is cancelled', async () => {
+  const context = setup();
+  const { result, rerender } = renderHook(
+    ({ lifecycle }) => useChallengeResults({ ...challenge, lifecycle }),
+    {
+      ...context,
+      initialProps: { lifecycle: 'active' as typeof challenge.lifecycle },
+    }
+  );
+  await waitFor(() => expect(result.current.data).toEqual(results));
+  rerender({ lifecycle: 'cancelled' });
+  expect(result.current.data).toBeUndefined();
+  rerender({ lifecycle: 'active' });
+  api.results.mockRejectedValue(
+    Object.assign(new Error('Denied'), { status: 403 })
+  );
+  await act(async () => {
+    await result.current.refetch();
+  });
+  await waitFor(() => expect(result.current.data).toBeUndefined());
+});
