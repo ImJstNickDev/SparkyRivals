@@ -153,7 +153,7 @@ See [REMOTE_PUSH.md](REMOTE_PUSH.md) for architecture. PR #12 merged normally at
 `8121e261a8e1a19637f047b9b9e0d139738292e3`, including startup RLS recovery for all three push tables.
 No direct Watch push, remote start/end/lead scheduler, scoring or production work.
 
-## 8A.6. Challenge types, personal goals and Ready lobbies — implemented, acceptance review pending
+## 8A.6. Challenge types, personal goals and Ready lobbies — completed; PR #14 merged
 
 See [CHALLENGE_TYPES.md](CHALLENGE_TYPES.md) for the allowed metric/mode matrix,
 canonical units, uncapped goal points, goal-day counts, personal target snapshots
@@ -168,29 +168,30 @@ activation, locked targets, uncapped Move points, goal-day counts, legacy Step R
 and canonical manual hydration without double counting. Both watches
 received the new data; visual defects and remaining physical health-source checks
 are explicitly recorded in [RELEASE_VALIDATION.md](RELEASE_VALIDATION.md).
-M8A.6 awaits acceptance review; do not treat automated coverage
-as physical evidence. M8A.5 credential, privacy and push boundaries remain intact.
+PR #14 merged normally at `0e185e879042a6fec0613e57ebe534c00fd552ab`,
+preserving reviewed head `a6f87cd34c78629f398016a18b60ffbdab264118`.
+The documented physical health-source gaps remain; automated coverage is not physical evidence. M8A.5 credential, privacy and push boundaries remain intact.
 
-## 8A.7. Challenge phone and watch UI/UX redesign — future
+## 8A.7. Challenge UX, localization and companion polish — in progress
 
-Redesign Dashboard entry, hub, invitations, lobby hierarchy, active results,
-1v1/group leaderboards, history, empty/loading/offline states, creation aesthetics
-and responsive spacing around the M8A.6 domain. Include screenshots and visual QA.
-Include Apple Watch and Wear OS Challenge interfaces in the redesign. Physical
-M8A.6 feedback reports poor presentation on both watches and text/icon overflow
-outside Apple Watch Challenge list cards. Verify watch layouts on device; working
-data transport does not constitute visual acceptance.
+The maintainer approved Phase A revision 3 and repository-local fork translation
+ownership on 2026-10-06. Phase B implements the three-view hub, ordered Dashboard
+summary and independent Library access, state-specific invitation/lobby/results,
+compact scores, locale-aware forms and English/Italian sources using the existing
+runtime. See [CHALLENGE_UX.md](CHALLENGE_UX.md) for captures, source maps and tests.
 
-Maintainer feedback from M8A.6 physical acceptance: reduce excessive explanatory
-text and make the UI understandable through its controls and hierarchy. Review
-returning after Personal activity goals Save and saving valid edits on back
-navigation while retaining an explicit Save button. The maintainer prefers Step
-Race's start/end-date selection; explore calendar controls for other types where
-compatible with Ready-lobby activation semantics. Audit untranslated fallback
-text, literal unit labels and singular/plural forms (including “1 goal days”) in
-the active app language. Reduce excessive displayed fractional point precision
-without changing authoritative score precision. These UX changes remain
-part of M8A.7; M8A.6 has not implemented automatic saving on back navigation.
+Goal-lobby targets autosave on blur/Back; Ready awaits the saved server revision.
+Ordinary personal-goal forms retain explicit Save and a dirty-form discard guard;
+successful Save returns after server acknowledgment. Projected lobby dates remain
+conditional on all-ready. The authorized creator removal is limited to unlocked
+goal lobbies and cannot set another participant's target.
+
+Both watches have compact metric-aware presentation and separate native catalogs.
+Android/Wear emulator renders and actual Android debug compilation are available.
+Apple runtime/screenshots, physical acceptance on both phones/watches and
+representative widgets/Tiles/complications remain required. English fallback in
+other languages is documented; Italian is an authored draft awaiting linguistic
+review. M8A.7 is not complete or ready for final visual acceptance.
 
 ## 8B. Real production deployment — deferred
 

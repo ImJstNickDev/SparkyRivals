@@ -908,3 +908,77 @@ new secret material. Documentation build and 39 local link-target checks passed.
 
 M8A.7 visual redesign and M8B production deployment remain deferred. No production
 server, NPM, push credentials or upstream repository was mutated.
+
+## M8A.7 — approved direction, implementation and local validation
+
+The maintainer approved Phase A revision 3 and repository-local translation
+ownership on 2026-10-06. See [CHALLENGE_UX.md](CHALLENGE_UX.md) for the source audit,
+before/after captures, manifest and explicit translation coverage. M8A.7 is not
+complete: physical Apple/Android and auxiliary-surface acceptance remain open.
+
+Runtime source for the first release pair/build is
+`ff10ef58265da5e726eeb24f4ead7ad0c5f5de6a`. Later documentation and trailing SQL
+whitespace cleanup do not change these client binaries. This source preserves
+server scoring/ranks and adds the authorized unlocked-lobby creator removal,
+bounded hub read filters, target autosave/Ready orchestration and the redesigned
+mobile/web/native presentation.
+
+### Automated and local rendered evidence
+
+- Mobile full CI: **521 suites / 8,011 tests**, all passed.
+- Web full CI: **188 suites / 1,805 tests**, passed. Final focused web checks:
+  **33 tests / 2 suites**, passed; production build passed.
+- Server bounded full CI: **454 files / 5,649 tests passed**, **18 files /
+  514 tests skipped**. Disposable DB/RLS integration: **376 tests / 4 files**,
+  passed. Remote push startup recovery and deny-all protections remain covered.
+- Companion focused Jest: **89 tests / 6 suites**, passed. Wear JVM: **44 tests**,
+  passed. Fork translation importer: **5 tests**; native Challenge locale
+  validation: **7 tests**, passed. Counts overlap package suites.
+- Mobile/web/server validation, localization generation/audit, native resources,
+  shared presentation and workflow-safety checks passed. Known React `act`
+  warnings remain visible. No tests or audit rules were disabled.
+- Clean production/preview/development/upstream native matrix: each profile had
+  two clean prebuilds with identical validated metadata. Real development Gradle
+  phone/Wear compile and Wear unit tests passed. No local Xcode execution.
+- Android emulator: Italian light/dark, German AMOLED fallback, Polish fallback
+  at 320 dp width and font scale 1.3, long title/emoji, target/Ready, score toggle,
+  goal-save/back/discard, existing language picker. Wear emulator: English and
+  Italian, normal/large text, honest stale snapshot. Browser: Italian desktop
+  and 390 px mobile-web production components with a synthetic auth fixture.
+  These are not physical-device or health-ingestion acceptance.
+
+### Native artifacts and pending device acceptance
+
+- Android phone **1008**, Wear **1000001008**: production release Gradle build
+  and Wear unit tests passed in 6m46s (1,351 tasks). Both packages are
+  `com.imjstnick.sparkyrivals`; `apksigner` verified the permanent SHA-256
+  `3E:B2:F9:50:8D:15:9C:C1:50:14:1A:9A:57:0D:37:71:24:4F:59:10:59:D0:AE:09:E9:61:28:1E:B6:42:D5:2A`.
+  Bundled Expo identity and phone scheme/FCM, Wear Tile/complication/Data Layer
+  manifest registrations passed inspection. Artifacts and verification are under
+  `~/.local/share/sparkyrivals/artifacts/milestone-8a7/android-1008/`.
+  No physical installation has occurred yet.
+- Full EAS iOS production-internal **1012** reused existing credentials for all
+  five targets. [Build](https://expo.dev/accounts/imjstnickdev/projects/sparkyrivals/builds/f0907076-eb2d-402d-b5df-d82ab86d24c1).
+  EAS compilation succeeded from the recorded source. Exported IPA inspection
+  verified all five build-1012 identities, team, internal provisioning, signed and
+  profile App Groups, callback scheme and production APNs on the phone only.
+  Compiled Italian Watch/watch-widget resources are present. Artifacts are under
+  `~/.local/share/sparkyrivals/artifacts/milestone-8a7/ios-1012/`.
+  Linux inspected profile CMS/embedded Mach-O entitlements; it did not run Xcode
+  or full Apple `codesign` verification. Installation remains pending.
+- No M8A.7 physical install, permission tap, Apple Watch screenshot, new public
+  tunnel or live remote notification has been performed.
+- Wear release 1000001008 launched on the dedicated round emulator. Android
+  CLI hosted the actual Tile service for empty and synthetic sum/stale renders
+  in English/Italian. The snapshot was injected only into emulator storage, with
+  its original timestamp; this does not prove paired transport. Phone widgets and
+  complications still require rendered acceptance; the CLI complication command
+  requires a specific host watch face/slot and did not activate a preview.
+  VoiceOver/TalkBack, iOS glass on/off and gesture checks remain open.
+- Italian linguistic review and broader error/offline/very-large-value visual
+  checks remain open. German/Polish new keys intentionally use English fallback.
+- M8A.6 health-source/writeback gaps remain exactly as previously documented.
+
+No production/NPM/DNS/store deployment, credential rotation or upstream write.
+Test infrastructure is laptop-local, with synthetic accounts and retained data.
+Do not mark M8A.7 complete or begin M8B from these local results.

@@ -323,3 +323,25 @@ server checkout's bind-mounted `dockerdata/`; no Docker changes are needed.
 ## Companion snapshot v3
 
 M8A.6 adds metric/mode/unit-aware scores and an explicit lobby directing configuration and Ready to iPhone. v1/v2 stay supported. Account clearing, source staleness and the single composed publisher remain. See [CHALLENGE_TYPES.md](CHALLENGE_TYPES.md).
+
+## M8A.7 presentation
+
+`ChallengePresentationFormat` supplies compact locale-aware scores and units to
+Watch views and the Challenge surface projection. List rows bound the title and
+metric icon; detail uses an own-result section and compact server-ranked rows.
+Invitations/lobbies never expose results. Missing observations and stale source
+timestamps stay distinct from zero; rendering never advances freshness. Optional
+`displayUnit` respects phone distance/energy preferences without changing
+canonical values, payload versions, account guards or transport.
+
+Watch and watch-widget own separate English/Italian `Localizable.xcstrings`
+catalogs with typed numeric goal-day plurals. Xcode synchronized groups include
+these resources; Linux prebuild is only project/configuration evidence. Text
+follows native system language independently of the phone's in-app choice.
+Italian is a draft awaiting review; other languages fall back to English.
+
+The source change addresses the overflowing list layout but is not yet a verified
+physical fix. EAS build 1012 compiled all five targets; small/large Watch,
+Dynamic Type, VoiceOver, the Swift model harness and complication rendering
+remain gates in [CHALLENGE_UX.md](CHALLENGE_UX.md).
+No Watch target, Ready, invitation or scoring mutation was added.

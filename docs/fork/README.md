@@ -120,10 +120,12 @@ Milestone 7 merged normally as PR #8.
 ### Milestone 8A
 
 Release engineering and local production-stack acceptance are complete.
-[PR #10](https://github.com/ImJstNickDev/SparkyRivals/pull/10) is ready for review
-and remains unmerged. The first-run Watch navigation fix passed physical acceptance
+[PR #10](https://github.com/ImJstNickDev/SparkyRivals/pull/10) merged normally at
+`0bd2420d3deebbc11c84afe76676799b8d87e3dc`. The first-run Watch navigation fix passed physical acceptance
 in full EAS build 1006 without entering weight. Broader functional QA remains listed
 in [RELEASE_VALIDATION.md](RELEASE_VALIDATION.md). Milestone 8B production deployment
 is deferred and requires separate authorization.
 
 - [Challenge types, personal goals and Ready lobbies](CHALLENGE_TYPES.md) — M8A.6 domain and compatibility rules.
+
+- [Challenge UX and localization](CHALLENGE_UX.md) — M8A.7 approved direction, implementation and capture boundaries.

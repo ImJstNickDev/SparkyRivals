@@ -1,0 +1,71 @@
+{
+  "stage": "phase-a",
+  "captured_on": "2026-10-06",
+  "baseline_sha": "0e185e879042a6fec0613e57ebe534c00fd552ab",
+  "source_tree_digest": "367eaa11861b7187cc37f7de998d4b288b77d0c6e196b4b175885bf5dd33c09e",
+  "source_manifest": "../source-manifest.json",
+  "build": "local development debug, no distributed version allocated",
+  "application_id": "com.imjstnick.sparkyrivals.dev",
+  "apk_sha256": "32c7f71ac19132970c5227fa2a74ef8fab72b3ce5b7e1ebbd5a033c9072c4879",
+  "javascript": "Production component path via local Metro",
+  "platform": "Android 16 / API 36",
+  "device": "Dedicated Pixel 6 AVD",
+  "viewport_pixels": [
+    1080,
+    2400
+  ],
+  "density_dpi": 420,
+  "locale": "en-US",
+  "provenance": "Synthetic accounts and canonical fixture values in isolated disposable server/database. No provider ingestion.",
+  "captures": [
+    {
+      "file": "dashboard-light.png",
+      "state": "dashboard-light",
+      "theme": "light",
+      "font_scale": 1.0,
+      "sha256": "5f54fd8a29bad0de34e713f924bcc7759329cde52831e2afba2555b51173ec92"
+    },
+    {
+      "file": "goal-progress-dark-large-text.png",
+      "state": "goal-progress-dark-large-text",
+      "theme": "dark",
+      "font_scale": 1.3,
+      "sha256": "3f16abc091e61ca3bdef63229a76b2b52afbb01bdfb1ddf426e0bf64d4a5651f"
+    },
+    {
+      "file": "goal-progress-light.png",
+      "state": "goal-progress-light",
+      "theme": "light",
+      "font_scale": 1.0,
+      "sha256": "a40435b1e81d727715dbb811186ce13535fbc4fd8b24d22b6814a3c4f4e89389"
+    },
+    {
+      "file": "hub-light.png",
+      "state": "hub-light",
+      "theme": "light",
+      "font_scale": 1.0,
+      "sha256": "142aaa189e9559f7a2ca5af2c23d6dfdaa207b82cef6f939c9841b5b7be7e8d3"
+    },
+    {
+      "file": "invitation-light.png",
+      "state": "invitation-light",
+      "theme": "light",
+      "font_scale": 1.0,
+      "sha256": "445ef2e276f777c46a2cb72cd1b05f37de31fa6cc081382def275855c6444a45"
+    },
+    {
+      "file": "lobby-light.png",
+      "state": "lobby-light",
+      "theme": "light",
+      "font_scale": 1.0,
+      "sha256": "c7f125424e64e9433aaeacae7b1fa52c89b7871f445fc5d7b00e30e3c21faddf"
+    },
+    {
+      "file": "lobby-ready-light.png",
+      "state": "lobby-ready-light",
+      "theme": "light",
+      "font_scale": 1.0,
+      "sha256": "e32002280e882091c00c62166b955156c7669f97059841900a288ecf25ad7374"
+    }
+  ]
+}

@@ -432,3 +432,30 @@ paths, exact source revisions and physical checks are recorded in the release
 evidence. New distributed builds must advance those numbers. Phone/watch layout,
 accessibility and unavailable physical health-source checks remain explicit QA
 debt; the disposable acceptance server and tunnel are now stopped.
+
+## M8A.7 localization and visual validation
+
+Fork-owned translations are versioned under `localization/fork/`. From the root,
+run `pnpm i18n:fork:export` after owned English changes, edit the approved source
+translations, then run `pnpm i18n:fork:import`, `pnpm i18n:fork:check` and
+`pnpm i18n:fork:test`. Imports preserve unrelated upstream keys and feed existing
+catalogs; no new runtime overlay, external service or upstream workflow is needed.
+
+Mobile `native-locales:check` now also validates Watch/watch-widget string catalogs
+and Wear string/plural resources. These native resources use OS language, not the
+phone's in-app selection. Clean prebuild copies/includes sources through existing
+plugins and synchronized groups. A prebuild or source validator does not execute
+Swift, compile an IPA or show an extension on device.
+
+Use the capture manifest in [CHALLENGE_UX.md](CHALLENGE_UX.md). Debug emulator
+artifacts are not distributed releases. Before physical acceptance, allocate new
+production version codes, reuse permanent phone/Wear signing and build a full EAS
+iOS internal artifact from the recorded source commit. No re-sign-only shortcut
+can incorporate changed Swift/resources. Preserve synthetic test provenance and
+keep raw private diagnostics outside Git. Device installation, Apple interaction,
+new public tunnels and actual push sends remain explicit maintainer gates.
+
+M8A.7 has allocated Android phone 1008, Wear 1000001008 and EAS iOS 1012.
+Their release builds passed; installation/physical acceptance is still pending.
+Future artifacts must advance these allocations. Do not reuse a number simply
+because its device acceptance has not finished. See the release validation ledger.
