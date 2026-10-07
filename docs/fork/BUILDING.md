@@ -135,6 +135,13 @@ phone, widget, Live Activity, Watch and Watch-widget targets. Do not pre-create
 portal resources. Stop at interactive Apple login/2FA and have the maintainer
 complete the command locally; never collect passwords or codes in chat.
 
+Owned profiles pin the iOS worker to `medium`, the smallest supported iOS
+resource class. Keep Android/Wear builds local. Rebuild only the affected
+platform when a binary is needed for a validated runtime/native change; batch
+related fixes before submitting. Documentation-only changes do not require a
+new binary. Do not upgrade the worker class without a demonstrated need and
+maintainer approval.
+
 Build-only ownership/signing settings do not belong in Docker/Helm server runtime
 configuration. Never put signing secrets in `extra`, `EXPO_PUBLIC_*`, tracked env
 files or logs. There is still no store submission profile/destination.
