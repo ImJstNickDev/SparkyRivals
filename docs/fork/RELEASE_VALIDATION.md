@@ -1402,6 +1402,15 @@ iOS build and physical upgrade/selection check remain required. Private USB
 logs and version evidence are retained under `.local/m8a7/`; no raw diagnostics
 or device identifiers are published.
 
+Fix source **`593fbf249670bcb246b92dd852516a7d43e096ca`** was submitted using the
+existing production-internal profile and all five existing Apple credentials.
+EAS allocated **1020**, uploaded the archive, then rejected build creation because
+the account's monthly free iOS build allowance was exhausted (reported reset:
+**1 November 2026**). There is **no 1020 IPA and no successful native compile**.
+No billing change, credential rotation or store submission was made. The fix's
+physical upgrade, gallery name, selection and rendering checks remain blocked
+on an available iOS build route; Android's accepted **1015** remains unchanged.
+
 After the desktop session crash, retained helpers, diagnostics and artifacts
 were moved to repository-root **`.local/m8a7/`**, excluded from Git, Docker and
 EAS. Earlier paths in this document are historical; the corresponding artifact
