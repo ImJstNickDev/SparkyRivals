@@ -667,6 +667,16 @@ Lookup confirmed the installed iPhone version **1014**, and the maintainer
 confirmed the same navigation journey on iPhone. This does not establish the
 installed Apple Watch build. See the source-specific release ledger.
 
+Subsequent physical testing confirmed Android points/activity toggling but found
+an iPhone error opening Close scores. This revealed a fractional-point path that
+used Hermes' Android-only `NumberFormat.formatToParts`. Its replacement uses
+localized `format()` output, retaining exact truncation and server ranks. Tests
+exercise missing/throwing `formatToParts`, large values and the real detail
+component. A new iPhone artifact and physical retry are required; the previously
+confirmed hub/Back navigation is a separate result. The corrected formatter passed
+full mobile CI (**523 suites / 8,031 tests**), mobile/server validation, web
+validation/production build and the **17-test** web Challenge UX group.
+
 Required outstanding acceptance: remaining physical phone and Apple Watch flows;
 Galaxy Watch larger text, rotary/swipe gestures and accessibility; iOS native
 headers with glass on/off, swipe/keyboard/accessibility; Apple Watch sizes/text

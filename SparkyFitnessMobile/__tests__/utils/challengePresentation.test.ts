@@ -63,6 +63,54 @@ describe('Challenge presentation, never ranking', () => {
       '13,02'
     );
   });
+  it.each(['missing', 'throwing'] as const)(
+    'formats close scores and large integers when formatToParts is %s',
+    (implementation) => {
+      const descriptor = Object.getOwnPropertyDescriptor(
+        Intl.NumberFormat.prototype,
+        'formatToParts'
+      )!;
+      Object.defineProperty(Intl.NumberFormat.prototype, 'formatToParts', {
+        configurable: true,
+        value:
+          implementation === 'missing'
+            ? undefined
+            : () => {
+                throw new Error('formatToParts is not supported');
+              },
+      });
+      try {
+        const close = entries(['140050000', '140000000']);
+        const precision = challengePointPrecision(close);
+        expect(
+          close.map((entry) =>
+            formatChallengePoints(entry, precision.get(entry.user_id)!, 'it')
+          )
+        ).toEqual(['140,05', '140']);
+        expect(close.map((entry) => entry.rank)).toEqual([1, 2]);
+        for (const [locale, expected] of [
+          ['en', '9,007,199,254,740,993.12'],
+          ['it', '9.007.199.254.740.993,12'],
+          ['hi-IN', '9,00,71,99,25,47,40,993.12'],
+          ['ar-EG', '٩٬٠٠٧٬١٩٩٬٢٥٤٬٧٤٠٬٩٩٣٫١٢'],
+        ]) {
+          expect(
+            formatChallengePoints(
+              entries(['9007199254740993123456'])[0]!,
+              2,
+              locale!
+            )
+          ).toBe(expected);
+        }
+      } finally {
+        Object.defineProperty(
+          Intl.NumberFormat.prototype,
+          'formatToParts',
+          descriptor
+        );
+      }
+    }
+  );
   it('keeps inclusive calendar duration over DST and locale ordering', () => {
     expect(challengeDateRange('2026-10-24', '2026-10-26', 'it')).toEqual({
       start: '24 ott',

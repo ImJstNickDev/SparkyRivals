@@ -1150,3 +1150,32 @@ This is evidence for the captured elements, not the complete standings, gestures
 other Watch sizes/Dynamic Type, VoiceOver or the complication. Originals are
 retained privately under
 `~/.local/share/sparkyrivals/artifacts/milestone-8a7/physical/apple-watch/`.
+
+### Close-score rendering regression — 7 October
+
+The maintainer confirmed points → steps → points on Android **1010**, but reported
+an error opening Close scores on iPhone **1014**. The exact device error text is
+now supplied: `[ChallengeDetail] Screen crashed`, `TypeError: undefined is not a
+function` at `formatChallengePoints`, then `ChallengeResultSummary`, at 04:20:32
+local time. A fetch-cancelled entry at the same instant is separate evidence,
+not proof of a server outage. Do not record the iPhone close-score flow as passed
+from the earlier navigation check.
+
+An independent reproduction found that the shared fractional-point formatter
+called `Intl.NumberFormat.formatToParts`, which Hermes documents as
+[Android-only](https://github.com/facebook/hermes/blob/static_h/doc/IntlAPIs.md).
+Removing that method reproduces a TypeError for **140.05**; simulating an
+implementation that throws also fails. Both new regression cases were red before
+the fix. The formatter now uses localized `format()` output for the decimal
+suffix and grouping pattern. Scaled BigInt truncation, exact large integers,
+server ranks and ties stay unchanged; no polyfill/dependency was added.
+
+Focused mobile validation passed **105 tests / 2 suites**, including close-score
+detail rendering, points/activity toggling, daily-history open/close, Italian
+decimals and large English/Italian/Indian/Arabic integers without `formatToParts`.
+Web Challenge UX tests passed **17 tests / 1 suite**; mobile/server validation and
+web validation/production build passed. Full mobile CI passed **523 suites /
+8,031 tests**; focused groups overlap this total. New native artifacts are
+recorded separately when finished. Updated iPhone physical acceptance is
+required; the matched crash location and local regression tests do not establish
+physical acceptance of the correction.

@@ -47,17 +47,14 @@ export function formatChallengePoints(
   const whole = formatExactInteger(truncated / places, locale);
   const fraction = Number(truncated % places);
   if (!fraction) return whole;
-  const parts = new Intl.NumberFormat(locale, {
+  const fractionFormatter = new Intl.NumberFormat(locale, {
     useGrouping: false,
     maximumFractionDigits: digits,
-  }).formatToParts(fraction / Number(places));
-  return (
-    whole +
-    parts
-      .filter((part) => part.type === "decimal" || part.type === "fraction")
-      .map((part) => part.value)
-      .join("")
-  );
+  });
+  // Hermes on iOS has format(), but not NumberFormat.formatToParts(). The
+  // fraction is less than one, so remove its localized leading zero only.
+  const fractionText = fractionFormatter.format(fraction / Number(places));
+  return whole + fractionText.slice(fractionFormatter.format(0).length);
 }
 
 /** Calendar strings stay calendar strings; display order comes from app locale. */
@@ -136,16 +133,15 @@ function formatExactInteger(value: bigint, locale: string): string {
   const formatter = new Intl.NumberFormat(locale, { maximumFractionDigits: 0 });
   if (value <= BigInt(Number.MAX_SAFE_INTEGER))
     return formatter.format(Number(value));
-  const parts = formatter.formatToParts(123456789012345);
-  const integers = parts
-    .filter((part) => part.type === "integer")
-    .map((part) => [...part.value].length);
-  const separator = parts.find((part) => part.type === "group")?.value;
-  const digits = Array.from(
-    { length: 10 },
-    (_, i) =>
-      formatter.formatToParts(i).find((p) => p.type === "integer")!.value,
-  );
+  const digits = Array.from({ length: 10 }, (_, i) => formatter.format(i));
+  // A safe integer made of one repeated digit exposes the locale's primary
+  // and secondary grouping without formatToParts or lossy BigInt conversion.
+  const one = digits[1]!;
+  const sample = formatter.format(111111111111111);
+  const separator = sample.split(one).find((part) => part.length > 0);
+  const integers = separator
+    ? sample.split(separator).map((group) => group.split(one).length - 1)
+    : [];
   let remaining = value.toString();
   const groups: string[] = [];
   let width = integers.at(-1) ?? remaining.length;

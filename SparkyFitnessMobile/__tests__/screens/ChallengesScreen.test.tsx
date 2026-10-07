@@ -1129,6 +1129,52 @@ describe('Goal result units', () => {
 });
 
 describe('Goal result visual summary', () => {
+  it('opens close scores and toggles activity without iOS-missing formatToParts', () => {
+    const descriptor = Object.getOwnPropertyDescriptor(
+      Intl.NumberFormat.prototype,
+      'formatToParts'
+    )!;
+    Object.defineProperty(Intl.NumberFormat.prototype, 'formatToParts', {
+      configurable: true,
+      value: undefined,
+    });
+    try {
+      const result = {
+        ...goalResults,
+        entries: goalResults.entries.map((entry, index) => ({
+          ...entry,
+          total_score: index === 0 ? 140.05 : 140,
+          total_score_scaled: index === 0 ? '140050000' : '140000000',
+          rank: index + 1,
+          is_tied: false,
+        })),
+      };
+      setDetail({ ...detail, challenge: result.challenge });
+      setResults(result);
+      const view = screen('ChallengeDetail');
+      expect(view.getAllByText('140.05').length).toBeGreaterThan(0);
+      expect(view.getByText('1st place · 2 players')).toBeTruthy();
+      fireEvent.press(view.getByLabelText(/Nico, rank 1/));
+      expect(view.getByText('11,200 steps')).toBeTruthy();
+      fireEvent.press(view.getByLabelText(/Nico, rank 1/));
+      expect(view.getAllByText('140.05').length).toBeGreaterThan(0);
+      expect(view.getByText('2')).toBeTruthy();
+      expect(view.queryByText('Tied')).toBeNull();
+      fireEvent.press(view.getByRole('button', { name: /Daily history/ }));
+      expect(
+        view.getAllByText(/11,200.*8,000 steps.*140%/).length
+      ).toBeGreaterThan(0);
+      fireEvent.press(view.getByRole('button', { name: /Daily history/ }));
+      expect(view.queryByText(/11,200.*8,000 steps.*140%/)).toBeNull();
+      view.unmount();
+    } finally {
+      Object.defineProperty(
+        Intl.NumberFormat.prototype,
+        'formatToParts',
+        descriptor
+      );
+    }
+  });
   it.each([
     [1, '1st'],
     [2, '2nd'],
