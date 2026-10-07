@@ -16,7 +16,14 @@ export async function publishChallengeWidget(
       'challengeWidgetSnapshot',
       JSON.stringify(snapshot)
     );
-    ExtensionStorage.reloadWidget('challengeWidget');
+    // Keep original automatic instances alive; configuration uses a distinct
+    // WidgetKit kind because static instances cannot acquire an intent in place.
+    // Attempt both reloads even if one fails, especially when clearing accounts.
+    await Promise.all(
+      ['challengeWidget', 'challengeSelectionWidget'].map((kind) =>
+        Promise.resolve().then(() => ExtensionStorage.reloadWidget(kind))
+      )
+    );
   } else if (Platform.OS === 'android') {
     await CalorieWidgetBridge.setChallengeSnapshot(JSON.stringify(snapshot));
   }

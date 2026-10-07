@@ -45,6 +45,22 @@ private struct ChallengeWidgetEntry: TimelineEntry {
     let date: Date
     let snapshot: ChallengeWidgetSnapshot?
     var pinned = false
+
+    static func current(selection: String? = nil, at date: Date = Date()) -> Self {
+        .init(date: date, snapshot: ChallengeWidgetSnapshot.load()?.selected(selection),
+              pinned: selection != nil && selection != "automatic")
+    }
+
+    static func timeline(selection: String? = nil) -> Timeline<Self> {
+        let entry = current(selection: selection)
+        // Both widget kinds share the same source timestamp and account guards.
+        let staleAt = entry.snapshot.map { Date(timeIntervalSince1970: $0.generatedAt / 1000 + 901) }
+        var entries = [entry]
+        if let staleAt, staleAt > entry.date {
+            entries.append(.init(date: staleAt, snapshot: entry.snapshot, pinned: entry.pinned))
+        }
+        return Timeline(entries: entries, policy: .after(entry.date.addingTimeInterval(900)))
+    }
 }
 struct ChallengeWidgetNeighbor: Decodable {
     let slot: String
@@ -84,16 +100,22 @@ struct ChallengeWidgetIntent: WidgetConfigurationIntent {
 private struct ChallengeWidgetProvider: AppIntentTimelineProvider {
     func placeholder(in context: Context) -> ChallengeWidgetEntry { .init(date: Date(), snapshot: nil) }
     func snapshot(for configuration: ChallengeWidgetIntent, in context: Context) async -> ChallengeWidgetEntry {
-        .init(date: Date(), snapshot: ChallengeWidgetSnapshot.load()?.selected(configuration.challenge?.id), pinned: configuration.challenge?.id != nil && configuration.challenge?.id != "automatic")
+        .current(selection: configuration.challenge?.id)
     }
     func timeline(for configuration: ChallengeWidgetIntent, in context: Context) async -> Timeline<ChallengeWidgetEntry> {
-        let now = Date()
-        let snapshot = ChallengeWidgetSnapshot.load()?.selected(configuration.challenge?.id)
-        // Schedule the stale transition with the same source time, never a new verification.
-        let staleAt = snapshot.map { Date(timeIntervalSince1970: $0.generatedAt / 1000 + 901) }
-        var entries = [ChallengeWidgetEntry(date: now, snapshot: snapshot, pinned: configuration.challenge?.id != nil && configuration.challenge?.id != "automatic")]
-        if let staleAt, staleAt > now { entries.append(.init(date: staleAt, snapshot: snapshot)) }
-        return Timeline(entries: entries, policy: .after(now.addingTimeInterval(900)))
+        ChallengeWidgetEntry.timeline(selection: configuration.challenge?.id)
+    }
+}
+
+// Existing Home Screen instances have no intent. Changing their configuration
+// type in place leaves WidgetKit requesting a missing intent (CHSError 1103).
+private struct AutomaticChallengeWidgetProvider: TimelineProvider {
+    func placeholder(in context: Context) -> ChallengeWidgetEntry { .init(date: Date(), snapshot: nil) }
+    func getSnapshot(in context: Context, completion: @escaping (ChallengeWidgetEntry) -> Void) {
+        completion(.current())
+    }
+    func getTimeline(in context: Context, completion: @escaping (Timeline<ChallengeWidgetEntry>) -> Void) {
+        completion(ChallengeWidgetEntry.timeline())
     }
 }
 private struct ChallengeWidgetView: View {
@@ -158,7 +180,16 @@ private struct ChallengeWidgetView: View {
 }
 struct ChallengeWidget: Widget {
     var body: some WidgetConfiguration {
-        AppIntentConfiguration(kind: "challengeWidget", intent: ChallengeWidgetIntent.self, provider: ChallengeWidgetProvider()) { ChallengeWidgetView(entry: $0) }
+        // Preserve the original static kind for installations predating selection.
+        StaticConfiguration(kind: "challengeWidget", provider: AutomaticChallengeWidgetProvider()) { ChallengeWidgetView(entry: $0) }
+            .configurationDisplayName(Text(verbatim: localizedWidgetString("widget.challenge.automatic_name")))
+            .description(Text(verbatim: localizedWidgetString("widget.challenge.description")))
+            .supportedFamilies([.systemSmall, .systemMedium])
+    }
+}
+struct SelectableChallengeWidget: Widget {
+    var body: some WidgetConfiguration {
+        AppIntentConfiguration(kind: "challengeSelectionWidget", intent: ChallengeWidgetIntent.self, provider: ChallengeWidgetProvider()) { ChallengeWidgetView(entry: $0) }
             .configurationDisplayName(Text(verbatim: localizedWidgetString("widget.challenge.name")))
             .description(Text(verbatim: localizedWidgetString("widget.challenge.description")))
             .supportedFamilies([.systemSmall, .systemMedium])

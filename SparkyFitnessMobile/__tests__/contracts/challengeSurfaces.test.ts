@@ -125,7 +125,9 @@ it('preserves one composed Apple context and one Wear protocol path', () => {
 
 it('configures each native widget independently and keeps invalid selections closed', () => {
   const swift = read('targets/widget/ChallengeWidget.swift');
-  expect(swift).toContain('AppIntentConfiguration(kind: "challengeWidget"');
+  expect(swift).toContain(
+    'AppIntentConfiguration(kind: "challengeSelectionWidget"'
+  );
   expect(swift).toContain(
     '$0.selectionId == id && $0.accountKey == accountKey'
   );
@@ -151,4 +153,22 @@ it('configures each native widget independently and keeps invalid selections clo
   expect(
     read('targets/android-widget/res/xml/sparky_challenge_widget_info.xml')
   ).toContain('reconfigurable|configuration_optional');
+});
+
+it('preserves static iOS instances and registers selection as a separate widget kind', () => {
+  const swift = read('targets/widget/ChallengeWidget.swift');
+  expect(swift).toContain('StaticConfiguration(kind: "challengeWidget"');
+  expect(swift).not.toContain('AppIntentConfiguration(kind: "challengeWidget"');
+  expect(swift).toContain('completion(.current())');
+  expect(swift).toContain('completion(ChallengeWidgetEntry.timeline())');
+  expect(swift).toContain('.current(selection: configuration.challenge?.id)');
+  expect(swift).toContain(
+    'ChallengeWidgetEntry.timeline(selection: configuration.challenge?.id)'
+  );
+  expect(swift).toContain('snapshot: entry.snapshot, pinned: entry.pinned');
+  const bundle = read('targets/widget/index.swift');
+  expect(bundle).toContain('SelectableChallengeWidget()');
+  expect(bundle).toContain('ChallengeWidget()');
+  expect(bundle).toContain('widget()');
+  expect(bundle).toContain('macroWidget()');
 });

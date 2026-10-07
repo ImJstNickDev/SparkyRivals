@@ -78,6 +78,7 @@ private func fallbackWidgetString(_ key: String) -> String {
     case "widget.challenge.not_synced": return "Open the app to sync Challenges."
     case "widget.challenge.choose": return "Challenge"
     case "widget.challenge.automatic": return "Automatic"
+    case "widget.challenge.automatic_name": return "Challenges (automatic)"
     case "widget.challenge.unavailable": return "Challenge unavailable"
     case "widget.challenge.synced_choices": return "Choose from up to eight recently synced Challenges. Open the app to refresh."
     case "widget.calorie.name": return "Calories"

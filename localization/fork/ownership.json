@@ -58,7 +58,8 @@
         "widget.challenge.choose",
         "widget.challenge.automatic",
         "widget.challenge.unavailable",
-        "widget.challenge.synced_choices"
+        "widget.challenge.synced_choices",
+        "widget.challenge.automatic_name"
       ]
     },
     {

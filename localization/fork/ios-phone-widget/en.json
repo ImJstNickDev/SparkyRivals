@@ -5,5 +5,6 @@
   "widget.challenge.choose": "Challenge",
   "widget.challenge.automatic": "Automatic",
   "widget.challenge.unavailable": "Challenge unavailable",
-  "widget.challenge.synced_choices": "Choose from up to eight recently synced Challenges. Open the app to refresh."
+  "widget.challenge.synced_choices": "Choose from up to eight recently synced Challenges. Open the app to refresh.",
+  "widget.challenge.automatic_name": "Challenges (automatic)"
 }

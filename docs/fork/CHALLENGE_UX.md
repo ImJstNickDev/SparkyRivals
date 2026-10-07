@@ -755,6 +755,22 @@ Glance, and the existing publication/session clearing barrier remains in force.
 Native configuration copy uses the approved English/Italian fork sources and
 existing resource imports. Other languages use the existing English fallback.
 
+On iOS, `challengeSelectionWidget` is the configurable kind. The original
+`challengeWidget` remains a static, automatic widget for existing Home Screen
+instances. Both reuse the same presentation, timestamp and account checks; the
+phone reloads both kinds after publishing or clearing the single snapshot.
+The gallery distinguishes **Challenges** from **Challenges (automatic)**.
+To choose a Challenge, add **Challenges**, then hold it and select **Edit Widget**.
+
+Physical upgrade testing found that replacing StaticConfiguration with
+AppIntentConfiguration under the original kind left iOS's stored descriptor
+without an intent. Even newly added instances used that cached descriptor and
+failed with CHSErrorDomain 1103. A distinct kind avoids depending on that
+unsupported conversion while retaining the original static provider. See
+[Apple's explanation of static widget configuration migration](https://developer.apple.com/forums/thread/661247).
+The new kind still requires physical upgrade/configuration acceptance; native
+metadata compilation alone did not detect the defect.
+
 Implementation references: [Apple configurable widgets](https://developer.apple.com/documentation/widgetkit/making-a-configurable-widget)
 uses AppEntity queries and AppIntentConfiguration; [Android widget configuration](https://developer.android.com/develop/ui/compose/glance/configuration)
 uses a launcher configuration Activity, per-instance preferences, explicit initial

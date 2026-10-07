@@ -5,5 +5,6 @@
   "widget.challenge.choose": "Sfida",
   "widget.challenge.automatic": "Automatica",
   "widget.challenge.unavailable": "Sfida non disponibile",
-  "widget.challenge.synced_choices": "Scegli tra le ultime otto sfide sincronizzate. Apri l’app per aggiornarle."
+  "widget.challenge.synced_choices": "Scegli tra le ultime otto sfide sincronizzate. Apri l’app per aggiornarle.",
+  "widget.challenge.automatic_name": "Sfide (automatiche)"
 }

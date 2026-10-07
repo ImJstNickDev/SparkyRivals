@@ -22,7 +22,7 @@ jest.mock('expo-constants', () => ({
 }));
 afterEach(() => jest.restoreAllMocks());
 beforeEach(() => jest.clearAllMocks());
-it('iOS clears only Challenge state and reloads its existing extension kind', async () => {
+it('iOS clears Challenge state and reloads both automatic and configurable instances', async () => {
   jest.replaceProperty(Platform, 'OS', 'ios');
   const clear = buildChallengeWidget(emptyCompanionChallenges(), i18n.t, 'en');
   await publishChallengeWidget(clear);
@@ -32,8 +32,42 @@ it('iOS clears only Challenge state and reloads its existing extension kind', as
     JSON.stringify(clear)
   );
   expect(ExtensionStorage.reloadWidget).toHaveBeenCalledWith('challengeWidget');
+  expect(ExtensionStorage.reloadWidget).toHaveBeenCalledWith(
+    'challengeSelectionWidget'
+  );
+  expect(ExtensionStorage.reloadWidget).toHaveBeenCalledTimes(2);
   expect(CalorieWidgetBridge.setChallengeSnapshot).not.toHaveBeenCalled();
 });
+
+it.each(['challengeWidget', 'challengeSelectionWidget'])(
+  'still reloads the other iOS kind when %s fails, and reports the failure',
+  async (failingKind) => {
+    jest.replaceProperty(Platform, 'OS', 'ios');
+    const failure = new Error('Widget timeline unavailable');
+    const reload = jest.mocked(ExtensionStorage.reloadWidget);
+    reload.mockImplementation((kind) => {
+      if (kind === failingKind) throw failure;
+    });
+    const clear = buildChallengeWidget(
+      emptyCompanionChallenges(),
+      i18n.t,
+      'en'
+    );
+    try {
+      await expect(publishChallengeWidget(clear)).rejects.toBe(failure);
+      expect(mockSet).toHaveBeenCalledWith(
+        'challengeWidgetSnapshot',
+        JSON.stringify(clear)
+      );
+      expect(reload.mock.calls.map(([kind]) => kind)).toEqual([
+        'challengeWidget',
+        'challengeSelectionWidget',
+      ]);
+    } finally {
+      reload.mockReset();
+    }
+  }
+);
 it('Android clears via the existing bridge, without an Apple write', async () => {
   jest.replaceProperty(Platform, 'OS', 'android');
   const clear = buildChallengeWidget(emptyCompanionChallenges(), i18n.t, 'en');

@@ -1359,7 +1359,7 @@ and independently selected
 [compact widget](assets/challenge-ux/phone-widget-selection/compact-selected-it-light.png)
 render correctly at font scale 1.3. Tapping the compact widget opened Close
 scores with separate server ranks for **140** and **140.05** points. No physical
-Android installation/appearance is claimed for this final iteration; the
+Android installation/appearance was claimed at that checkpoint; the
 Samsung was not connected. The emulator was stopped with its data retained.
 
 Full internal iOS [**1019**](https://expo.dev/accounts/imjstnickdev/projects/sparkyrivals/builds/d16a56da-0920-4163-aaed-19e624295222)
@@ -1368,9 +1368,39 @@ App Groups, ad-hoc profiles, callback and phone-only APNs passed exported IPA
 inspection. All seven Italian widget keys match the approved fork source;
 AppIntents metadata is included. IPA and inspection records are in
 `.local/m8a7/artifacts/ios-1019/`. Physical widget selection/layout verification
-was requested from the maintainer and remains pending. These Linux inspections
+was requested at that checkpoint; the physical failure is recorded below. These Linux inspections
 are not an Apple codesign execution, local Xcode run or physical installation.
 Docs production build and local documentation-link checks passed.
+
+#### Physical widget upgrade diagnosis (7 October, evening)
+
+Samsung and Galaxy Watch were updated in place to **1015 / 1000001015** with
+versions read back. The maintainer subsequently confirmed Android widgets work;
+this does not independently validate every family or the updated Wear app.
+The iPhone installation registry reports **1019**. Initially all three phone
+widget kinds failed with WidgetKit's bundle-version mismatch error despite the
+IPA containing matching app/extension versions. A normal user restart restored
+the calorie and macro widgets.
+
+Challenge widgets remained blank, showed raw localization keys and offered no
+Edit Widget action, including a newly added instance. USB logs show the stored
+descriptor has no intent and CHSErrorDomain **1103** rejects its timeline:
+`Intent configuration is required but was not provided.` The packaged extension
+does contain the AppIntent and Italian strings; packaged resource checks were
+therefore insufficient to establish upgrade behavior.
+
+The fix restores the original static `challengeWidget` provider and adds the
+separate configurable `challengeSelectionWidget` kind. Both share the view/data
+and are reloaded on publication/account clearing, even if one reload fails.
+The focused publisher/configuration/localization group passes **44 tests in
+4 suites** (included in full mobile CI: **523 suites / 8,065 tests**). Mobile
+validation and clean iOS prebuild/identity checks pass for owned development,
+preview, production-internal and upstream production. The first CI invocation
+misplaced the pnpm argument separator and ran zero tests; the corrected full run
+passed. Source contract tests do not execute WidgetKit on Linux. A new full
+iOS build and physical upgrade/selection check remain required. Private USB
+logs and version evidence are retained under `.local/m8a7/`; no raw diagnostics
+or device identifiers are published.
 
 After the desktop session crash, retained helpers, diagnostics and artifacts
 were moved to repository-root **`.local/m8a7/`**, excluded from Git, Docker and
