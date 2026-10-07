@@ -163,3 +163,158 @@ it('lobby selection has no score and retains source freshness/account guard', ()
   expect(widget.generatedAt).toBe(1000);
   expect(widget.url).toContain('account=');
 });
+
+it.each([0, 4, 99])(
+  'uses the actual adjacent server rows around position %i, not the leaders',
+  (position) => {
+    const entries = Array.from({ length: 100 }, (_, index) => ({
+      ...results.entries[0],
+      user_id: index === position ? actor : `synthetic-${index}`,
+      display_name: `Participant ${index}`,
+      rank: index + 1,
+      total_score: 1000 - index,
+    }));
+    const input = {
+      accountKey: 'config:' + actor,
+      actor,
+      challenges: [challenge],
+      listUpdatedAt: 1000,
+      hasMore: false,
+      results: new Map([
+        [challenge.id, { data: { ...results, entries }, dataUpdatedAt: 900 }],
+      ]),
+    };
+    const legacy = buildCompanionChallenges(input);
+    expect(legacy.items[0].rows).toHaveLength(position < 3 ? 3 : 4);
+    expect(legacy.items[0]).not.toHaveProperty('rowsAreAdjacent');
+    const widget = buildChallengeWidget(
+      buildCompanionChallenges({ ...input, rowWindow: 'self' }),
+      i18n.t,
+      'en'
+    );
+    expect(widget.generatedAt).toBe(900);
+    expect(widget.neighbors.map((row) => row.name)).toEqual(
+      entries
+        .slice(Math.max(0, position - 1), position + 2)
+        .map((row) => row.display_name)
+    );
+    expect(widget.neighbors.find((row) => row.slot === 'self')?.rank).toBe(
+      String(position + 1)
+    );
+    expect(widget.choices[0].neighbors).toEqual(widget.neighbors);
+    expect(JSON.stringify(widget)).not.toContain('daily');
+  }
+);
+it('retains server ties and explicit missing data in the nearby rows', () => {
+  const state = snapshot();
+  state.items[0].rowsAreAdjacent = true;
+  state.items[0].rows = state.items[0].rows.map((row) => ({
+    ...row,
+    rank: 1,
+    tied: true,
+    total: 0,
+  }));
+  state.items[0].rows[1].daysWithSteps = 0;
+  const widget = buildChallengeWidget(state, i18n.t, 'en');
+  expect(widget.neighbors.map((row) => row.rank)).toEqual(['1', '1']);
+  expect(widget.neighbors.map((row) => row.score)).toEqual([
+    '0 steps',
+    'No step data',
+  ]);
+});
+it('does not invent neighbors from legacy top-three-plus-self projections', () => {
+  const widget = buildChallengeWidget(snapshot(), i18n.t, 'en');
+  expect(widget.neighbors.map((row) => row.slot)).toEqual(['self']);
+});
+it('publishes independent choices with account bindings and no invitation results', () => {
+  const state = snapshot();
+  state.items.push({ ...state.items[0], id: 'second', name: 'Second' });
+  state.items.push({
+    ...state.items[0],
+    id: 'invitation',
+    membership: 'pending',
+  });
+  const widget = buildChallengeWidget(state, i18n.t, 'en');
+  expect(widget.choices.map((choice) => choice.id)).toEqual([
+    challenge.id,
+    'second',
+  ]);
+  expect(new Set(widget.choices.map((choice) => choice.selectionId)).size).toBe(
+    2
+  );
+  const changedAccount = buildChallengeWidget(
+    { ...state, accountKey: 'other-account' },
+    i18n.t,
+    'en'
+  );
+  expect(widget.choices[0].selectionId).not.toBe(
+    changedAccount.choices[0].selectionId
+  );
+  expect(JSON.parse(widget.choices[0].selectionId)).toEqual([
+    state.accountKey,
+    challenge.id,
+  ]);
+  const cleared = buildChallengeWidget(
+    emptyCompanionChallenges(),
+    i18n.t,
+    'en'
+  );
+  expect(cleared.choices).toEqual([]);
+  expect(cleared.neighbors).toEqual([]);
+  expect(cleared.metric).toBe('');
+});
+it('removal and denied access remove the configuration choice', () => {
+  const state = buildCompanionChallenges({
+    accountKey: 'config:' + actor,
+    actor,
+    challenges: [challenge],
+    listUpdatedAt: 1000,
+    hasMore: false,
+    rowWindow: 'self',
+    results: new Map([
+      [
+        challenge.id,
+        { data: results, dataUpdatedAt: 1000, inaccessible: true },
+      ],
+    ]),
+  });
+  expect(buildChallengeWidget(state, i18n.t, 'en').choices).toEqual([]);
+});
+
+it('keeps the same eight-query bound and a compact payload even with long names', () => {
+  const challenges = Array.from({ length: 12 }, (_, index) => ({
+    ...challenge,
+    id: `challenge-${index}`,
+    name: '🟢'.repeat(120),
+  }));
+  const state = buildCompanionChallenges({
+    accountKey: 'config:' + actor,
+    actor,
+    challenges,
+    listUpdatedAt: 1000,
+    hasMore: false,
+    rowWindow: 'self',
+    results: new Map(
+      challenges.map((item) => [
+        item.id,
+        {
+          data: {
+            ...results,
+            challenge: item,
+            entries: results.entries.map((row) => ({
+              ...row,
+              display_name: '🟢'.repeat(120),
+            })),
+          },
+          dataUpdatedAt: 1000,
+        },
+      ])
+    ),
+  });
+  const widget = buildChallengeWidget(state, i18n.t, 'en');
+  expect(widget.choices).toHaveLength(8);
+  expect(widget.hasMore).toBe(true);
+  expect(Buffer.byteLength(JSON.stringify(widget), 'utf8')).toBeLessThan(
+    32_768
+  );
+});

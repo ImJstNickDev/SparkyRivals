@@ -38,10 +38,10 @@ export function helperKeyUsages(): WidgetKeyUsage[] {
   return usages(/localizedWidgetString\(\s*"([^"]+)"\s*\)/);
 }
 
-/** Gallery metadata keys, resolved by SwiftUI's LocalizedStringKey rather than the helper. */
+/** Gallery and AppIntent metadata resolved by native localized string resources. */
 export function galleryKeyUsages(): WidgetKeyUsage[] {
   return usages(
-    /(?:configurationDisplayName|\.description)\(\s*"([^"]+)"\s*\)/
+    /(?:configurationDisplayName|\.description|LocalizedStringResource)\(\s*"([^"]+)"/
   );
 }
 

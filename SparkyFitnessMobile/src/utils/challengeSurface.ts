@@ -30,16 +30,13 @@ export function selectPrimaryChallengeSurface(
       a.id.localeCompare(b.id)
   )[0];
 }
-export function buildChallengeWidget(
+function presentChallengeWidget(
   snapshot: CompanionChallengeSnapshot,
+  item: CompanionChallengeItem | undefined,
   t: TFunction,
   locale: string,
-  preferences: ChallengeDisplayPreferences = {}
+  preferences: ChallengeDisplayPreferences
 ) {
-  const item =
-    snapshot.state === 'ready'
-      ? selectPrimaryChallengeSurface(snapshot.items)
-      : undefined;
   const title =
     item?.name ?? t('challenges.title', { defaultValue: 'Challenges' });
   const empty =
@@ -50,11 +47,9 @@ export function buildChallengeWidget(
       : t('challenges.surfaces.notSynced', {
           defaultValue: 'Open the app to sync Challenges.',
         });
-  const metric = challengeTypeText(
-    t,
-    item?.metric ?? 'steps',
-    item?.scoringMode ?? 'sum'
-  );
+  const metric = item
+    ? challengeTypeText(t, item?.metric ?? 'steps', item?.scoringMode ?? 'sum')
+    : '';
   const score = (value: number) =>
     formatChallengeDisplay(
       value,
@@ -147,6 +142,28 @@ export function buildChallengeWidget(
             participants: item.participantCount ?? item.rows.length,
           })
         : '',
+    // Already bounded to the adjacent server rows by the widget projection.
+    // Never sort by the rounded text or manufacture ranks for ties.
+    neighbors: canScore
+      ? item.rows
+          .filter((row) => item.rowsAreAdjacent || row.isSelf)
+          .map((row) => ({
+            slot: row.isSelf
+              ? 'self'
+              : item.rows.indexOf(row) < item.rows.findIndex((r) => r.isSelf)
+                ? 'above'
+                : 'below',
+            name: row.name,
+            score:
+              (row.daysWithData ?? row.daysWithSteps ?? 0) > 0
+                ? score(row.total)
+                : missing,
+            rank:
+              row.rank === undefined
+                ? ''
+                : new Intl.NumberFormat(locale).format(row.rank),
+          }))
+      : [],
     gap,
     peer:
       canScore && leader
@@ -156,5 +173,34 @@ export function buildChallengeWidget(
     staleLabel: t('challenges.surfaces.stale', {
       defaultValue: 'May be out of date',
     }),
+  };
+}
+
+/** Backward-compatible automatic snapshot plus a bounded, account-scoped menu.
+ * Choices reuse the companion queries; widgets never fetch health/results. */
+export function buildChallengeWidget(
+  snapshot: CompanionChallengeSnapshot,
+  t: TFunction,
+  locale: string,
+  preferences: ChallengeDisplayPreferences = {}
+) {
+  const items =
+    snapshot.state === 'ready' && snapshot.accountKey ? snapshot.items : [];
+  const primary = presentChallengeWidget(
+    snapshot,
+    selectPrimaryChallengeSurface(items),
+    t,
+    locale,
+    preferences
+  );
+  return {
+    ...primary,
+    choices: items
+      .filter((item) => item.membership === 'accepted')
+      .map((item) => ({
+        ...presentChallengeWidget(snapshot, item, t, locale, preferences),
+        selectionId: JSON.stringify([snapshot.accountKey, item.id]),
+      })),
+    hasMore: snapshot.hasMore,
   };
 }

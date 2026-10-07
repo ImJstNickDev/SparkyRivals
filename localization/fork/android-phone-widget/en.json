@@ -1,5 +1,10 @@
 {
   "sparky_challenge_widget_name": "Challenges",
   "challenge_widget_not_synced": "Open the app to sync Challenges.",
-  "challenge_widget_description": "Your latest Challenge result at a glance."
+  "challenge_widget_description": "Your latest Challenge result at a glance.",
+  "challenge_widget_choose": "Challenge",
+  "challenge_widget_automatic": "Automatic",
+  "challenge_widget_unavailable": "Challenge unavailable",
+  "challenge_widget_synced_choices": "Choose from up to eight recently synced Challenges. Open the app to refresh.",
+  "challenge_widget_save_failed": "Could not save. Try again."
 }

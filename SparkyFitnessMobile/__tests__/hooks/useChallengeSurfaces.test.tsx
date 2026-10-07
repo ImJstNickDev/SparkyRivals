@@ -55,6 +55,7 @@ const refresh = jest.fn();
 function state(value = snapshot) {
   return {
     snapshot: value,
+    widgetSnapshot: value,
     observation: { challenges: [], freshList: false, freshResultIds: [] },
     sessionRevision: getCompanionChallengeSession().revision,
     configId: 'config',
@@ -203,4 +204,22 @@ it('republishes unit preference changes without changing source freshness', asyn
     expect(publish.mock.calls.at(-1)?.[0].score).toBe('1 mi')
   );
   expect(publish.mock.calls.at(-1)?.[0].generatedAt).toBe(changed.generatedAt);
+});
+
+it('publishes the adjacent widget projection without changing the companion snapshot', async () => {
+  const value = state();
+  value.widgetSnapshot = {
+    ...snapshot,
+    items: snapshot.items.map((item) => ({
+      ...item,
+      name: 'Widget projection',
+      rowsAreAdjacent: true,
+    })),
+  };
+  jest.mocked(useCompanionChallenges).mockReturnValue(value);
+  renderHook(() => useChallengeSurfaces(true));
+  await waitFor(() =>
+    expect(publish.mock.calls.at(-1)?.[0].title).toBe('Widget projection')
+  );
+  expect(snapshot.items[0].name).not.toBe('Widget projection');
 });

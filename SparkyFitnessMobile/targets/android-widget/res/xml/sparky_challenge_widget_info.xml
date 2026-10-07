@@ -6,5 +6,7 @@
     android:resizeMode="horizontal|vertical" android:widgetCategory="home_screen"
     android:initialLayout="@layout/sparky_challenge_widget_initial_layout"
     android:previewLayout="@layout/sparky_challenge_widget_initial_layout"
+    android:configure="com.sparkyapps.sparkyfitness.widget.ChallengeWidgetConfigureActivity"
+    android:widgetFeatures="reconfigurable|configuration_optional"
     android:description="@string/challenge_widget_description"
     android:updatePeriodMillis="1800000" />

@@ -79,7 +79,7 @@ export function useCompanionChallenges(connected: boolean, supported: boolean) {
       enabled,
     })),
   });
-  const snapshot =
+  const buildSnapshot = (rowWindow?: 'self') =>
     !identity ||
     accessDenied(list.error) ||
     results.some(
@@ -88,6 +88,7 @@ export function useCompanionChallenges(connected: boolean, supported: boolean) {
     )
       ? emptyCompanionChallenges()
       : buildCompanionChallenges({
+          rowWindow,
           accountKey: identity.key,
           displayPreferences: {
             distance: preferences?.default_distance_unit,
@@ -109,6 +110,8 @@ export function useCompanionChallenges(connected: boolean, supported: boolean) {
             ])
           ),
         });
+  const snapshot = buildSnapshot();
+  const widgetSnapshot = buildSnapshot('self');
   const lastRefresh = useRef(0);
   const refetchAccount = account.refetch;
   const refresh = useCallback(() => {
@@ -138,6 +141,7 @@ export function useCompanionChallenges(connected: boolean, supported: boolean) {
   // Serialize the projections together after reading all observer metadata.
   const serialized = JSON.stringify({
     snapshot,
+    widgetSnapshot,
     observation: {
       challenges,
       freshList: list.isFetchedAfterMount && list.isSuccess && !list.isFetching,
@@ -155,6 +159,7 @@ export function useCompanionChallenges(connected: boolean, supported: boolean) {
     () =>
       JSON.parse(serialized) as {
         snapshot: CompanionChallengeSnapshot;
+        widgetSnapshot: CompanionChallengeSnapshot;
         observation: {
           challenges: ChallengeResponse[];
           freshList: boolean;
@@ -166,6 +171,7 @@ export function useCompanionChallenges(connected: boolean, supported: boolean) {
   return {
     observation: projected.observation,
     snapshot: projected.snapshot,
+    widgetSnapshot: projected.widgetSnapshot,
     refresh,
     sessionRevision: session.revision,
     configId: identity?.configId,

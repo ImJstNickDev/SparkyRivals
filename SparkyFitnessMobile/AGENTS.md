@@ -312,7 +312,7 @@ npx expo prebuild --clean
 
 - iOS launches through the UIScene life cycle, which the iOS 27 SDK (Xcode 27) requires — a build that still creates its window in `AppDelegate` is killed at launch in `_UIApplicationEvaluateRuntimeIssueForNoSceneLifecycleAdoption`. The SDK 57 prebuild template predates this, so `plugins/withSceneLifecycle.ts` applies the SDK 58 template's changes: `AppDelegate` conforms to `ExpoReactNativeFactoryProvider` and stops starting React Native, a `SceneDelegate.swift` subclassing expo's `ExpoAppSceneDelegate` (needs `expo` >= 57.0.25) is added to the app target, and `Info.plist` gets `UIApplicationSceneManifest`. The plugin throws if `AppDelegate.swift` no longer matches the template; delete it when moving to SDK 58, whose template already does all three.
 - iOS widgets live under `targets/widget/`, share data through the app group from `app.identifiers.js`, and reload through `ExtensionStorage` in `useWidgetSync`.
-- Current iOS widgets are calorie and macro widgets. When changing display, update Swift views, shared helpers, TS snapshot shape, and reload kind handling together.
+- Current iOS widgets are calorie, macro and configurable Challenge widgets. When changing display, update Swift views, shared helpers, TS snapshot shape, and reload kind handling together.
 - Widget string keys are derived from the Swift sources, not tracked by hand: `__tests__/config/helpers/widgetSwiftKeys.ts` discovers every `.swift` file under `targets/widget/` (recursively) and extracts the literal keys passed to `localizedWidgetString`, `configurationDisplayName` and `.description`. A new key must therefore be added to `targets/widget/en.lproj/Localizable.strings`, and — for `localizedWidgetString` keys — to the `fallbackWidgetString` map, or the contract tests fail. Target-language files stay optional and fall back to EN.
 - Android widgets live under `targets/android-widget/`. `plugins/withCalorieWidget.ts` copies Kotlin/templates/resources, registers receivers, wires the native module package, and documents the pattern for adding another widget.
 - `src/services/CalorieWidgetBridge.ts` is the JS bridge for Android widget snapshot writes and Glance reloads.
@@ -504,11 +504,18 @@ The maintainer approved repository-local ownership of fork-only translations.
 `localization/fork/ownership.json` (relative to the repository root) restricts
 imports to Challenge keys and explicitly listed activity-goal keys. Edit Italian
 source files under `localization/fork/`, then run root `pnpm i18n:fork:import`.
-The manifest's `nativeComponents` also owns the three Challenge phone-widget
-metadata/empty-state keys on each platform. The same commands merge those keys
+The manifest's `nativeComponents` also owns the explicitly listed Challenge
+phone-widget metadata, empty-state and configuration keys on each platform. The same commands merge those keys
 into native resources without changing unrelated upstream translations.
 Do not hand-edit other non-English catalog entries. English remains canonical;
 run `pnpm i18n:fork:export` after owned English changes and retain existing package
 plural/placeholder/registry checks. This narrow approved exception does not
 transfer ownership of upstream translations. Keep the upstream translation
 workflow guarded; do not create external translation resources without approval.
+
+Challenge phone widgets select an account-bound Challenge independently per widget
+(AppIntent on iOS; Glance per-instance preference and launcher configuration on
+Android). The automatic v1 snapshot remains readable. `useCompanionChallenges`
+projects an additional three-row window around self for phone widgets from the
+same bounded result queries; watch rows and notification inputs stay unchanged.
+See `docs/fork/CHALLENGE_UX.md` for configuration limits and acceptance evidence.

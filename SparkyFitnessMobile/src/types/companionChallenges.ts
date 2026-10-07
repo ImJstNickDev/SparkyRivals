@@ -45,6 +45,8 @@ export interface CompanionChallengeItem {
   participantCount?: number;
   calculatedAt?: string;
   leadMargin?: number;
+  /** Only the phone-widget projection carries an adjacent server-row window. */
+  rowsAreAdjacent?: true;
   rows: CompanionChallengeRow[];
 }
 export interface CompanionChallengeSnapshot {

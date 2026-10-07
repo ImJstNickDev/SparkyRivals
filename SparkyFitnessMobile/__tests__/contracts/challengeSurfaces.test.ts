@@ -37,7 +37,9 @@ it('Android third widget has its own snapshot and variant-aware destination', ()
   expect(widget).toContain('{{APP_URL_SCHEME}}://challenges');
   expect(widget).toContain('SizeMode.Responsive');
   expect(widget).toContain('900000');
-  expect(widget).toContain('optString("accountKey").isNotEmpty()');
+  expect(read(base + 'ChallengeWidgetData.kt.tmpl')).toContain(
+    'optString("accountKey").isNotEmpty()'
+  );
   expect(widget).toContain('WidgetLocale.LOCALE_RENDER_REVISION_STATE_KEY');
   const provider = read(
     'targets/android-widget/res/xml/sparky_challenge_widget_info.xml'
@@ -119,4 +121,30 @@ it('preserves one composed Apple context and one Wear protocol path', () => {
   expect(read('src/hooks/useChallengeSurfaces.ts')).not.toMatch(
     /fetch\(|challengesApi|setInterval/
   );
+});
+
+it('configures each native widget independently and keeps invalid selections closed', () => {
+  const swift = read('targets/widget/ChallengeWidget.swift');
+  expect(swift).toContain('AppIntentConfiguration(kind: "challengeWidget"');
+  expect(swift).toContain(
+    '$0.selectionId == id && $0.accountKey == accountKey'
+  );
+  expect(swift).toContain('configuration.challenge?.id');
+  expect(swift).toContain('["above", "self", "below"]');
+  const base =
+    'targets/android-widget/kotlin/com/sparkyapps/sparkyfitness/widget/';
+  const config = read(base + 'ChallengeWidgetConfigureActivity.kt.tmpl');
+  expect(config).toContain(
+    'info?.provider != ComponentName(this, ChallengeWidgetReceiver::class.java)'
+  );
+  expect(config).toContain(
+    'state[ChallengeWidget.SELECTION_STATE_KEY] = ids[position]'
+  );
+  expect(config).toContain('current?.optString("accountKey") != account');
+  expect(read(base + 'ChallengeWidget.kt.tmpl')).toContain(
+    'listOf("above", "self", "below")'
+  );
+  expect(
+    read('targets/android-widget/res/xml/sparky_challenge_widget_info.xml')
+  ).toContain('reconfigurable|configuration_optional');
 });

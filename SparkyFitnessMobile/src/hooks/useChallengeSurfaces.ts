@@ -34,8 +34,14 @@ import type { CompanionChallengeSnapshot } from '../types/companionChallenges';
  * Apple/Wear observers use identical keys; TanStack deduplicates their requests. */
 export function useChallengeSurfaces(connected: boolean) {
   const supported = Platform.OS === 'ios' || Platform.OS === 'android';
-  const { snapshot, observation, refresh, sessionRevision, configId } =
-    useCompanionChallenges(connected, supported);
+  const {
+    snapshot,
+    widgetSnapshot,
+    observation,
+    refresh,
+    sessionRevision,
+    configId,
+  } = useCompanionChallenges(connected, supported);
   const { t, i18n } = useTranslation();
   const client = useQueryClient();
   const { preferences: displayPreferences } = usePreferences({
@@ -169,7 +175,12 @@ export function useChallengeSurfaces(connected: boolean) {
   ]);
   useEffect(() => {
     if (!supported) return;
-    void widget.offer(snapshot, sessionRevision, configId, presentationKey);
+    void widget.offer(
+      widgetSnapshot,
+      sessionRevision,
+      configId,
+      presentationKey
+    );
     if (hydrated)
       void notifications.reconcile(
         {
@@ -196,6 +207,7 @@ export function useChallengeSurfaces(connected: boolean) {
     hydrated,
     t,
     presentationKey,
+    widgetSnapshot,
     supported,
     widget,
     notifications,

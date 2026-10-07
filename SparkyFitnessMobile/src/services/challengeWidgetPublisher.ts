@@ -11,7 +11,11 @@ export async function publishChallengeWidget(
   if (Platform.OS === 'ios') {
     const group: unknown = Constants.expoConfig?.extra?.iosAppGroup;
     if (typeof group !== 'string' || !group) return;
-    new ExtensionStorage(group).set('challengeWidgetSnapshot', snapshot);
+    // The public storage API supports strings; nested choices are encoded once.
+    new ExtensionStorage(group).set(
+      'challengeWidgetSnapshot',
+      JSON.stringify(snapshot)
+    );
     ExtensionStorage.reloadWidget('challengeWidget');
   } else if (Platform.OS === 'android') {
     await CalorieWidgetBridge.setChallengeSnapshot(JSON.stringify(snapshot));

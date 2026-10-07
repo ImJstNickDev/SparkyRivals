@@ -19,3 +19,7 @@
 "widget.challenge.name" = "Challenges";
 "widget.challenge.description" = "Your latest Challenge result at a glance.";
 "widget.challenge.not_synced" = "Open the app to sync Challenges.";
+"widget.challenge.choose" = "Challenge";
+"widget.challenge.automatic" = "Automatic";
+"widget.challenge.unavailable" = "Challenge unavailable";
+"widget.challenge.synced_choices" = "Choose from up to eight recently synced Challenges. Open the app to refresh.";

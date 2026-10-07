@@ -18,3 +18,7 @@
 "widget.challenge.name" = "Sfide";
 "widget.challenge.description" = "Il risultato della tua sfida a colpo d’occhio.";
 "widget.challenge.not_synced" = "Apri l’app per sincronizzare le sfide.";
+"widget.challenge.choose" = "Sfida";
+"widget.challenge.automatic" = "Automatica";
+"widget.challenge.unavailable" = "Sfida non disponibile";
+"widget.challenge.synced_choices" = "Scegli tra le ultime otto sfide sincronizzate. Apri l’app per aggiornarle.";

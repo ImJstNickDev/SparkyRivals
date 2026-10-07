@@ -27,7 +27,10 @@ it('iOS clears only Challenge state and reloads its existing extension kind', as
   const clear = buildChallengeWidget(emptyCompanionChallenges(), i18n.t, 'en');
   await publishChallengeWidget(clear);
   expect(ExtensionStorage).toHaveBeenCalledWith('group.test.shared');
-  expect(mockSet).toHaveBeenCalledWith('challengeWidgetSnapshot', clear);
+  expect(mockSet).toHaveBeenCalledWith(
+    'challengeWidgetSnapshot',
+    JSON.stringify(clear)
+  );
   expect(ExtensionStorage.reloadWidget).toHaveBeenCalledWith('challengeWidget');
   expect(CalorieWidgetBridge.setChallengeSnapshot).not.toHaveBeenCalled();
 });

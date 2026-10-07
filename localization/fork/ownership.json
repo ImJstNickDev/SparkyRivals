@@ -54,7 +54,11 @@
       "keys": [
         "widget.challenge.name",
         "widget.challenge.description",
-        "widget.challenge.not_synced"
+        "widget.challenge.not_synced",
+        "widget.challenge.choose",
+        "widget.challenge.automatic",
+        "widget.challenge.unavailable",
+        "widget.challenge.synced_choices"
       ]
     },
     {
@@ -68,7 +72,12 @@
       "keys": [
         "sparky_challenge_widget_name",
         "challenge_widget_not_synced",
-        "challenge_widget_description"
+        "challenge_widget_description",
+        "challenge_widget_choose",
+        "challenge_widget_automatic",
+        "challenge_widget_unavailable",
+        "challenge_widget_synced_choices",
+        "challenge_widget_save_failed"
       ]
     }
   ]

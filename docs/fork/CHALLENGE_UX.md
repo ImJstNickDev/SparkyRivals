@@ -729,3 +729,35 @@ platform's existing policy; published result text follows the phone app locale.
 These source changes require native rebuilds. Android emulator evidence and
 subsequent device acceptance are recorded in the release ledger; Linux source
 checks alone do not establish iOS rendering or gallery acceptance.
+
+
+### Configurable phone widgets and nearby standings (2026-10-07)
+
+The medium/wide family uses its space for the current position and a three-slot
+standings window: the preceding server row, self, and the following server row.
+Self remains in the middle; an absent neighbor leaves that slot empty. Server
+order/ranks/ties are preserved even when compact scores look equal. No full
+leaderboard, inferred winner, private samples or new scoring is introduced.
+The compact family retains its own score/rank presentation.
+
+Each instance has an Automatic choice or a pinned Challenge. Choices come from
+up to eight recently synchronized Challenges in the existing bounded companion
+query selection (accepted memberships only, with no scores before activation).
+The configuration explains this bound; it does not claim to list every Challenge
+on the server. No extra result requests or fetch-every-page workaround is added.
+The phone builds a separate adjacent-row projection from those same results;
+watch top-three-plus-self payloads and notification planning remain unchanged.
+
+A pinned choice contains the account binding and Challenge ID, not credentials.
+A removed/denied/unavailable choice shows the sync/empty state; it never silently
+changes to another account or another Challenge. Automatic instances follow the
+current authorized snapshot. Configuration is stored per widget by WidgetKit or
+Glance, and the existing publication/session clearing barrier remains in force.
+Native configuration copy uses the approved English/Italian fork sources and
+existing resource imports. Other languages use the existing English fallback.
+
+Implementation references: [Apple configurable widgets](https://developer.apple.com/documentation/widgetkit/making-a-configurable-widget)
+uses AppEntity queries and AppIntentConfiguration; [Android widget configuration](https://developer.android.com/develop/ui/compose/glance/configuration)
+uses a launcher configuration Activity, per-instance preferences, explicit initial
+update and the reconfigurable/configuration_optional flags. The Android activity
+validates the supplied widget ID/provider and rechecks its account before saving.

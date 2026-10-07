@@ -1,0 +1,21 @@
+package com.sparkyapps.sparkyfitness.widget
+
+import org.json.JSONObject
+
+/** Local presentation only. A stored choice includes its account binding. */
+internal object ChallengeWidgetData {
+    const val AUTOMATIC = "automatic"
+    fun load(json: String?): JSONObject? = runCatching { JSONObject(json ?: "{}") }.getOrNull()
+        ?.takeIf { it.optInt("version") == 1 && it.optString("state") == "ready" && it.optString("accountKey").isNotEmpty() }
+
+    fun choices(snapshot: JSONObject?): List<JSONObject> {
+        val items = snapshot?.optJSONArray("choices") ?: return emptyList()
+        return (0 until minOf(items.length(), 8)).mapNotNull { items.optJSONObject(it) }
+            .filter { it.optString("accountKey") == snapshot.optString("accountKey") && it.optString("selectionId").isNotEmpty() }
+    }
+
+    fun select(snapshot: JSONObject?, selection: String?): JSONObject? {
+        if (selection == null || selection == AUTOMATIC) return snapshot
+        return choices(snapshot).firstOrNull { it.optString("selectionId") == selection }
+    }
+}

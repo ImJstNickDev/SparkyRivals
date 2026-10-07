@@ -38,7 +38,6 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import {{APPLICATION_ID}}.R
-import org.json.JSONObject
 
 /** Latest presentation only. No auth, server access or independent scoring. */
 class ChallengeWidget : GlanceAppWidget() {
@@ -49,8 +48,8 @@ class ChallengeWidget : GlanceAppWidget() {
         provideContent {
             currentState(WidgetLocale.LOCALE_RENDER_REVISION_STATE_KEY)
             val json = currentState<Preferences>()[SNAPSHOT_STATE_KEY] ?: stored
-            val value = runCatching { JSONObject(json ?: "{}") }.getOrNull()
-                ?.takeIf { it.optInt("version")==1 && it.optString("state")=="ready" && it.optString("accountKey").isNotEmpty() }
+            val selection = currentState<Preferences>()[SELECTION_STATE_KEY]
+            val value = ChallengeWidgetData.select(ChallengeWidgetData.load(json), selection)
             val localized = WidgetLocale.localizedContext(context)
             val url = value?.optString("url")?.takeIf { it.startsWith("{{APP_URL_SCHEME}}://challenges/") } ?: "{{APP_URL_SCHEME}}://challenges"
             GlanceTheme {
@@ -75,13 +74,25 @@ class ChallengeWidget : GlanceAppWidget() {
                         val rank = value.optString("rank")
                         if (score.isEmpty()) {
                             Text(value.optString("metric"), style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 14.sp), maxLines = 2)
-                        } else if (wide) {
-                            Row(GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                                Text(score, modifier = GlanceModifier.defaultWeight(),
-                                    style = TextStyle(color = GlanceTheme.colors.primary, fontSize = 20.sp, fontWeight = FontWeight.Bold), maxLines = 2)
-                                Spacer(GlanceModifier.width(12.dp))
-                                Text(rank, modifier = GlanceModifier.defaultWeight(),
-                                    style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 12.sp), maxLines = 2)
+                        } else if (wide && (value.optJSONArray("neighbors")?.length() ?: 0) > 0) {
+                            Text(rank, style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 14.sp, fontWeight = FontWeight.Bold), maxLines = 1)
+                            Spacer(GlanceModifier.height(4.dp))
+                            val neighbors = value.getJSONArray("neighbors")
+                            for (slot in listOf("above", "self", "below")) {
+                                val row = (0 until neighbors.length()).mapNotNull { neighbors.optJSONObject(it) }.firstOrNull { it.optString("slot") == slot }
+                                if (row == null) {
+                                    Spacer(GlanceModifier.height(18.dp))
+                                } else {
+                                    val style = TextStyle(
+                                        color = if (slot == "self") GlanceTheme.colors.primary else GlanceTheme.colors.onSurfaceVariant,
+                                        fontSize = 12.sp, fontWeight = if (slot == "self") FontWeight.Bold else FontWeight.Normal)
+                                    Row(GlanceModifier.fillMaxWidth().padding(vertical = 1.dp), verticalAlignment = Alignment.CenterVertically) {
+                                        Text(row.optString("rank"), modifier = GlanceModifier.width(32.dp), style = style, maxLines = 1)
+                                        Text(row.optString("name"), modifier = GlanceModifier.defaultWeight(), style = style, maxLines = 1)
+                                        Spacer(GlanceModifier.width(8.dp))
+                                        Text(row.optString("score"), style = style, maxLines = 1)
+                                    }
+                                }
                             }
                         } else {
                             Text(score, style = TextStyle(color = GlanceTheme.colors.primary, fontSize = 20.sp, fontWeight = FontWeight.Bold), maxLines = 2)
@@ -92,7 +103,8 @@ class ChallengeWidget : GlanceAppWidget() {
                     Spacer(GlanceModifier.defaultWeight())
                     val age = System.currentTimeMillis() - (value?.optLong("generatedAt") ?: 0)
                     // OS rendering changes age only; it never advances verified time.
-                    val footer = if (value == null) localized.getString(R.string.challenge_widget_not_synced)
+                    val footer = if (value == null) localized.getString(
+                        if (selection != null && selection != ChallengeWidgetData.AUTOMATIC) R.string.challenge_widget_unavailable else R.string.challenge_widget_not_synced)
                         else if (age > 900000 || age < -300000) value.optString("staleLabel")
                         else value.optString("status")
                     Text(footer, style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 11.sp), maxLines = 2)
@@ -100,5 +112,8 @@ class ChallengeWidget : GlanceAppWidget() {
             }
         }
     }
-    companion object { val SNAPSHOT_STATE_KEY = stringPreferencesKey("challengeSnapshot") }
+    companion object {
+        val SNAPSHOT_STATE_KEY = stringPreferencesKey("challengeSnapshot")
+        val SELECTION_STATE_KEY = stringPreferencesKey("challengeSelection")
+    }
 }

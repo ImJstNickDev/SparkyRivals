@@ -1,0 +1,124 @@
+package com.sparkyapps.sparkyfitness.widget
+
+import android.app.Activity
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.content.SharedPreferences
+import android.content.res.Configuration
+import android.os.Bundle
+import android.widget.ArrayAdapter
+import android.widget.LinearLayout
+import android.widget.ListView
+import android.widget.TextView
+import androidx.glance.appwidget.GlanceAppWidgetManager
+import androidx.glance.appwidget.state.getAppWidgetState
+import androidx.glance.appwidget.state.updateAppWidgetState
+import androidx.glance.state.PreferencesGlanceStateDefinition
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import {{APPLICATION_ID}}.R
+
+/** Launcher-owned configuration. No authentication, networking or health access. */
+class ChallengeWidgetConfigureActivity : Activity(), SharedPreferences.OnSharedPreferenceChangeListener {
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private var widgetId = AppWidgetManager.INVALID_APPWIDGET_ID
+    private var saving = false
+    private lateinit var prefs: SharedPreferences
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        val dark = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
+        setTheme(if (dark) android.R.style.Theme_Material_NoActionBar else android.R.style.Theme_Material_Light_NoActionBar)
+        super.onCreate(savedInstanceState)
+        widgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
+        setResult(RESULT_CANCELED, Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId))
+        val info = AppWidgetManager.getInstance(this).getAppWidgetInfo(widgetId)
+        if (intent.action != AppWidgetManager.ACTION_APPWIDGET_CONFIGURE ||
+            info?.provider != ComponentName(this, ChallengeWidgetReceiver::class.java)) {
+            finish(); return
+        }
+        prefs = getSharedPreferences(ChallengeWidgetReceiver.PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.registerOnSharedPreferenceChangeListener(this)
+        renderChoices()
+    }
+
+    private fun renderChoices() {
+        val localized = WidgetLocale.localizedContext(this)
+        val snapshot = ChallengeWidgetData.load(prefs.getString("snapshot", null))
+        val choices = ChallengeWidgetData.choices(snapshot)
+        val account = snapshot?.optString("accountKey")
+        val ids = listOf(ChallengeWidgetData.AUTOMATIC) + choices.map { it.optString("selectionId") }
+        val labels = listOf(localized.getString(R.string.challenge_widget_automatic)) + choices.map { it.optString("title") }
+        val padding = (24 * resources.displayMetrics.density).toInt()
+        val layout = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(padding, padding, padding, padding)
+            fitsSystemWindows = true
+        }
+        layout.addView(TextView(this).apply {
+            text = localized.getString(R.string.challenge_widget_choose)
+            textSize = 22f
+            setPadding(0, padding, 0, padding / 2)
+            androidx.core.view.ViewCompat.setAccessibilityHeading(this, true)
+        })
+        layout.addView(TextView(this).apply {
+            text = localized.getString(R.string.challenge_widget_synced_choices)
+            textSize = 14f
+            setPadding(0, 0, 0, padding)
+        })
+        val list = ListView(this).apply {
+            choiceMode = ListView.CHOICE_MODE_SINGLE
+            adapter = ArrayAdapter(this@ChallengeWidgetConfigureActivity, android.R.layout.simple_list_item_single_choice, labels)
+        }
+        layout.addView(list, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f))
+        setContentView(layout)
+        scope.launch {
+            val glanceId = GlanceAppWidgetManager(this@ChallengeWidgetConfigureActivity).getGlanceIdBy(widgetId)
+            val state = getAppWidgetState(this@ChallengeWidgetConfigureActivity, PreferencesGlanceStateDefinition, glanceId)
+            val index = ids.indexOf(state[ChallengeWidget.SELECTION_STATE_KEY] ?: ChallengeWidgetData.AUTOMATIC)
+            if (index >= 0) list.setItemChecked(index, true)
+        }
+        list.setOnItemClickListener { _, _, position, _ ->
+            if (!saving) {
+                val current = ChallengeWidgetData.load(prefs.getString("snapshot", null))
+                if (current?.optString("accountKey") != account ||
+                    (ids[position] != ChallengeWidgetData.AUTOMATIC && ChallengeWidgetData.select(current, ids[position]) == null)) {
+                    renderChoices(); return@setOnItemClickListener
+                }
+                saving = true
+                list.isEnabled = false
+                scope.launch {
+                    try {
+                        val glanceId = GlanceAppWidgetManager(this@ChallengeWidgetConfigureActivity).getGlanceIdBy(widgetId)
+                        updateAppWidgetState(this@ChallengeWidgetConfigureActivity, glanceId) { state ->
+                            state[ChallengeWidget.SELECTION_STATE_KEY] = ids[position]
+                        }
+                        ChallengeWidget().update(this@ChallengeWidgetConfigureActivity, glanceId)
+                        setResult(RESULT_OK, Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId))
+                        finish()
+                    } catch (error: kotlinx.coroutines.CancellationException) {
+                        throw error
+                    } catch (_: Exception) {
+                        android.widget.Toast.makeText(this@ChallengeWidgetConfigureActivity, localized.getString(R.string.challenge_widget_save_failed), android.widget.Toast.LENGTH_SHORT).show()
+                    } finally {
+                        saving = false
+                        list.isEnabled = true
+                    }
+                }
+            }
+        }
+    }
+
+    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
+        if (key == "snapshot" && !isFinishing) runOnUiThread { renderChoices() }
+    }
+    override fun onDestroy() {
+        if (::prefs.isInitialized) prefs.unregisterOnSharedPreferenceChangeListener(this)
+        scope.cancel()
+        super.onDestroy()
+    }
+}
