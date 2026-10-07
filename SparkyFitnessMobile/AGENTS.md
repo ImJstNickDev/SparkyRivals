@@ -107,7 +107,9 @@ npx expo prebuild --clean
 - Dashboard opens `Challenges`, `ChallengeDetail` and `CreateChallenge` through
   safe root-stack screens; preserve existing tabs and detached Add behavior.
   `src/navigation/challengeEntry.ts` keeps a hub route behind the Dashboard's
-  single-active shortcut. `view=active` plus the pagination sentinel establishes
+  single-active shortcut. Read `getRootState()` for root-targeted actions:
+  container dispatch callbacks receive the focused child navigator's state.
+  `view=active` plus the pagination sentinel establishes
   uniqueness; never infer it from the priority summary or partially loaded pages.
 - `src/components/challenges/`, `src/hooks/useChallenges.ts`, Challenge keys in
   `src/hooks/queryKeys.ts` and `src/services/api/challengesApi.ts` consume shared

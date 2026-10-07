@@ -1,4 +1,21 @@
-import { CommonActions, type NavigationState } from '@react-navigation/native';
+import {
+  CommonActions,
+  type NavigationContainerRef,
+  type NavigationState,
+} from '@react-navigation/native';
+import type { RootStackParamList } from '../types/navigation';
+
+export function openChallengeEntry(
+  navigation: NavigationContainerRef<RootStackParamList>,
+  id?: string
+) {
+  if (!navigation.isReady()) return;
+  // Container dispatch callbacks receive the deepest focused navigator's state
+  // (tabs, or the iOS tab-local stack), not the root stack that owns Challenges.
+  // Read the root explicitly and dispatch an already targeted action.
+  const state = navigation.getRootState();
+  if (state) navigation.dispatch(challengeEntryAction(state, id));
+}
 
 /** Keep a real hub route behind the optional single-active shortcut. */
 export function challengeEntryAction(state: NavigationState, id?: string) {

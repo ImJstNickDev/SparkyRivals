@@ -1041,3 +1041,27 @@ Source: `176a8a815c375e140112c27b413f648308ed4f07`.
   only. This is embedded entitlement/profile inspection, not local Xcode or full
   Apple `codesign` verification. Device installation/acceptance remains pending.
   Artifacts: `~/.local/share/sparkyrivals/artifacts/milestone-8a7/ios-1013/`.
+
+### Nested-container regression found on devices — 7 October
+
+The maintainer reported that Dashboard → Challenges did nothing on both phones,
+while Library → trophy still opened the hub. The 1009/1013 navigation correction
+therefore failed physical acceptance; its successful builds/router tests were
+insufficient. Private app logs collected around repeated taps showed no matching
+JavaScript exception or navigation error, so they do not independently establish
+the cause.
+
+The installed React Navigation implementation forwards container `dispatch`
+callbacks to the deepest focused navigator. The entry incorrectly treated that
+callback state as the root stack, targeting a reset with Challenge routes at the
+tab or tab-local stack. A new real-container regression test reproduced all four
+failures (hub/single-active entry, with/without a tab-local stack). Explicitly
+reading `getRootState()` and dispatching the resulting root-targeted action fixes
+all four. The tests also verify detail → hub → Dashboard, retained tab state and
+no dispatch before readiness. The focused group passed **101 tests / 3 suites**.
+Full mobile CI passed **523 suites / 8,028 tests**; mobile `validate`, docs build
+and 16 relative file-link checks passed. Test groups overlap. Existing React
+`act` warnings remain visible.
+New phone artifacts and physical confirmation are required; no device pass is
+claimed from the automated result. Scoring, server queries and watch sources are
+unchanged by this correction.

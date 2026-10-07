@@ -28,7 +28,7 @@ import {
   useActiveWorkoutBarPadding,
   navigationRef as rootNavigationRef,
 } from '../components/ActiveWorkoutBar';
-import { challengeEntryAction } from '../navigation/challengeEntry';
+import { openChallengeEntry } from '../navigation/challengeEntry';
 import CalendarSheet, {
   type CalendarSheetRef,
 } from '../components/CalendarSheet';
@@ -521,12 +521,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) => {
               return challengesCardVisible ? (
                 <ChallengeDashboardEntry
                   key="challenges"
-                  onPress={(id) => {
-                    if (rootNavigationRef.isReady())
-                      rootNavigationRef.dispatch((state) =>
-                        challengeEntryAction(state, id)
-                      );
-                  }}
+                  onPress={(id) => openChallengeEntry(rootNavigationRef, id)}
                 />
               ) : null;
             case 'calorieRing':

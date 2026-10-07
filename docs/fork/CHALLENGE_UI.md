@@ -197,6 +197,10 @@ response proves exactly one accepted active Challenge (`has_more=false`). That
 shortcut installs the hub behind detail in the existing root navigation stack:
 Back visits the hub, then the Dashboard. There is no extra all-Challenges button
 inside detail. Loading, failed or incomplete active reads open the hub safely.
+The entry reads the container's `getRootState()` before dispatching a targeted
+action. A container dispatch callback receives the focused tab/tab-local stack
+state, which cannot accept root Challenge routes. Regression tests mount a real
+container with nested navigators and exercise entry plus Back in both structures.
 
 Invitations show metric-specific consent without scores. Goal lobbies show
 projected dates, own target/Ready and compact authorized participant rows.
