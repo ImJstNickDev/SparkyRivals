@@ -1,6 +1,6 @@
 # AGENTS.md
 
-_Last updated: 2026-10-06_
+_Last updated: 2026-10-08_
 
 SparkyFitness Server is the backend API package for the SparkyFitness monorepo. Use this file as the primary guide for work inside `SparkyFitnessServer/`.
 
@@ -68,9 +68,11 @@ pnpm exec eslint routes/v2/foodRoutes.ts services/foodCoreService.ts
   `Challenges.api.zod.ts`; no client Challenge implementation is part of this domain yet.
 - `routes/v2/openFoodFactsContributionRoutes.ts` - owner-only single-food preview and explicit photo-backed publication; background contributions are disabled for this release
 - `routes/v2/symptomRoutes.ts` - generic symptom tracking (`symptoms` permission): definitions (`/custom`), the pick-list library (`/options`), entries and episodes (`/entries`, `/entries/ongoing`, `/entries/:id/end`, `/entries/:id/severity`), photos, and symptom-free days. Logic lives in `services/symptomService.ts` over `models/symptomRepository.ts` and `models/symptomOptionRepository.ts`; the request/response contract is `../shared/src/schemas/api/Symptoms.api.zod.ts`
+- `routes/reportRoutes.ts` `GET /reports/training-consistency` - the consistency view (#59): `reportService.getTrainingConsistency` reads a fixed 26 weeks of exercise entries and hands them to the shared `buildTrainingConsistency`, so web and mobile show the same streak and weekly sets (`reports` permission)
 - `routes/v2/reportRoutes.ts` - weekly alcohol rollup and the zero-padded hydration/caffeine/alcohol range used by the Trends charts (`reports` permission)
 - `routes/v2/nutritionKineticsRoutes.ts` - active-caffeine estimate and bedtime cutoff (`diary` permission)
 - `routes/v2/workoutCoachingRoutes.ts` - adaptive coaching (#1560): session feedback (`workout_feedback`), the per-user `adaptive_workout_suggestions` setting (owner-only write), and recent-history signals (`diary` permission). `GET /v2/exercises/:id/alternatives` (ranked substitutes) lives in `routes/v2/exerciseRoutes.ts`
+- `routes/v2/mindfulnessRoutes.ts` - mindfulness & meditation sessions tracking (`checkin` permission): day summaries (`/day-summary`), session logs and telemetry (`/entries`, `/entries/:id`). Logic lives in `models/mindfulnessRepository.ts`; the request/response contract is `../shared/src/schemas/api/Mindfulness.api.zod.ts`
 - `routes/auth/` - auth-specific route fragments mounted through `routes/authRoutes.ts`
 - `services/` - business logic and orchestration
 - `models/` - PostgreSQL repositories and persistence helpers
@@ -287,6 +289,7 @@ When searching, ignore noisy/generated directories unless you explicitly need th
   inspect `services/exerciseAlternativesService.ts` (library + Free Exercise DB candidates, dedupe) with the pure ranking in `utils/exerciseAlternativesRanking.ts` and the muscle/equipment vocabulary in `../shared/src/constants/exerciseTaxonomy.ts`; feedback in `services/workoutCoachingService.ts` + `models/workoutFeedbackRepository.ts`; signals in `services/adaptiveWorkoutService.ts`. The rules that turn signals into weight changes are client-side and shared (`../shared/src/utils/adaptiveCoaching.ts`) so web, mobile and the AI tools agree; the server only reports what happened. AI actions: `suggest_alternatives`, `rate_workout`, `get_workout_coaching` in `ai/tools/exerciseTools.ts`
 - Bodyweight exercise load, volume or 1RM issue (#56):
   a `bodyweight_reps` set's weight is signed added/assisting load, and its load is body weight plus that weight (`effectiveLoadKg` in `../shared/src/utils/exerciseLoad.ts`). SQL mirrors the rule in `utils/exerciseLoadSql.ts` (`bodyWeightJoinSql`, `setLoadSql`), used by `services/exerciseStatsService.ts` and `models/exerciseEntry.ts`'s progress query; `services/reportService.ts` applies the shared helper with readings from `reportRepository.getBodyWeightReadings`. Keep the two copies identical. A negative set weight is rejected unless that exercise's modality is `bodyweight_reps`. `models/exercise.ts`'s `createExercise` defaults the modality from equipment through `resolveExerciseModality`
+  `weight_distance` (weighted carries) and `weight_duration` (loaded holds) store weight plus distance (km) or duration (s); stats treat them as weight-based, not cardio, and best-set ordering falls back to distance then duration.
 - Sleep or sleep-science issue:
   inspect `routes/sleepRoutes.ts`, `routes/sleepScienceRoutes.ts`, `services/sleepAnalyticsService.ts`, `services/sleepScienceService.ts`, and the sleep repositories
 

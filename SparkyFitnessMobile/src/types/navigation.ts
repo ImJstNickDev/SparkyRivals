@@ -195,6 +195,8 @@ export type RootStackParamList = {
         initialFood?: Partial<FoodFormData>;
         barcode?: string;
         providerType?: string;
+        /** Which AI read the label this form was filled in from. */
+        labelScanSource?: 'device' | 'server';
         pickerMode?: FoodPickerMode;
         returnDepth?: number;
         pendingScannedBarcode?: string;
@@ -228,6 +230,7 @@ export type RootStackParamList = {
         duplicateOf?: Exercise;
       }
     | { mode: 'edit-exercise'; exercise: Exercise; returnKey: string };
+  AiSettings: undefined;
   FoodScan:
     | {
         mode?: 'lookup';
@@ -324,6 +327,7 @@ export type RootStackParamList = {
   };
   ActivityDetail: { session: IndividualSessionResponse };
   FastingDetail: undefined;
+  MindfulnessDetail: { selectedDate?: string } | undefined;
   SleepDetail: { entryId: string; day: string };
   Chat: undefined;
   Logs: undefined;
@@ -357,7 +361,7 @@ export type RootStackParamList = {
   WhatsNew: undefined;
   MedicationsList: undefined;
   MedicationDetail: { medicationId: string };
-  MedicationForm: { medicationId?: string };
+  MedicationForm: { medicationId?: string; isSupplement?: boolean };
   MedicationScheduleForm: { medicationId: string; scheduleId?: string };
   SymptomLog:
     | {

@@ -25,6 +25,15 @@ RUN pnpm install --frozen-lockfile --filter sparkyfitnessfrontend...
 COPY SparkyFitnessFrontend/ ./SparkyFitnessFrontend/
 COPY shared/ ./shared/
 
+# The fork catalog check is part of frontend validation. Include its source
+# inputs in the build stage only; the runtime image still contains dist alone.
+COPY scripts/sync-fork-locales.mjs scripts/fork-native-locales.mjs ./scripts/
+COPY localization/ ./localization/
+COPY SparkyFitnessMobile/scripts/ ./SparkyFitnessMobile/scripts/
+COPY SparkyFitnessMobile/src/localization/locales/ ./SparkyFitnessMobile/src/localization/locales/
+COPY SparkyFitnessMobile/targets/widget/ ./SparkyFitnessMobile/targets/widget/
+COPY SparkyFitnessMobile/targets/android-widget/res/ ./SparkyFitnessMobile/targets/android-widget/res/
+
 # Build the application
 RUN pnpm --filter sparkyfitnessfrontend run build
 

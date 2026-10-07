@@ -190,6 +190,7 @@ describe.runIf(RUN)('RLS permission matrix', () => {
     pregnancy_kick_sessions: 'owner',
     pregnancy_photos: 'owner',
     user_cycle_display_preferences: 'owner',
+    user_fasting_preferences: 'owner',
     user_mood_display_preferences: 'owner',
     // diary
     exercise_entries: 'diary',
@@ -218,6 +219,7 @@ describe.runIf(RUN)('RLS permission matrix', () => {
     day_classification_cache: 'checkin',
     fasting_logs: 'checkin',
     health_metric_samples: 'checkin',
+    mindfulness_sessions: 'checkin',
     mood_entries: 'checkin',
     user_custom_moods: 'checkin',
     sleep_entries: 'checkin',
@@ -325,6 +327,46 @@ describe.runIf(RUN)('RLS permission matrix', () => {
     Object.keys(DOMAIN).filter((t) => d.includes(DOMAIN[t]));
 
   describe('policy wiring (pg_policies)', () => {
+    it('startup restores every classified table, including merged upstream and Challenge domains', async () => {
+      const sys: PoolClient = await getSystemClient();
+      const tables = Object.keys(DOMAIN).sort();
+      try {
+        await sys.query('BEGIN');
+        for (const table of tables) {
+          // DOMAIN is a static server-owned inventory, never request input.
+          await sys.query(
+            `ALTER TABLE public.${table} DISABLE ROW LEVEL SECURITY`
+          );
+        }
+        await applyRlsPolicies(sys);
+        const restored = await sys.query<{
+          relname: string;
+          relrowsecurity: boolean;
+          protected: boolean;
+        }>(
+          `SELECT c.relname, c.relrowsecurity,
+                  EXISTS (SELECT 1 FROM pg_policies p
+                           WHERE p.schemaname = 'public' AND p.tablename = c.relname) AS protected
+             FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+            WHERE n.nspname = 'public' AND c.relname = ANY($1::text[])
+            ORDER BY c.relname`,
+          [tables]
+        );
+        expect(restored.rows).toEqual(
+          tables.map((relname) => ({
+            relname,
+            relrowsecurity: true,
+            protected: true,
+          }))
+        );
+      } finally {
+        try {
+          await sys.query('ROLLBACK');
+        } finally {
+          sys.release();
+        }
+      }
+    });
     it.each(['push_installations', 'push_events', 'push_deliveries'])(
       'startup restores RLS and deny-all protection on %s',
       async (table) => {

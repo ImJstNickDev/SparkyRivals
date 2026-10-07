@@ -41,7 +41,22 @@ jest.mock('../../src/hooks/useCustomNutrients', () => ({
 jest.mock('../../src/hooks/useWorkoutPresets', () => ({
   useWorkoutPresets: () => ({ presets: mockEmpty }),
 }));
+jest.mock('../../src/hooks/useActiveWorkoutPlan', () => ({
+  useActiveWorkoutPlans: () => ({ plans: mockEmpty }),
+}));
+const mockScheduled = [
+  {
+    presetId: 'plan-preset',
+    name: 'Scheduled workout',
+    planName: 'Synthetic plan',
+    caption: 'Today',
+  },
+];
+jest.mock('../../src/utils/workoutPlanSchedule', () => ({
+  scheduledWorkoutsForWatch: () => mockScheduled,
+}));
 const mockSummary = {
+  exerciseEntries: [],
   calorieBalance: {
     eaten: 1500,
     burned: 2100,
@@ -113,6 +128,9 @@ it('composes Challenge with every existing context family using the sole writer'
     ackedClientIds: [],
     failedClientIds: [],
     startableWorkouts: [],
+    scheduledWorkouts: mockScheduled,
+    distanceUnit: 'km',
+    doubleTapEnabled: true,
     workoutServerId: 'server',
   });
   for (const key of [
@@ -140,6 +158,9 @@ it('pushes an auth clear immediately even while measurements and server are unav
   rerender({ connected: false });
   act(() => invalidateWatchChallengeSession(true));
   expect(latest().challengeSnapshot).toEqual(emptyWatchChallenges());
+  expect(latest().scheduledWorkouts).toEqual([]);
+  expect(latest().startableWorkouts).toEqual([]);
+  expect(latest().workoutServerId).toBeNull();
 });
 it('prevents an in-flight older push from overwriting a clear', async () => {
   let release: (id: string) => void = () => {};

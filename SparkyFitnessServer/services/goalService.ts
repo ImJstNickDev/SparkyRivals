@@ -576,6 +576,8 @@ async function manageGoalTimeline(
       log('debug', `cleanNumber: Returning cleaned number: ${num}`);
       return num;
     };
+    const blankToNull = (value: unknown) =>
+      typeof value === 'string' && value.trim() === '' ? null : value;
     const activeCustomNutrients =
       await customNutrientService.getCustomNutrients(authenticatedUserId);
     const activeNames = new Set(
@@ -641,8 +643,10 @@ async function manageGoalTimeline(
       vitamin_c: cleanNumber(p_vitamin_c),
       calcium: cleanNumber(p_calcium),
       iron: cleanNumber(p_iron),
-      caffeine_mg: cleanNumber(p_caffeine_mg),
-      alcohol_g: cleanNumber(p_alcohol_g),
+      // Like water: a missing or blank caffeine/alcohol goal means "no limit set",
+      // not a limit of 0 (both are tracked as maximums).
+      caffeine_mg: cleanNumber(blankToNull(p_caffeine_mg), true),
+      alcohol_g: cleanNumber(blankToNull(p_alcohol_g), true),
       target_exercise_calories_burned: cleanNumber(
         p_target_exercise_calories_burned
       ),
