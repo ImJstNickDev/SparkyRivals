@@ -3,13 +3,17 @@ import { Platform } from 'react-native';
 
 import i18n from '../localization/i18n';
 import type { LanguagePreference } from '../localization';
+import {
+  resolveLanguage,
+  type SupportedLanguage,
+} from '../localization/localeRegistry';
 import { useAppPreferencesStore } from '../stores/appPreferencesStore';
 import { CalorieWidgetBridge } from '../services/CalorieWidgetBridge';
 import { addLog } from '../services/LogService';
 
 type WidgetSyncState = {
   preference: LanguagePreference;
-  effectiveLanguage: 'en' | 'pl';
+  effectiveLanguage: SupportedLanguage;
 };
 
 /**
@@ -19,7 +23,7 @@ type WidgetSyncState = {
  * also receives the effective i18next language and commits it as a rendering
  * cache before reload. That cache is not a preference or locale authority; it
  * only bridges the live-process configuration-change window deterministically.
- * Android <=12 continues to use the widget-only en/pl override.
+ * Android <=12 continues to use the widget-only registered-language override.
  *
  * Runs are serialized and deduped by {preference, effectiveLanguage}. Locale
  * preparation must complete before either widget reload. Any preparation or
@@ -37,8 +41,7 @@ export function useWidgetLanguageRefresh(): void {
 
     const runSync = async (): Promise<void> => {
       const preference = useAppPreferencesStore.getState().languagePreference;
-      const effectiveLanguage: 'en' | 'pl' =
-        i18n.resolvedLanguage === 'pl' ? 'pl' : 'en';
+      const effectiveLanguage = resolveLanguage(i18n.resolvedLanguage);
       const desired: WidgetSyncState = { preference, effectiveLanguage };
 
       if (

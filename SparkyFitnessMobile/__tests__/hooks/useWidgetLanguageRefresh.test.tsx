@@ -3,6 +3,8 @@ import { Platform } from 'react-native';
 
 import { useWidgetLanguageRefresh } from '../../src/hooks/useWidgetLanguageRefresh';
 import i18n from '../../src/localization/i18n';
+import type { LanguagePreference } from '../../src/localization';
+import { SUPPORTED_LANGUAGES } from '../../src/localization/localeRegistry';
 import { CalorieWidgetBridge } from '../../src/services/CalorieWidgetBridge';
 import { useAppPreferencesStore } from '../../src/stores/appPreferencesStore';
 import { addLog } from '../../src/services/LogService';
@@ -71,9 +73,52 @@ describe('useWidgetLanguageRefresh', () => {
     if (osSpy) osSpy.restore();
   });
 
-  const setPreference = (preference: 'system' | 'en' | 'pl') => {
+  const setPreference = (preference: LanguagePreference) => {
     useAppPreferencesStore.setState({ languagePreference: preference });
   };
+
+  it.each(SUPPORTED_LANGUAGES)(
+    'prepares the registered %s language instead of replacing it with English',
+    async (language) => {
+      setPreference(language);
+      resolvedLanguage = language;
+      renderHook(() => useWidgetLanguageRefresh());
+      await flushSync();
+
+      expect(mockPrepareWidgetLocale).toHaveBeenCalledWith(language, language);
+      expect(mockReload).toHaveBeenCalledTimes(1);
+      expect(mockReloadMacro).toHaveBeenCalledTimes(1);
+    }
+  );
+
+  it.each([
+    ['it-IT', 'it'],
+    ['de-DE', 'de'],
+    ['unsupported', 'en'],
+  ])(
+    'resolves %s through the shared registry to %s',
+    async (input, expected) => {
+      resolvedLanguage = input;
+      renderHook(() => useWidgetLanguageRefresh());
+      await flushSync();
+      expect(mockPrepareWidgetLocale).toHaveBeenCalledWith('system', expected);
+    }
+  );
+
+  it('refreshes mounted widgets between Italian and German with the system preference', async () => {
+    resolvedLanguage = 'it';
+    renderHook(() => useWidgetLanguageRefresh());
+    await flushSync();
+
+    resolvedLanguage = 'de';
+    languageListeners[0]('de');
+    await flushSync();
+
+    expect(mockPrepareWidgetLocale).toHaveBeenNthCalledWith(1, 'system', 'it');
+    expect(mockPrepareWidgetLocale).toHaveBeenNthCalledWith(2, 'system', 'de');
+    expect(mockReload).toHaveBeenCalledTimes(2);
+    expect(mockReloadMacro).toHaveBeenCalledTimes(2);
+  });
 
   it('prepares the effective PL render locale before both reloads', async () => {
     setPreference('pl');
