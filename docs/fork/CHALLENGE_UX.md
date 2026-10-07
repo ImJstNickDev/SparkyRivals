@@ -672,10 +672,18 @@ an iPhone error opening Close scores. This revealed a fractional-point path that
 used Hermes' Android-only `NumberFormat.formatToParts`. Its replacement uses
 localized `format()` output, retaining exact truncation and server ranks. Tests
 exercise missing/throwing `formatToParts`, large values and the real detail
-component. A new iPhone artifact and physical retry are required; the previously
+component. The new full iPhone artifact **1015** compiled and passed exported-IPA
+inspection; physical retry is pending. The previously
 confirmed hub/Back navigation is a separate result. The corrected formatter passed
 full mobile CI (**523 suites / 8,031 tests**), mobile/server validation, web
 validation/production build and the **17-test** web Challenge UX group.
+Android **1011** / Wear **1000001011** compiled with the permanent signer and
+**44 Wear JVM tests** passed. A focused production-APK emulator journey passed
+at font scale 1.3: close scores, activity toggling and daily-history open/close.
+[Before/after capture provenance](assets/challenge-ux/close-score-regression/manifest.json)
+records actual Android rendering, not iPhone evidence. The maintainer confirmed
+the Close scores, points/activity and daily-history journey on physical Samsung
+1011. See the release ledger for exact source SHAs.
 
 Required outstanding acceptance: remaining physical phone and Apple Watch flows;
 Galaxy Watch larger text, rotary/swipe gestures and accessibility; iOS native

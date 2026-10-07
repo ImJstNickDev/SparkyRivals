@@ -1176,6 +1176,45 @@ decimals and large English/Italian/Indian/Arabic integers without `formatToParts
 Web Challenge UX tests passed **17 tests / 1 suite**; mobile/server validation and
 web validation/production build passed. Full mobile CI passed **523 suites /
 8,031 tests**; focused groups overlap this total. New native artifacts are
-recorded separately when finished. Updated iPhone physical acceptance is
+recorded below. Updated iPhone physical acceptance is
 required; the matched crash location and local regression tests do not establish
 physical acceptance of the correction.
+
+Corrected source **`4fd8a974fbda3f1387eb19e281cce887c15d3406`** produced Android
+phone **1011** and Wear **1000001011**. Clean production prebuild/native validation,
+both release assemblies and **44 Wear JVM tests** passed. Both APKs use
+`com.imjstnick.sparkyrivals` and the permanent certificate documented above.
+Artifacts, checksums and signer verification are retained privately under
+`~/.local/share/sparkyrivals/artifacts/milestone-8a7/android-1011/`.
+
+The production phone APK passed a focused Android API 36 emulator journey at
+1080×2400, 420 dpi, font scale **1.3**, English/light: Dashboard → hub → Close
+scores; **140.05** and **140** retain separate ranks; other-participant
+points/activity/points; daily-history open, scroll and close. Missing and future
+days have distinct labels. The dedicated emulator was then stopped with its
+data retained. [Before](assets/challenge-ux/close-score-regression/points-before.png),
+[after](assets/challenge-ux/close-score-regression/points-after.png),
+[activity](assets/challenge-ux/close-score-regression/activity-after.png), and
+[history](assets/challenge-ux/close-score-regression/history-after.png) are actual
+Android captures with a [manifest](assets/challenge-ux/close-score-regression/manifest.json).
+They do not establish physical Android or iOS acceptance of this source.
+
+Samsung Galaxy A25 was updated in place to **1011**, with the installed version
+read back and no app-data clearing. The maintainer then confirmed Close scores
+opens, points → steps → points works, and daily history opens/closes correctly
+on this physical build. This is separate from the emulator evidence above.
+
+The full internal iOS [build **1015**](https://expo.dev/accounts/imjstnickdev/projects/sparkyrivals/builds/05ba85eb-a830-4ece-bfaa-95326f929cf7)
+finished from the same **`4fd8a974f`** source using existing EAS-managed credentials.
+Exported IPA inspection verified all five bundle identities/build numbers, team
+**U5K88Y67DL**, shared App Group, ad-hoc provisioning, callback scheme and
+production APNs on the phone only. This is EAS compilation plus Linux inspection
+of provisioning profiles and embedded Mach-O entitlements, not local Xcode,
+full Apple codesign verification or a physical acceptance pass. IPA, build
+metadata, source and verification are retained privately under
+`~/.local/share/sparkyrivals/artifacts/milestone-8a7/ios-1015/`.
+
+The maintainer has been asked to install 1015 and retry Close scores, row
+points/activity toggling and daily-history open/close. That physical result is
+still pending. Watch native source is unchanged by this formatter fix; the earlier
+Watch capture/version limitations remain. M8A.7 is not complete.
