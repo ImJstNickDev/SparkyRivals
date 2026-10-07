@@ -142,6 +142,7 @@ async function list(
              OR ($5='history' AND lifecycle.state IN ('completed','cancelled'))
              OR ($5='invitations' AND cp.status='pending' AND lifecycle.state NOT IN ('completed','cancelled'))
              OR ($5='mine' AND cp.status='accepted' AND lifecycle.state NOT IN ('completed','cancelled'))
+             OR ($5='active' AND cp.status='accepted' AND lifecycle.state='active')
              OR ($5='summary' AND lifecycle.state NOT IN ('completed','cancelled')))
          ORDER BY CASE WHEN $5='summary' THEN CASE
            WHEN cp.status='pending' THEN 0

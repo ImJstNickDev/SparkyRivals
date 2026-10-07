@@ -956,7 +956,8 @@ mobile/web/native presentation.
   Bundled Expo identity and phone scheme/FCM, Wear Tile/complication/Data Layer
   manifest registrations passed inspection. Artifacts and verification are under
   `~/.local/share/sparkyrivals/artifacts/milestone-8a7/android-1008/`.
-  No physical installation has occurred yet.
+  Installed as updates on the physical Galaxy A25 and Galaxy Watch on 7 October,
+  preserving data; ADB package readback verified both version codes.
 - Full EAS iOS production-internal **1012** reused existing credentials for all
   five targets. [Build](https://expo.dev/accounts/imjstnickdev/projects/sparkyrivals/builds/f0907076-eb2d-402d-b5df-d82ab86d24c1).
   EAS compilation succeeded from the recorded source. Exported IPA inspection
@@ -965,9 +966,13 @@ mobile/web/native presentation.
   Compiled Italian Watch/watch-widget resources are present. Artifacts are under
   `~/.local/share/sparkyrivals/artifacts/milestone-8a7/ios-1012/`.
   Linux inspected profile CMS/embedded Mach-O entitlements; it did not run Xcode
-  or full Apple `codesign` verification. Installation remains pending.
-- No M8A.7 physical install, permission tap, Apple Watch screenshot, new public
-  tunnel or live remote notification has been performed.
+  or full Apple `codesign` verification. The maintainer installed the iPhone
+  update and supplied native invitation/lobby screenshots in Italian and dark
+  appearance (1290 × 2796 pixels). Exact text scale/glass preference is unverified.
+- The maintainer authorized a temporary HTTPS tunnel to the disposable test
+  backend on 7 October. Remote push and scheduled jobs remain disabled; the
+  gateway blocks health uploads and unnecessary admin/diagnostic endpoints.
+  No new health permission or live remote notification was requested.
 - Wear release 1000001008 launched on the dedicated round emulator. Android
   CLI hosted the actual Tile service for empty and synthetic sum/stale renders
   in English/Italian. The snapshot was injected only into emulator storage, with
@@ -980,5 +985,36 @@ mobile/web/native presentation.
 - M8A.6 health-source/writeback gaps remain exactly as previously documented.
 
 No production/NPM/DNS/store deployment, credential rotation or upstream write.
-Test infrastructure is laptop-local, with synthetic accounts and retained data.
+Test infrastructure runs on the laptop with synthetic accounts and retained data;
+its temporary public URL exists only for the authorized physical session.
 Do not mark M8A.7 complete or begin M8B from these local results.
+
+### Physical session and navigation correction — 7 October
+
+- Both phones accepted the synthetic invitation. Server readback confirmed
+  membership. The iPhone invitation and lobby screenshots show wrapped long
+  titles, projected calendar dates and compact Italian consent without visible
+  clipping. They do not validate other themes/scales or Apple Watch layout.
+- iPhone target 9,000 persisted after Back; Android target 10,000 persisted after
+  blur/Back and cleared Ready. The maintainer confirmed reopening both forms;
+  server readback matched the saved targets and not-ready state.
+- A subsequent Dashboard navigation check **failed discoverability**: the entry
+  opened the current priority Challenge, and the hub was only found after using
+  the Library trophy. The maintainer approved hub-first entry with a single-active
+  shortcut and ordinary detail → hub → Dashboard Back. The source correction
+  requires new phone builds and physical verification; the installed artifacts
+  above do not contain it. The direct detail header gains no extra button.
+- Starting the existing synthetic Hydration lobby was explained by the final
+  participant's Ready action, not automatic readiness on accepting an invitation.
+  The 140/140.05 values belong to the separate close-score fixture.
+- Physical watch layout/transport, score/actual toggle and remaining auxiliary
+  surface acceptance are still open. No complete physical pass is claimed.
+- Navigation follow-up validation: mobile/server/web `validate` passed; full
+  mobile CI passed **522 suites / 8,022 tests**. A subsequent explicit assertion
+  that detail has no extra hub button passed in the focused **96-test / 2-suite**
+  run. These groups overlap and are not additive. Server unit/API tests passed
+  **77 / 3 files**; disposable Challenge database/RLS tests passed **35 / 3 files**,
+  including an active Challenge behind more than one page of preparation rows.
+  Docs build and 88 local links passed. The restarted test backend returned
+  `has_more=true` for both physical accounts' one-item active query, correctly
+  selecting hub navigation once the new mobile builds are installed.

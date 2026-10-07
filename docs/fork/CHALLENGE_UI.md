@@ -192,6 +192,11 @@ The hub separates My Challenges, Invitations and History using bounded server
 filters before pagination. A loaded-page count is never a complete badge.
 Dashboard selection is bounded and independent of nutrition dates; hiding its
 ordered card does not stop reconciliation or Library header access.
+The Dashboard entry opens the hub unless the bounded `view=active&limit=1`
+response proves exactly one accepted active Challenge (`has_more=false`). That
+shortcut installs the hub behind detail in the existing root navigation stack:
+Back visits the hub, then the Dashboard. There is no extra all-Challenges button
+inside detail. Loading, failed or incomplete active reads open the hub safely.
 
 Invitations show metric-specific consent without scores. Goal lobbies show
 projected dates, own target/Ready and compact authorized participant rows.

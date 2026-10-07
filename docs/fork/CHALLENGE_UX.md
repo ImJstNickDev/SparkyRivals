@@ -516,6 +516,16 @@ phone, web and companion direction. Native physical acceptance remains open.
 
 - Mobile Dashboard uses the existing card ordering/hiding preferences. Library
   retains a separate Challenge header action, independent of nutrition queries.
+  The 7 October physical session exposed a discoverability defect: tapping the
+  whole summary opened its changing priority item, so the maintainer could not
+  find the hub. The approved correction opens the hub, except when there is
+  exactly one accepted active Challenge. A separate `view=active&limit=1` read
+  uses the server's second-row sentinel; preparation pages and pending invites
+  cannot be mistaken for an exhaustive active collection. The shortcut keeps a
+  real hub route beneath detail, so ordinary Back goes detail → hub → Dashboard.
+  Existing route keys/state are retained. No extra “all Challenges” detail action.
+  This additive filter changes no schema, RLS policy, consent or scoring rule;
+  migration/schema-mirror/security-tier changes are not applicable.
 - Hub uses bounded server-side `view` filters. Empty states are collection-aware;
   there is no complete-count badge inferred from a loaded page. Summary fetch is
   bounded and only the selected summary needs results.
@@ -624,5 +634,6 @@ VoiceOver/TalkBack, reduced motion and broader offline/error/long-value visual
 cases. The release Wear Tile was separately rendered in its CLI host for empty and
 sum/stale synthetic states; see the manifest. This does not establish physical
 Tile behavior or complication/widget acceptance. Carry forward
-M8A.6 health-source/writeback gaps. A new public tunnel and any live remote push
-require separate consent. M8A.7 remains incomplete; M8B stays deferred.
+M8A.6 health-source/writeback gaps. The maintainer authorized the temporary
+M8A.7 test tunnel on 7 October; remote push remains disabled. Live remote push
+still requires separate consent. M8A.7 remains incomplete; M8B stays deferred.

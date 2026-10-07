@@ -24,7 +24,11 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCSSVariable } from 'uniwind';
-import { useActiveWorkoutBarPadding } from '../components/ActiveWorkoutBar';
+import {
+  useActiveWorkoutBarPadding,
+  navigationRef as rootNavigationRef,
+} from '../components/ActiveWorkoutBar';
+import { challengeEntryAction } from '../navigation/challengeEntry';
 import CalendarSheet, {
   type CalendarSheetRef,
 } from '../components/CalendarSheet';
@@ -517,11 +521,12 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) => {
               return challengesCardVisible ? (
                 <ChallengeDashboardEntry
                   key="challenges"
-                  onPress={(id) =>
-                    id
-                      ? navigation.navigate('ChallengeDetail', { id })
-                      : navigation.navigate('Challenges')
-                  }
+                  onPress={(id) => {
+                    if (rootNavigationRef.isReady())
+                      rootNavigationRef.dispatch((state) =>
+                        challengeEntryAction(state, id)
+                      );
+                  }}
                 />
               ) : null;
             case 'calorieRing':

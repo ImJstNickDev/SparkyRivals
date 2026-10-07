@@ -1,6 +1,6 @@
 # AGENTS.md
 
-_Last updated: 2026-10-06_
+_Last updated: 2026-10-07_
 
 SparkyFitness Mobile is a React Native 0.86 + Expo SDK 57 app for syncing Apple Health / Health Connect data with the SparkyFitness backend, tracking nutrition, hydration, fasting, measurements, exercise, saved foods, meal templates, custom exercises, workout presets, iOS / Android widgets, the active workout HUD, and the Sparky AI chat.
 
@@ -106,6 +106,9 @@ npx expo prebuild --clean
 
 - Dashboard opens `Challenges`, `ChallengeDetail` and `CreateChallenge` through
   safe root-stack screens; preserve existing tabs and detached Add behavior.
+  `src/navigation/challengeEntry.ts` keeps a hub route behind the Dashboard's
+  single-active shortcut. `view=active` plus the pagination sentinel establishes
+  uniqueness; never infer it from the priority summary or partially loaded pages.
 - `src/components/challenges/`, `src/hooks/useChallenges.ts`, Challenge keys in
   `src/hooks/queryKeys.ts` and `src/services/api/challengesApi.ts` consume shared
   server results. No local ranking, second health sync or offline membership queue.

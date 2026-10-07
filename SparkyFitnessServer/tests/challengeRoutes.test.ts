@@ -111,6 +111,20 @@ beforeEach(() => {
 });
 
 describe('Challenge typed routes and authentication', () => {
+  it('accepts the bounded active collection through normal self authentication', async () => {
+    expect(
+      (
+        await request(app)
+          .get(`${url}?view=active&limit=1`)
+          .set('X-Challenge-Contract-Version', '3')
+      ).status
+    ).toBe(200);
+    expect(service.list).toHaveBeenCalledWith(
+      actor,
+      { view: 'active', limit: 1, offset: 0 },
+      true
+    );
+  });
   it('accepts the native transport cache-buster without forwarding it', async () => {
     expect((await request(app).get(`${url}?_=1790985600000`)).status).toBe(200);
     expect(service.list).toHaveBeenCalledWith(

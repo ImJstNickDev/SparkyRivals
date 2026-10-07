@@ -102,7 +102,9 @@ export const challengeListQuerySchema = z
   .object({
     limit: z.coerce.number().int().min(1).max(50).default(20),
     offset: z.coerce.number().int().min(0).max(10000).default(0),
-    view: z.enum(["mine", "invitations", "history", "summary"]).optional(),
+    view: z
+      .enum(["mine", "invitations", "history", "summary", "active"])
+      .optional(),
   })
   .strict();
 export type ChallengeListQuery = z.infer<typeof challengeListQuerySchema>;

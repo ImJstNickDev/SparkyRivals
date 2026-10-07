@@ -97,7 +97,13 @@ describe.runIf(process.env.RUN_CHALLENGE_DB_TESTS === '1')(
       ).toBe(invitation);
     });
     it('preserves RLS isolation for every collection', async () => {
-      for (const view of ['mine', 'invitations', 'history', 'summary'] as const)
+      for (const view of [
+        'mine',
+        'invitations',
+        'history',
+        'summary',
+        'active',
+      ] as const)
         expect(
           (await service.list(outsider, { limit: 20, offset: 0, view }))
             .challenges
@@ -135,6 +141,88 @@ describe.runIf(process.env.RUN_CHALLENGE_DB_TESTS === '1')(
           await service.list(owner, { limit: 50, offset: 0 }, false)
         ).challenges.map((c) => c.id)
       ).toEqual([legacy.challenge.id]);
+    });
+    it('finds the only active accepted Challenge behind preparation pages and detects a second one', async () => {
+      const person = randomUUID();
+      const db = await getSystemClient();
+      try {
+        await db.query(
+          'INSERT INTO public."user" (id,email,email_verified) VALUES ($1,$2,true)',
+          [person, `${person}@example.test`]
+        );
+        await db.query(
+          "INSERT INTO public.family_access(owner_user_id,family_user_id,family_email,access_permissions,is_active,status) VALUES ($1,$2,$3,'{}',true,'active')",
+          [person, peer, `${peer}@example.test`]
+        );
+      } finally {
+        db.release();
+      }
+      const day = todayInZone('UTC');
+      const sum = {
+        name: 'Active fixture',
+        metric: 'steps',
+        scoring_mode: 'sum',
+        timezone: 'UTC',
+        start_date: day,
+        end_date: day,
+        participant_ids: [],
+      };
+      const first = (
+        await service.create(person, createChallengeRequestSchema.parse(sum))
+      ).challenge.id;
+      for (let i = 0; i < 22; i++)
+        await service.create(
+          person,
+          createChallengeRequestSchema.parse({
+            name: `Waiting ${i}`,
+            metric: 'steps',
+            scoring_mode: 'goal_days',
+            timezone: 'UTC',
+            duration_days: 3,
+          })
+        );
+      // Pending membership in an active fixed-date Challenge is not a participating active Challenge.
+      await service.create(
+        peer,
+        createChallengeRequestSchema.parse({
+          ...sum,
+          participant_ids: [person],
+        })
+      );
+      const unfiltered = await service.list(person, {
+        limit: 20,
+        offset: 0,
+        view: 'mine',
+      });
+      expect(unfiltered.has_more).toBe(true);
+      expect(unfiltered.challenges.some((c) => c.id === first)).toBe(false);
+      const single = await service.list(person, {
+        limit: 1,
+        offset: 0,
+        view: 'active',
+      });
+      expect(single.challenges.map((c) => c.id)).toEqual([first]);
+      expect(single.has_more).toBe(false);
+      const second = (
+        await service.create(person, createChallengeRequestSchema.parse(sum))
+      ).challenge.id;
+      const multiple = await service.list(person, {
+        limit: 1,
+        offset: 0,
+        view: 'active',
+      });
+      expect(multiple.challenges.map((c) => c.id)).toEqual([second]);
+      expect(multiple.has_more).toBe(true);
+      await service.update(person, second, { cancel: true });
+      expect(
+        (await service.list(person, { limit: 1, offset: 0, view: 'active' }))
+          .has_more
+      ).toBe(false);
+      await service.update(person, first, { cancel: true });
+      expect(
+        (await service.list(person, { limit: 1, offset: 0, view: 'active' }))
+          .challenges
+      ).toEqual([]);
     });
   }
 );

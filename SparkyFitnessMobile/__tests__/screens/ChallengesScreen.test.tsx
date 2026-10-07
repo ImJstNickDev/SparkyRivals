@@ -201,12 +201,55 @@ beforeEach(() => {
     refetch,
   } as unknown as ReturnType<typeof usePreferences>);
 });
-it('provides a labelled one-tap Dashboard entry', () => {
+it('opens the only accepted active Challenge from the Dashboard without duplicate taps', () => {
   const press = jest.fn();
   const view = display(<ChallengeDashboardEntry onPress={press} />);
   fireEvent.press(view.getByRole('button', { name: 'Challenges' }));
+  fireEvent.press(view.getByRole('button', { name: 'Challenges' }));
   expect(press).toHaveBeenCalledTimes(1);
+  expect(press).toHaveBeenCalledWith(challenge.id);
+  expect(h.useChallenges).toHaveBeenCalledWith('active');
 });
+it.each([
+  'multiple',
+  'empty',
+  'loading',
+  'refreshing',
+  'error',
+  'pending',
+  'lobby',
+] as const)(
+  'opens the hub instead of the priority Challenge when active collection is %s',
+  (state) => {
+    const activeChallenge = {
+      ...challenge,
+      ...(state === 'pending' ? { my_membership: 'pending' as const } : {}),
+      ...(state === 'lobby' ? { lifecycle: 'lobby' as const } : {}),
+    };
+    const activeQuery = {
+      ...query({
+        pages: [
+          {
+            challenges: state === 'empty' ? [] : [activeChallenge],
+            has_more: state === 'multiple',
+          },
+        ],
+        pageParams: [0],
+      }),
+      isPending: state === 'loading',
+      isFetching: state === 'refreshing',
+      isError: state === 'error',
+    } as unknown as ReturnType<typeof hooks.useChallenges>;
+    const summaryQuery = h.useChallenges();
+    h.useChallenges.mockImplementation((view) =>
+      view === 'active' ? activeQuery : summaryQuery
+    );
+    const press = jest.fn();
+    const view = display(<ChallengeDashboardEntry onPress={press} />);
+    fireEvent.press(view.getByRole('button', { name: 'Challenges' }));
+    expect(press).toHaveBeenCalledWith(undefined);
+  }
+);
 it('requests the selected server collection and keeps rows free of score queries', () => {
   setList([challenge]);
   const view = screen('Challenges');
@@ -233,6 +276,12 @@ it('opens creation from the shared header', () => {
   if (action && !Array.isArray(action) && 'onPress' in action)
     act(() => action.onPress());
   expect(nav.navigate).toHaveBeenCalledWith('CreateChallenge');
+});
+it('uses ordinary Back in detail without an extra all-Challenges action', () => {
+  screen('ChallengeDetail');
+  const config = jest.mocked(useScreenHeader).mock.calls.at(-1)?.[0];
+  expect(config?.left).toEqual({ kind: 'back' });
+  expect(config?.right).toBeUndefined();
 });
 it('refreshes the entire Challenge domain on pull', async () => {
   const view = screen('Challenges');

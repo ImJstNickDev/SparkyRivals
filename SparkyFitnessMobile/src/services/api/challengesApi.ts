@@ -32,7 +32,7 @@ export const challengesApi = {
   ) =>
     challengeListResponseSchema.parse(
       await request(
-        `/api/v2/challenges?limit=${view === 'summary' ? 1 : 20}&offset=${offset}${view ? `&view=${view}` : ''}`,
+        `/api/v2/challenges?limit=${view === 'summary' || view === 'active' ? 1 : 20}&offset=${offset}${view ? `&view=${view}` : ''}`,
         'GET',
         undefined,
         signal

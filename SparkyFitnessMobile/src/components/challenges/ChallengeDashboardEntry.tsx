@@ -1,6 +1,8 @@
 import { formatChallengeDisplay, challengeScoreUnit } from '@workspace/shared';
 import { Pressable, Text, View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
+import { useNavigation } from '@react-navigation/native';
+import { useNavigationActionGuard } from '../../hooks/useNavigationActionGuard';
 import Icon from '../Icon';
 import {
   useChallenges,
@@ -15,9 +17,26 @@ export default function ChallengeDashboardEntry({
 }: {
   onPress: (id?: string) => void;
 }) {
+  const navigation = useNavigation();
+  const { isNavigationLocked, runNavigationAction } =
+    useNavigationActionGuard(navigation);
   const query = useChallenges('summary');
+  const active = useChallenges('active');
+  const activePage = active.data?.pages[0];
+  // The server applies the active/accepted filter before its limit + 1 query.
+  // A priority summary or a partially loaded My Challenges list cannot prove uniqueness.
+  const soleActive =
+    !active.isPending &&
+    !active.isFetching &&
+    !active.isError &&
+    activePage?.has_more === false &&
+    activePage.challenges.length === 1 &&
+    activePage.challenges[0].lifecycle === 'active' &&
+    activePage.challenges[0].my_membership === 'accepted'
+      ? activePage.challenges[0]
+      : undefined;
   const { actor } = useChallengeIdentity();
-  const challenge = query.data?.pages[0]?.challenges[0];
+  const challenge = soleActive ?? query.data?.pages[0]?.challenges[0];
   const result = useChallengeResults(challenge);
   const own = result.data?.entries.find((entry) => entry.user_id === actor);
   const { t, locale, displayPreferences, statuses, unitLabel, day } =
@@ -45,7 +64,8 @@ export default function ChallengeDashboardEntry({
               });
   return (
     <Pressable
-      onPress={() => onPress(challenge?.id)}
+      onPress={() => runNavigationAction(() => onPress(soleActive?.id))}
+      disabled={isNavigationLocked}
       accessibilityRole="button"
       className="mb-4 flex-row items-center gap-3 rounded-2xl bg-surface p-4"
       style={{ minHeight: 80 }}
