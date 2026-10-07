@@ -1283,3 +1283,107 @@ both iPhone widget sizes are awaiting a new screenshot/maintainer check.
 This correction does not validate Tiles, complications, additional widget
 metrics/states, screen readers or inherited health-source/writeback gaps.
 M8A.7 remains incomplete while the required visual/device checks are pending.
+
+### M8A.7 configurable widgets and recovery (2026-10-07)
+
+The wide widget now shows the server position and at most three adjacent rows:
+the participant above, self in the center, and the participant below. Missing
+neighbors leave an empty slot; missing metric data keeps its explicit label.
+The compact widget keeps the own-score/rank layout. Each widget independently
+selects Automatic or an accepted Challenge from the existing bounded set of up
+to eight recently synchronized results. No extra leaderboard requests, scoring,
+watch mutations or private health fields were added. Selections retain the
+account binding; unavailable/removed selections do not fall through to another
+Challenge or account.
+
+Signed source `b4a5f855c873140e442fd76cfe5724bef206ff09` passed mobile `validate`
+and **523 suites / 8,043 tests**. Clean Android and iOS prebuild/identity checks
+passed for owned production, preview and development, plus upstream/default
+production. Fork translation import/export validation passed. Android **1013**
+and Wear **1000001013** compiled and passed package, version and permanent signer
+verification, with **44 Wear JVM tests**. These were emulator candidates.
+
+The actual API 36 launcher journey selected a three-player synthetic Challenge
+on the wide widget and a different Challenge on the compact widget. The first
+showed Jules above, Alex in the center and Sam below with an explicit missing-data
+label. Tapping it opened that selected Challenge through the existing account
+guard. Reconfiguring the compact widget did not change the wide selection.
+The synthetic test connection URL was restored in the emulator's saved settings
+after the old temporary tunnel stopped; this is fixture setup, not manual login
+evidence or health-provider ingestion.
+
+Native rendering exposed two additional defects. Android's inset handling
+replaced the configuration form's gutters and left light system icons on a light
+background. Android-only source `2f1ea423f72d1d4b84bfd68c7b497919227978c8` fixed
+both. Android **1014** / Wear **1000001014** compiled from that source, passed the
+same signer/identity checks and **44 Wear tests**. The **34** focused mobile tests
+passed. The emulator confirmed the corrected light/dark picker, upgrade-preserved
+independent selections, the three-row layout and a tap into the selected result.
+
+The app language then changed to Italian: published scores translated correctly,
+but the picker stayed English. The inherited widget language hook only forwarded
+English or Polish to the native rendering cache. Registry-based resolution in
+`fd7dde6c91599d39476db2a3a9e63e00c60804e9` fixes all registered languages and keeps
+the existing locale authority. The regression first failed **16 of 28** hook
+cases, then passed. Final mobile `validate` and CI passed **523 suites / 8,062
+tests**; the **62** focused tests overlap that total. No totals here should be
+added together as independent coverage.
+
+The [wide Italian capture](assets/challenge-ux/phone-widget-selection/neighbors-it-dark.png)
+and corrected [light](assets/challenge-ux/phone-widget-selection/picker-en-light.png)
+and [dark](assets/challenge-ux/phone-widget-selection/picker-en-dark.png) pickers
+are real Android native captures with a
+[manifest](assets/challenge-ux/phone-widget-selection/manifest.json). They use a
+1080×2400 Pixel 6 emulator, 420 dpi and font scale **1.3**, with synthetic data.
+Their exact source/build is recorded individually; they are not iPhone evidence.
+
+Full internal iOS [**1018**](https://expo.dev/accounts/imjstnickdev/projects/sparkyrivals/builds/4efe2f3e-dc73-4823-95b9-128dafba979d)
+compiled the configurable WidgetKit extension from `b4a5f855c`. Linux IPA
+inspection verified all five bundle identities/versions, team, App Groups,
+ad-hoc profiles, callback scheme, phone-only production APNs, AppIntents metadata
+and **seven** compiled Italian widget keys. Build number 1017 was consumed by
+an archive preparation failure and has no accepted artifact. Physical gallery,
+configuration and layout acceptance remain separate from this compile result.
+
+Final source `fd7dde6c91599d39476db2a3a9e63e00c60804e9` produced Android **1015**
+and Wear **1000001015**, with production prebuild/native validation, release
+assembly, **44 Wear tests** and permanent signer/package/version verification.
+This pass retained the compiled native intermediates from the clean 1014 build;
+only the registry-based JS language hook changed. Private APKs, checksums,
+verification and source manifests are in `.local/m8a7/artifacts/android-1015/`.
+The final emulator update preserved both widget selections. The native
+[Italian picker](assets/challenge-ux/phone-widget-selection/picker-it-dark.png)
+now follows the selected app language; the
+[wide widget](assets/challenge-ux/phone-widget-selection/neighbors-it-light.png)
+and independently selected
+[compact widget](assets/challenge-ux/phone-widget-selection/compact-selected-it-light.png)
+render correctly at font scale 1.3. Tapping the compact widget opened Close
+scores with separate server ranks for **140** and **140.05** points. No physical
+Android installation/appearance is claimed for this final iteration; the
+Samsung was not connected. The emulator was stopped with its data retained.
+
+Full internal iOS [**1019**](https://expo.dev/accounts/imjstnickdev/projects/sparkyrivals/builds/d16a56da-0920-4163-aaed-19e624295222)
+finished from the same `fd7dde6c9` source. All five identities/versions, team,
+App Groups, ad-hoc profiles, callback and phone-only APNs passed exported IPA
+inspection. All seven Italian widget keys match the approved fork source;
+AppIntents metadata is included. IPA and inspection records are in
+`.local/m8a7/artifacts/ios-1019/`. Physical widget selection/layout verification
+was requested from the maintainer and remains pending. These Linux inspections
+are not an Apple codesign execution, local Xcode run or physical installation.
+Docs production build and local documentation-link checks passed.
+
+After the desktop session crash, retained helpers, diagnostics and artifacts
+were moved to repository-root **`.local/m8a7/`**, excluded from Git, Docker and
+EAS. Earlier paths in this document are historical; the corresponding artifact
+subdirectories now live under `.local/m8a7/artifacts/`. No signing or service
+credentials were moved into the repository. EAS requires transient archive
+staging outside its source tree; its retained outputs remain in `.local/`.
+Builds, full tests and emulators run sequentially with memory limits after the
+observed global out-of-memory event. Interrupted runs are not counted as passes.
+
+The authorized disposable test backend/tunnel was restarted for widget checks,
+with remote push disabled and public admin, diagnostic and health-data routes
+blocked. No production, NPM, DNS, upstream or credential changes occurred.
+Physical phone configuration checks, additional widget families/states,
+screen readers, Tiles/complications and inherited health-source/writeback
+boundaries remain open; M8A.7 is not declared complete.

@@ -730,7 +730,6 @@ These source changes require native rebuilds. Android emulator evidence and
 subsequent device acceptance are recorded in the release ledger; Linux source
 checks alone do not establish iOS rendering or gallery acceptance.
 
-
 ### Configurable phone widgets and nearby standings (2026-10-07)
 
 The medium/wide family uses its space for the current position and a three-slot
@@ -761,3 +760,20 @@ uses AppEntity queries and AppIntentConfiguration; [Android widget configuration
 uses a launcher configuration Activity, per-instance preferences, explicit initial
 update and the reconfigurable/configuration_optional flags. The Android activity
 validates the supplied widget ID/provider and rechecks its account before saving.
+
+The API 36 configuration capture exposed `fitsSystemWindows` replacing the
+form's padding and light status icons on a light background. The Android-only
+follow-up applies system-bar/cutout insets while retaining the form gutters and
+sets icon contrast for the system theme, following the
+[Android view inset guidance](https://developer.android.com/develop/ui/views/layout/edge-to-edge).
+This does not change the widget data contract, iOS sources or Challenge behavior.
+
+The next emulator pass found an inherited language bridge restriction: it sent
+only `en` or `pl` into the Android widget rendering cache, even when the app's
+native per-app language was Italian. Published Challenge text was Italian but
+the new picker remained English. `useWidgetLanguageRefresh` now resolves the
+effective language through the existing shipped-locale registry. Registered
+languages, regional tags, deterministic English fallback, mounted language
+changes, reload ordering/retries and the iOS no-op have behavioral coverage.
+This preserves Android's existing locale authority and avoids a picker-specific
+language override.
