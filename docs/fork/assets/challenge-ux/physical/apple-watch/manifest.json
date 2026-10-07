@@ -1,0 +1,50 @@
+{
+  "stage": "phase-b-physical-apple-watch",
+  "source_commit": null,
+  "build": null,
+  "source_note": "Build confirmation requested from maintainer. Watch and watch-widget sources are unchanged between ff10ef58265da5e726eeb24f4ead7ad0c5f5de6a (iOS 1012) and d66d8fa8352470956915a7c9b099624977a034a8 (iOS 1014).",
+  "watch_source_tree": "97f29f1dcda0108b04ad8b4351a323845eb6e536",
+  "platform": "Physical Apple Watch",
+  "device": "Apple Watch Series 7 (maintainer-reported model)",
+  "viewport_pixels": [
+    396,
+    484
+  ],
+  "text_scale": null,
+  "text_scale_note": "Not supplied; no claim of large-text acceptance.",
+  "theme": "native dark",
+  "locale": "Italian visible strings; exact OS locale not read back",
+  "capture_method": "Maintainer-supplied native Watch screenshots, visually inspected",
+  "received_at_utc": "2026-10-07T02:11:17.611767+00:00",
+  "provenance": "Synthetic disposable test-server Challenge account and data. No health-provider ingestion claim.",
+  "captures": [
+    {
+      "file": "long-detail.png",
+      "sha256": "a446d876c8e581c55e36551319fefd883566ec1f490125e46ab1a1a8dfbd5cb2",
+      "pixels": [
+        396,
+        484
+      ],
+      "inspected": true,
+      "metadata_note": "Text/EXIF metadata omitted; all image/color chunks and decompressed image data verified unchanged.",
+      "state": "Full long title, own 50 pt and server position 2"
+    },
+    {
+      "file": "long-row.png",
+      "sha256": "99549adaf5636017c60c93827296a22139a963c40386f26f1ac078ee77a3800e",
+      "pixels": [
+        396,
+        484
+      ],
+      "inspected": true,
+      "metadata_note": "Text/EXIF metadata omitted; all image/color chunks and decompressed image data verified unchanged.",
+      "state": "Long-title Challenge row with icon, 50 pt and server position 2"
+    }
+  ],
+  "limits": [
+    "Exact installed build awaits maintainer confirmation.",
+    "One physical viewport; text-scale setting unknown.",
+    "Only list row and upper detail shown, not the whole standings or gestures.",
+    "No complication, VoiceOver or small/large Watch matrix acceptance."
+  ]
+}

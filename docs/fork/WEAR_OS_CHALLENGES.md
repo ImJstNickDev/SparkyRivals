@@ -435,5 +435,12 @@ in [CHALLENGE_UX.md](CHALLENGE_UX.md). Emulator snapshots use persisted syntheti
 projections with original timestamps; they do not prove paired Data Layer delivery.
 Release 1000001008 also launched in the emulator; its Tile was rendered in the
 CLI host for empty and sum/stale fixtures. Complication rendering and physical
-Galaxy Watch/Tile acceptance remain separate.
+Tile acceptance remain separate. Physical Galaxy Watch release **1000001009**
+(SM-R930, 432×432, Italian, font scale 1.0) has inspected list, long-title detail,
+points/rank and lobby captures in the
+[physical manifest](assets/challenge-ux/physical/wear-1000001009/manifest.json).
+The centered long row and full detail title fit at that size; missing data remains
+explicit. Lobby text directs the user to the phone without claiming individual
+readiness or offering edits. Larger physical text, rotary/swipe gestures,
+TalkBack, Tile and complication still need separate acceptance.
 No speculative transport change or simulated freshness was introduced.

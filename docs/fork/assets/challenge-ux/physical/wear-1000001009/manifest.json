@@ -1,0 +1,87 @@
+{
+  "stage": "phase-b-physical-wear",
+  "source_commit": "176a8a815c375e140112c27b413f648308ed4f07",
+  "build": 1000001009,
+  "paired_phone_build": 1010,
+  "paired_phone_source_commit": "d66d8fa8352470956915a7c9b099624977a034a8",
+  "platform": "Physical Wear OS",
+  "device": "Galaxy Watch (SM-R930)",
+  "viewport_pixels": [
+    432,
+    432
+  ],
+  "density_dpi": 340,
+  "font_scale": 1.0,
+  "theme": "native dark",
+  "locale": "it-IT",
+  "capture_method": "adb exec-out screencap -p; fresh Android CLI layout for navigation",
+  "provenance": "Synthetic disposable-server Challenge data received through the existing phone/Data Layer path. No health samples written into physical health providers.",
+  "source_note": "Wear native source is unchanged by the later phone root-navigation correction. This records the actual installed Wear build.",
+  "captures": [
+    {
+      "file": "list.png",
+      "state": "Raw steps and hydration missing-data rows",
+      "sha256": "72aa5aa1270585e3b6eb80ceab4b8eabd85c71eece6973c5ead4187ed97c3591",
+      "pixels": [
+        432,
+        432
+      ],
+      "captured_at_utc": "2026-10-07T02:04:33.133316+00:00",
+      "inspected": true
+    },
+    {
+      "file": "goal-points.png",
+      "state": "Own 140 points, server rank 2, no data today",
+      "sha256": "d4474ebac1a2ebc0022f02b0a356da6def8340a130cbdd5adfb1b18dbf73d9ac",
+      "pixels": [
+        432,
+        432
+      ],
+      "captured_at_utc": "2026-10-07T02:05:32.386256+00:00",
+      "inspected": true
+    },
+    {
+      "file": "long-row.png",
+      "state": "Centered long title wraps to two lines then ellipsis",
+      "sha256": "012d504a5f9e6f0aa2ed7b01d150b79107ade46357a4234aeaa79dda741a0de3",
+      "pixels": [
+        432,
+        432
+      ],
+      "captured_at_utc": "2026-10-07T02:06:10.249223+00:00",
+      "inspected": true
+    },
+    {
+      "file": "long-detail.png",
+      "state": "Full long title and emoji, 140 points, rank 1",
+      "sha256": "efc0ffa90821aa0ba0ee2a7d9dfd8a419f40158e6ee7c25de22af07300d2e970",
+      "pixels": [
+        432,
+        432
+      ],
+      "captured_at_utc": "2026-10-07T02:06:20.831215+00:00",
+      "inspected": true
+    },
+    {
+      "file": "lobby.png",
+      "state": "Read-only phone-readiness guidance, 3 participants, source age",
+      "sha256": "2fddaa53c45ce0385e0942a8d4701ed20ff3e949731d967e8dcc029479b0ffd5",
+      "pixels": [
+        432,
+        432
+      ],
+      "captured_at_utc": "2026-10-07T02:06:37.618202+00:00",
+      "inspected": true
+    }
+  ],
+  "limits": [
+    "One physical viewport/font scale only",
+    "No physical Tile or complication capture",
+    "No rotary/swipe gesture or TalkBack acceptance",
+    "No new delivery-latency or health-ingestion claim",
+    "Final Back from the lobby was not executed because the app was no longer visible; earlier Back returns from active details passed.",
+    "Apple Watch overflow and rendering remain unverified.",
+    "Partially visible list rows at the edge of the round scrolling viewport do not establish full-row readability.",
+    "Lobby wording is generic phone guidance, not an individual Ready-state display."
+  ]
+}

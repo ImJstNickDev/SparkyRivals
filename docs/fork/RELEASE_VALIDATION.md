@@ -1097,3 +1097,50 @@ phone only. This is not local Xcode execution or full Apple `codesign`
 verification. iPhone installation/navigation acceptance remains pending.
 IPA and verification evidence are under
 `~/.local/share/sparkyrivals/artifacts/milestone-8a7/ios-1014/`.
+
+### Physical Galaxy Watch presentation — 7 October
+
+Release **1000001009**, source `176a8a815c375e140112c27b413f648308ed4f07`,
+was inspected on physical **SM-R930**, **432×432 / 340 dpi**, font scale **1.0**,
+system locale **it-IT**, native dark theme, paired with phone **1010**. Wear
+native source is unchanged by the later phone navigation fix. The
+[capture manifest](assets/challenge-ux/physical/wear-1000001009/manifest.json)
+records five inspected screenshots with source/build, timestamps and hashes.
+
+- List rows distinguish raw steps from hydration with missing data.
+- The centered long row wraps to two lines then ellipsis; opening it shows the
+  full title and emoji without visible overflow at this viewport/text scale.
+- Close scores shows own **140 pt**, server **position 2**, and missing data
+  today; missing is not presented as an observed zero.
+- Lobby shows generic read-only phone-readiness guidance, **3 participants** and
+  source age. It does not claim this participant is unready or offer mutations.
+- Fresh-layout taps, bounded scrolling and Back from active details worked.
+  The last Back attempt from the lobby was not executed after the display timed
+  out; no successful lobby return is inferred from it.
+
+All data is synthetic disposable-server data received through the normal phone
+companion path. No health samples were injected into physical health providers.
+This is one physical viewport/font scale, not a full Wear acceptance matrix or a
+measurement of Data Layer latency. Rotary/swipe-back gestures, TalkBack, physical
+Tile/complication remain unverified. Apple Watch evidence is recorded separately
+below. Private original captures/journey are under
+`~/.local/share/sparkyrivals/artifacts/milestone-8a7/physical/galaxy-watch-1000001009/`.
+
+### Physical Apple Watch screenshots — 7 October
+
+The maintainer supplied two native screenshots at **396×484**, Italian visible
+strings and native dark theme, showing the synthetic long-title Challenge list
+row and upper detail. The icon and complete two-line name stay inside the row;
+detail shows the full name/emoji, **50 pt** and server **position 2** without the
+reported overflow. Captures and limitations are in the
+[manifest](assets/challenge-ux/physical/apple-watch/manifest.json). Build
+confirmation was requested; the exact installed build and text-scale setting
+remain unconfirmed. Native Watch sources are unchanged between the 1012 and 1014
+source commits, but this is not used to infer the installed build number.
+
+Public copies omit text/EXIF metadata; image/color chunks and decompressed image
+data match the private originals.
+This is evidence for the captured elements, not the complete standings, gestures,
+other Watch sizes/Dynamic Type, VoiceOver or the complication. Originals are
+retained privately under
+`~/.local/share/sparkyrivals/artifacts/milestone-8a7/physical/apple-watch/`.

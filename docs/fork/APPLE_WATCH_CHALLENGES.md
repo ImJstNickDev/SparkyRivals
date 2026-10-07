@@ -340,8 +340,13 @@ these resources; Linux prebuild is only project/configuration evidence. Text
 follows native system language independently of the phone's in-app choice.
 Italian is a draft awaiting review; other languages fall back to English.
 
-The source change addresses the overflowing list layout but is not yet a verified
-physical fix. EAS build 1012 compiled all five targets; small/large Watch,
-Dynamic Type, VoiceOver, the Swift model harness and complication rendering
-remain gates in [CHALLENGE_UX.md](CHALLENGE_UX.md).
+Two maintainer-supplied physical screenshots at 396×484 show the long title and
+metric icon inside the centered row, and the full title/emoji, own **50 pt** and
+server **position 2** inside the upper detail. This verifies the reported overflow
+fix for those visible elements at one viewport. The
+[capture manifest](assets/challenge-ux/physical/apple-watch/manifest.json)
+leaves the installed build and text scale unconfirmed. Watch sources are unchanged
+across EAS 1012–1014, which compiled all five targets. Other Watch sizes,
+Dynamic Type, VoiceOver, gestures, the Swift model harness and complication
+rendering remain gates in [CHALLENGE_UX.md](CHALLENGE_UX.md).
 No Watch target, Ready, invitation or scoring mutation was added.

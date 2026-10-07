@@ -550,7 +550,8 @@ phone, web and companion direction. Native physical acceptance remains open.
 - Watch native rows wrap names and keep the icon/status inside the row. Both
   companions use compact units, numeric native plurals and optional, validated
   display-unit metadata. Account/session guards, payload limits and transport
-  architecture remain unchanged. Apple overflow still needs a rendered check.
+  architecture remain unchanged. A physical Apple Watch check below covers the
+  reported overflow at one viewport; other sizes/text scales remain open.
 
 ### Translation ownership and coverage
 
@@ -602,6 +603,34 @@ an absent header while direct ADB showed the current complete header. Later
 phone captures use `adb exec-out screencap -p`; speculative header workarounds
 were removed. This is recorded as a capture limitation, not an application fix.
 
+The [physical Galaxy Watch manifest](assets/challenge-ux/physical/wear-1000001009/manifest.json)
+records release **1000001009**, paired with phone **1010**, on a 432×432 SM-R930,
+Italian system locale, native dark theme and font scale 1.0. Inspected captures:
+[list](assets/challenge-ux/physical/wear-1000001009/list.png),
+[centered long row](assets/challenge-ux/physical/wear-1000001009/long-row.png),
+[full long-title detail](assets/challenge-ux/physical/wear-1000001009/long-detail.png),
+[points/rank](assets/challenge-ux/physical/wear-1000001009/goal-points.png) and
+[lobby](assets/challenge-ux/physical/wear-1000001009/lobby.png).
+The centered long row wraps then truncates; its detail shows the full title and
+emoji without visible overflow at this size. Own **140 pt / position 2** stays
+distinct from missing data today. The lobby gives generic phone-readiness
+guidance, participant count and source age; it does not expose an individual
+Ready state or editing controls. These are synthetic test-server data received
+through the existing companion path, not provider-ingestion evidence. App
+screenshots do not validate the physical Tile or complication.
+
+The maintainer supplied two physical Apple Watch screenshots at **396×484**:
+[long row](assets/challenge-ux/physical/apple-watch/long-row.png) and
+[upper detail](assets/challenge-ux/physical/apple-watch/long-detail.png).
+The long name, emoji and metric icon stay inside the centered row; the detail
+shows the full title, **50 pt** and server **position 2** without the reported
+overflow. This verifies those visible elements at one viewport, not the complete
+Watch matrix. [Provenance](assets/challenge-ux/physical/apple-watch/manifest.json)
+explicitly leaves build confirmation and text scale unknown until supplied.
+Public copies omit text/EXIF metadata; image/color chunks and decompressed image
+data match the private originals. The screenshots do not validate gestures, the
+full standings, VoiceOver or complications.
+
 ### Validation and remaining gates
 
 Full mobile CI passed **521 suites / 8,011 tests** at the initial release source;
@@ -636,10 +665,11 @@ journey. The maintainer also confirmed that journey on physical Samsung **1010**
 EAS iOS **1014** compilation and exported-IPA inspection passed; iPhone update
 and navigation confirmation remain pending. See the source-specific release ledger.
 
-Required outstanding acceptance: both physical phones and watches; iOS native
-headers with glass on/off, swipe/keyboard/accessibility; small/large Apple Watch
-and overflow; representative phone widgets, Tile and complication renders;
-VoiceOver/TalkBack, reduced motion and broader offline/error/long-value visual
+Required outstanding acceptance: remaining physical phone and Apple Watch flows;
+Galaxy Watch larger text, rotary/swipe gestures and accessibility; iOS native
+headers with glass on/off, swipe/keyboard/accessibility; Apple Watch sizes/text
+scales beyond the captured viewport; representative phone widgets, Tile and
+complication renders; VoiceOver/TalkBack, reduced motion and broader offline/error/long-value visual
 cases. The release Wear Tile was separately rendered in its CLI host for empty and
 sum/stale synthetic states; see the manifest. This does not establish physical
 Tile behavior or complication/widget acceptance. Carry forward
