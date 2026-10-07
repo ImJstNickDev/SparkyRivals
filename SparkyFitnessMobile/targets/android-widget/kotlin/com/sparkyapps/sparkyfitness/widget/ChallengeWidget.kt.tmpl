@@ -43,7 +43,7 @@ import org.json.JSONObject
 /** Latest presentation only. No auth, server access or independent scoring. */
 class ChallengeWidget : GlanceAppWidget() {
     override val stateDefinition = PreferencesGlanceStateDefinition
-    override val sizeMode = SizeMode.Responsive(setOf(DpSize(130.dp, 160.dp), DpSize(250.dp, 160.dp)))
+    override val sizeMode = SizeMode.Responsive(setOf(DpSize(130.dp, 110.dp), DpSize(250.dp, 110.dp)))
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val stored = context.getSharedPreferences(ChallengeWidgetReceiver.PREFS_NAME,Context.MODE_PRIVATE).getString("snapshot",null)
         provideContent {

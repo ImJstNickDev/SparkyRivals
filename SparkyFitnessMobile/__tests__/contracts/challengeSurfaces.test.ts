@@ -44,6 +44,9 @@ it('Android third widget has its own snapshot and variant-aware destination', ()
   );
   expect(provider).toContain('android:targetCellWidth="4"');
   expect(provider).toContain('android:targetCellHeight="2"');
+  // Larger minimums override the requested cell footprint in real launchers.
+  expect(provider).toContain('android:minHeight="110dp"');
+  expect(provider).toContain('android:minResizeHeight="110dp"');
   expect(provider).toContain('@layout/sparky_challenge_widget_initial_layout');
   const preview = read(
     'targets/android-widget/res/layout/sparky_challenge_widget_initial_layout.xml'
