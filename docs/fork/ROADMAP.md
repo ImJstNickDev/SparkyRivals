@@ -193,7 +193,9 @@ both platforms; the fractional-score fix passed physical Close scores,
 points/activity and daily-history checks on Samsung **1011** and iPhone **1015**.
 Physical Watch captures show the revised presentation and corrected Apple Watch
 row overflow, with exact capture/version limits documented. Representative
-widgets/Tiles/complications, remaining accessibility/gesture checks and the
+phone widgets now have Android emulator 4×2/2×2 captures and corrected Italian
+iOS gallery resources in full build **1016**; physical widget confirmation is
+pending. Tiles/complications, remaining accessibility/gesture checks and the
 broader visual matrix remain outstanding. English fallback in other languages
 is documented; Italian is an authored draft awaiting linguistic review.
 M8A.7 is not complete or ready for final visual acceptance.

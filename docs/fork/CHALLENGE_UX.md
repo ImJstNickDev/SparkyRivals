@@ -684,8 +684,7 @@ Android **1011** / Wear **1000001011** compiled with the permanent signer and
 at font scale 1.3: close scores, activity toggling and daily-history open/close.
 [Before/after capture provenance](assets/challenge-ux/close-score-regression/manifest.json)
 records actual Android rendering, not iPhone evidence. The maintainer confirmed
-the Close scores, points/activity and daily-history journey on physical Samsung
-1011. See the release ledger for exact source SHAs.
+the Close scores, points/activity and daily-history journey on physical Samsung 1011. See the release ledger for exact source SHAs.
 
 Required outstanding acceptance: remaining physical phone and Apple Watch flows;
 Galaxy Watch larger text, rotary/swipe gestures and accessibility; iOS native
@@ -698,7 +697,6 @@ Tile behavior or complication/widget acceptance. Carry forward
 M8A.6 health-source/writeback gaps. The maintainer authorized the temporary
 M8A.7 test tunnel on 7 October; remote push remains disabled. Live remote push
 still requires separate consent. M8A.7 remains incomplete; M8B stays deferred.
-
 
 ### Phone widget correction after physical feedback
 

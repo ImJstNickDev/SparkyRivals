@@ -1221,3 +1221,65 @@ the IPA as `physical-close-scores.json`. This closes the reported fractional-sco
 crash regression on both phones; it does not establish widget, screen-reader or
 additional companion acceptance. Watch native source is unchanged by this fix;
 the earlier Watch capture/version limitations remain. M8A.7 is not complete.
+
+### M8A.7 phone widget correction (2026-10-07)
+
+Physical feedback identified raw iOS gallery keys and an oversized, verbose
+phone-widget layout. Android API 36 reproduced the old tall 2×3 default and
+truncated title/result at font scale 1.3. The correction uses a compact
+score/rank composition and a native gallery fallback, plus three fork-owned
+Italian native strings per platform. Existing nutrition-widget translations are
+preserved by a bounded import. No scoring, ranks or companion transport changed.
+
+Source `07610b9fa771f380f17a2d89db060afa0657b018` passed mobile `validate`,
+**8,031 tests / 523 suites**, **7** separate translation-import tests and the docs
+build. The **50** focused surface/resource tests overlap the mobile total.
+Jest exited successfully with its existing worker-teardown warning. A command
+with an extra pnpm `--` initially matched no tests; the actual CI invocation
+was `pnpm run test:ci --watchman=false`.
+
+An additional Android-only sizing correction,
+`18324728fc6b247ff35645505b200ce4351229a9`, lowers minimum height so launchers can
+honor two rows. Its **5** focused native-surface contracts passed (overlapping
+the full suite). Clean prebuild/native-identity checks passed for owned
+development, preview and production, plus upstream/default development.
+The minimum-size follow-up changes no iOS source; the iOS artifact remains built
+from `07610b9fa`.
+
+Final Android **1012** / Wear **1000001012** built from `18324728f`, with clean
+production prebuild, native validation, release assembly, **44 Wear JVM tests**
+and permanent signer/package verification. Artifacts and checksums are private:
+`~/.local/share/sparkyrivals/artifacts/milestone-8a7/android-1012/`.
+The earlier local candidate at the same code was installed only on the dedicated
+emulator; the final pair above is the retained release source. Galaxy A25 was
+updated in place to final **1012**, installed version read back, data preserved.
+Physical widget appearance is awaiting maintainer confirmation.
+
+The API 36 launcher now offers and adds the widget at **4×2**, and manual resize
+to **2×2** works. Italian/light, Italian/dark and English/light at font scale
+**1.3** show the full sample score and rank without the previous truncation.
+A widget tap opened the matching authorized Step Race. The
+[before](assets/challenge-ux/phone-widgets/before-en-light.png),
+[wide Italian](assets/challenge-ux/phone-widgets/wide-it-light.png),
+[compact Italian](assets/challenge-ux/phone-widgets/compact-it-light.png),
+[dark](assets/challenge-ux/phone-widgets/compact-it-dark.png) and
+[English after](assets/challenge-ux/phone-widgets/compact-en-light.png) captures
+have a [provenance manifest](assets/challenge-ux/phone-widgets/manifest.json).
+The data are synthetic test-server results. The old launcher instance retained
+its old allocation; fresh placement used the corrected dimensions. Launcher
+metadata was refreshed during the emulator test. The emulator was stopped with
+its data retained. No private physical home-screen images are committed.
+
+Full internal iOS [**1016**](https://expo.dev/accounts/imjstnickdev/projects/sparkyrivals/builds/a8f1c519-d9eb-4ab1-9f19-e727bbd61c65)
+finished from `07610b9fa`. Exported-IPA inspection passed for all five identities,
+build numbers, team, provisioning, App Group, callback scheme and phone-only
+APNs. The compiled WidgetKit Italian resource contains **Sfide** and
+**Il risultato della tua sfida a colpo d’occhio.** for gallery name/description.
+The artifact and inspection records are retained privately under
+`~/.local/share/sparkyrivals/artifacts/milestone-8a7/ios-1016/`. This proves
+compilation/resource inclusion, not physical gallery behavior or readable layout;
+both iPhone widget sizes are awaiting a new screenshot/maintainer check.
+
+This correction does not validate Tiles, complications, additional widget
+metrics/states, screen readers or inherited health-source/writeback gaps.
+M8A.7 remains incomplete while the required visual/device checks are pending.
