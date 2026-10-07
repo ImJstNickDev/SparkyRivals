@@ -1557,3 +1557,69 @@ full-suite executions for this wording-only change.
 The PR is an implementation/evidence review handoff. Full visual acceptance is
 not declared and M8B remains deferred. No production, NPM, DNS, credential,
 upstream or store changes occurred.
+
+## 2026-10-08 — upstream integration and first-production preparation
+
+M8A.7 PR #15 merged normally at `6e7e02f8d0ce90118a01b4011b4e39b77ccd579a`,
+retaining all 33 reviewed commits. The new integration freezes upstream
+`1201594ffa9a84df06d00e7fada8aeac6216fb1e`. Integration merge
+`b0f820f87a290bededf917d4d31cc3782a4b70b3` preserves both histories; production
+preparation source is `65bb5d5f6f811fb18f6a0d77658f7f3275455330`. The subsequent
+commit records evidence only. See [UPSTREAM_PRE_PRODUCTION.md](UPSTREAM_PRE_PRODUCTION.md)
+for all eleven conflict resolutions and feature/security reconciliation.
+
+### Automated and disposable acceptance
+
+| Check | Result |
+| --- | --- |
+| Server `validate` and full CI | Passed; **5,796 passed / 519 skipped tests; 468 passed / 19 skipped files**. |
+| Web `validate`, full CI and production image build | Passed; **1,819 tests / 190 suites**. |
+| Mobile `validate` and full CI | Passed; **8,214 tests / 537 suites**, including locale generation/audit, native locales, typecheck/lint/format and Knip. |
+| Disposable DB groups | **562 tests / 25 files**: 556 general integration/RLS, 2 Challenge migration, 1 startup lock, 2 schema/Zod parity, 1 first-admin concurrency. These overlap full-suite groups; totals are not added together. |
+| Fresh schema and actual pre-sync upgrade | Normal initializer on PostgreSQL 18.3; main `6e7e02f...` initialized first for upgrade, with synthetic Challenge/participant/goal/push rows retained unchanged through the combined initializer and repeat startup. |
+| RLS recovery | Every classified table temporarily disabled, then normal startup restored RLS/policies. Existing deny-all push recovery cases passed. |
+| Production bootstrap | **13 tests**: closed signup, both origins, existing-secret preservation and external push-token handling. |
+| Root Docker acceptance | Both images built; three healthy containers; zero host ports; frontend-only external network; private binds; authenticated API; secure cookies; real two-hop client IP and forged-header rate limits; writable uploads/backups; logical dump/restore and repeat startup passed. |
+| Enabled push config | True flag and `/run/secrets/expo_access_token` reached backend with a synthetic token; jobs disabled, no push sent. HTTPS egress to Expo passed; Bearer-auth sender behavior covered by mocked transport tests. |
+| Native identity matrix | **4 profiles × 2 clean Android/iOS prebuilds**, stable metadata: owned production/preview/development and upstream production. No signing/distribution. |
+| Wear protocol/surfaces | **44 JVM tests** passed. |
+| Fork importer / workflow safety | **7 / 3 tests** passed. |
+| Helm | Pinned CI Helm lint, default render and configured trusted-proxy render passed. No cluster deployment. |
+| Docs / secret checks | VitePress build, changed fork-document local links and staged path/secret-pattern scans passed. |
+
+An upstream optional-limit test mock needed the fork's personal-goal lookup
+fixtures; its correction retains both optional limits and activity targets.
+An initial mobile command passed an extra separator to Jest; the corrected full
+command passed. A server rerun used hidden `.local` as `TMPDIR`, so Express
+correctly refused three file fixtures. A non-hidden, ignored repository
+`dockerdata` temporary directory passed all 44 focused route tests and the entire
+server suite. No file-serving policy was relaxed. Existing Vite config, docs
+bundle-size and JVM deprecation warnings are non-failing. Two whitespace findings
+are in unchanged upstream SQL/text; no historical migration was rewritten.
+
+Private evidence: `.local/pre-production-2026-10-08/`, including
+`server-ci-passed.log`, `mobile-full-corrected.log`, `web-full.log`, DB logs,
+upgrade comparisons and native snapshots. Docker project
+`sparkyrivals-acceptance-9cbde0482c02` retains `acceptance.json` and private logs
+under its `dockerdata` directory. Owned test services were stopped; persistent
+test data was retained. No production credential entered a test.
+
+### Explicit remaining boundaries
+
+- The synchronization PR must be reviewed before its merge or any real server/NPM
+  action. Production uses a separate pinned checkout.
+- The private Expo token is a nonempty regular file, mode 0600, verified without
+  printing it. Secure transfer and actual production enablement follow review.
+  Live delivery awaits consenting production accounts/devices; push stays enabled
+  while that test is pending.
+- Actual host inventory/SSH, admin email, membership policy, NPM certificate/routing,
+  public HTTPS and off-host backup/recovery remain deployment checks. Local Docker
+  is not real production acceptance.
+- No Android/Wear release or EAS build was produced. Linux prebuild/JVM checks do
+  not execute Xcode/Swift, Apple simulators or physical devices. Incoming upstream
+  native behavior needs runtime acceptance when a new mobile release is made;
+  existing M8A.7 apps retain their accepted wording/evidence.
+- M8A.6 health-source/writeback and M8A.7 visual/accessibility gaps remain open.
+  No additional scoring, privacy or Challenge lifecycle changes were introduced.
+
+No production/NPM/DNS/upstream changes, credential rotation or secret commits.

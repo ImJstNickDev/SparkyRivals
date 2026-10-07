@@ -1,5 +1,19 @@
 # Building SparkyRivals
 
+## Pre-production synchronization (8 October 2026)
+
+The frozen upstream integration and its validation are recorded in
+[UPSTREAM_PRE_PRODUCTION.md](UPSTREAM_PRE_PRODUCTION.md). All four identity profiles
+passed two clean configuration-only Android/iOS prebuilds; owned EAS, Firebase,
+app groups and companion identities are preserved. No new release number was
+allocated, native artifact distributed or EAS build requested. Existing M8A.7 apps
+remain the physical baseline; incoming upstream native changes need runtime
+acceptance when the next mobile release is built. The accepted Italian wording
+edits alone do not justify a rebuild. Production Docker checks are separate from
+native runtime acceptance and from the mandatory server-deployment review gate.
+
+## Existing build workflow
+
 Owned build implementation, updated during Milestone 8A on 2026-10-03. Start in
 `SparkyFitnessMobile/` after a root `pnpm install --frozen-lockfile`. Use the pinned
 pnpm version and Node 24 (validated: 24.20.0). Native projects are generated and

@@ -6,6 +6,12 @@ an integration branch; it preserves both upstream identities and published fork
 commits. Rebase only unpublished, private topic commits when useful. Never rebase,
 squash, replace, or force-push the upstream history or published fork `main`.
 
+The 8 October 2026 first-production integration freezes upstream at
+`1201594ffa9a84df06d00e7fada8aeac6216fb1e` after merging M8A.7 PR #15 normally.
+Its conflict resolutions, validation and mandatory pre-deployment review gate are
+recorded in [UPSTREAM_PRE_PRODUCTION.md](UPSTREAM_PRE_PRODUCTION.md). Historical
+snapshots below remain audit history, not the current synchronization target.
+
 ## Read-only upstream rule
 
 `CodeWithCJ/SparkyFitness` is reference-only for this derivative. Never perform
