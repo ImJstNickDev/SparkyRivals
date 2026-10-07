@@ -1065,3 +1065,26 @@ and 16 relative file-link checks passed. Test groups overlap. Existing React
 New phone artifacts and physical confirmation are required; no device pass is
 claimed from the automated result. Scoring, server queries and watch sources are
 unchanged by this correction.
+
+Source `d66d8fa8352470956915a7c9b099624977a034a8` produced Android phone
+**1010** and Wear **1000001010** after clean owned prebuild/identity checks.
+Gradle release compilation and Wear unit tests passed in 5m38s. Both archived
+APKs passed production package/version and permanent-certificate verification;
+phone bundled Expo identity also passed. Artifacts are under
+`~/.local/share/sparkyrivals/artifacts/milestone-8a7/android-1010/`.
+
+The production phone APK was installed on the dedicated API 36 emulator and
+logged into the synthetic test account through the normal UI. Fresh-layout taps
+and inspected screenshots verified Dashboard card → hub → Close scores → header
+Back → hub → header Back → Dashboard. No extra detail hub button is present.
+Screenshots, viewport/text-scale metadata and journey evidence are in the
+artifact directory's `navigation-emulator/`. The emulator was stopped afterward,
+retaining its data. This is emulator evidence, not an iPhone or hardware pass.
+
+Samsung was updated to **1010** using `adb install -r`; package readback matched,
+data was retained and the app launched. Maintainer navigation confirmation is
+pending. The physical Watch remains on **1000001009**, with unchanged source.
+Full EAS production-internal
+[iOS 1014](https://expo.dev/accounts/imjstnickdev/projects/sparkyrivals/builds/300dc12f-c31f-484e-8646-33d31807949e)
+is in progress from the same source, using existing credentials and the remote
+version counter. No iOS build/installation success is claimed yet.

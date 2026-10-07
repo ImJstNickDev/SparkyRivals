@@ -455,10 +455,12 @@ can incorporate changed Swift/resources. Preserve synthetic test provenance and
 keep raw private diagnostics outside Git. Device installation, Apple interaction,
 new public tunnels and actual push sends remain explicit maintainer gates.
 
-Latest M8A.7 allocations are Android phone 1009, Wear 1000001009 and EAS iOS
-1013, from `176a8a815c375e140112c27b413f648308ed4f07`. Their release builds
-passed. The Android pair is installed with data preserved; iPhone installation
-and physical acceptance of the navigation correction remain pending. Earlier
-1008/1000001008/1012 artifacts do not contain that correction.
+Latest M8A.7 allocations are Android phone 1010, Wear 1000001010 and EAS iOS
+1014, from `d66d8fa8352470956915a7c9b099624977a034a8`. The Android release
+pair passed build/signature checks, and phone 1010 passed the Dashboard/hub/Back
+journey on the dedicated emulator. Samsung is updated with data preserved;
+physical confirmation is pending. iOS 1014 is building. The 1009/1013 Dashboard
+entry failed physical acceptance and is superseded by this correction. The
+physical Watch remains on 1000001009; its runtime source is unchanged.
 Future artifacts must advance these allocations. Do not reuse a number simply
 because its device acceptance has not finished. See the release validation ledger.

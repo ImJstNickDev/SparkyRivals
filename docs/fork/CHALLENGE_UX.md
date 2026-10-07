@@ -605,7 +605,8 @@ were removed. This is recorded as a capture limitation, not an application fix.
 ### Validation and remaining gates
 
 Full mobile CI passed **521 suites / 8,011 tests** at the initial release source;
-the navigation correction passed **522 suites / 8,022 tests**. Full web CI
+the latest nested-container navigation correction passed **523 suites / 8,028
+tests**. Full web CI
 passed **188 suites / 1,805 tests**, with the final focused web group **33 tests**
 and production build also passing. Full bounded server CI passed **454 files /
 5,649 tests**, with **18 files / 514 tests skipped**. Disposable DB/RLS suites
@@ -627,9 +628,12 @@ are recorded separately in [RELEASE_VALIDATION.md](RELEASE_VALIDATION.md).
 Linux did not execute Xcode or the Swift model harness. EAS compiled all five
 Apple targets in builds 1012 and 1013; production Android phone/Wear
 1008/1000001008 and 1009/1000001009 compiled and passed permanent-signer
-verification. The latest pair/build includes the Dashboard hub/back correction.
-Both Android updates are installed; physical navigation confirmation and iPhone
-1013 installation remain pending. See the source-specific release ledger.
+verification. Physical testing then found the 1009/1013 Dashboard entry did
+nothing because its reset targeted the focused child navigator. A real-container
+test reproduced the failure. The root-state fix passed those tests and the
+production Android **1010** emulator Dashboard → hub → detail → hub → Dashboard
+journey. Samsung 1010 is installed; physical confirmation and EAS iOS **1014**
+completion remain pending. See the source-specific release ledger.
 
 Required outstanding acceptance: both physical phones and watches; iOS native
 headers with glass on/off, swipe/keyboard/accessibility; small/large Apple Watch
