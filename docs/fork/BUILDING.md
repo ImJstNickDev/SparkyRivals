@@ -466,3 +466,20 @@ entry failed physical acceptance and is superseded by this correction. The
 physical Watch remains on 1000001009; its runtime source is unchanged.
 Future artifacts must advance these allocations. Do not reuse a number simply
 because its device acceptance has not finished. See the release validation ledger.
+
+
+### Retained laptop development workspace
+
+Store milestone helpers, logs, captures and private acceptance artifacts under
+repository-root `.local/<milestone>/` (M8A.7 uses `.local/m8a7/`). This directory is
+explicitly excluded from Git, EAS archives and Docker contexts. Do not retain
+these development files in `/tmp`. M8A.7 files previously under
+`/tmp/sparkyrivals-8a7/` and `~/.local/share/sparkyrivals/artifacts/milestone-8a7/`
+were moved to `.local/m8a7/` and `.local/m8a7/artifacts/` respectively on 7 October.
+Earlier evidence may retain its original capture path. Signing and service
+credentials retain their existing private locations outside the repository.
+
+The 7 October session hit a kernel global out-of-memory event while several
+heavy jobs overlapped. Run native builds, the full mobile suite and Android
+emulators sequentially on this laptop. Use a bounded Gradle worker count/heap
+and a single Jest worker when running acceptance; interrupted logs are not passes.

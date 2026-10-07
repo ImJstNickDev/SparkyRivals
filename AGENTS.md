@@ -193,6 +193,12 @@ Keep the upstream license, attribution, history, functionality, and package guid
   authoritative result.
 - Read `docs/fork/IDENTIFIERS.md` before changing native identity, signing, deep
   links, or health writeback markers. Do not submit builds to upstream accounts.
+- Keep retained local development helpers, logs, captures and acceptance artifacts
+  under repository-root `.local/<milestone>/`, excluded from Git, EAS archives and
+  Docker contexts. Do not use `/tmp` as the durable development workspace. Keep
+  signing/push/Apple credentials in their established private external locations.
+  Run memory-heavy native builds, full suites and emulators sequentially on the
+  development laptop; use bounded worker counts and heap limits.
 - Run the relevant tests and validation for every changed package; validate
   shared contracts through all affected consumers. Record baseline failures and
   platform limitations rather than claiming unrun checks passed.

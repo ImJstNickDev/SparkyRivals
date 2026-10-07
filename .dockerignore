@@ -70,3 +70,6 @@ docker/docker_volume/
 
 # TypeScript
 *.tsbuildinfo
+
+# Retained private development tools, logs and native acceptance artifacts.
+.local/
