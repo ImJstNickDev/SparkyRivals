@@ -1001,9 +1001,10 @@ Do not mark M8A.7 complete or begin M8B from these local results.
 - A subsequent Dashboard navigation check **failed discoverability**: the entry
   opened the current priority Challenge, and the hub was only found after using
   the Library trophy. The maintainer approved hub-first entry with a single-active
-  shortcut and ordinary detail → hub → Dashboard Back. The source correction
-  requires new phone builds and physical verification; the installed artifacts
-  above do not contain it. The direct detail header gains no extra button.
+  shortcut and ordinary detail → hub → Dashboard Back. The initial artifacts
+  above do not contain the correction. Replacement builds are recorded below;
+  physical navigation verification remains pending. The direct detail header
+  gains no extra button.
 - Starting the existing synthetic Hydration lobby was explained by the final
   participant's Ready action, not automatic readiness on accepting an invitation.
   The 140/140.05 values belong to the separate close-score fixture.
@@ -1018,3 +1019,25 @@ Do not mark M8A.7 complete or begin M8B from these local results.
   Docs build and 88 local links passed. The restarted test backend returned
   `has_more=true` for both physical accounts' one-item active query, correctly
   selecting hub navigation once the new mobile builds are installed.
+
+### Navigation correction artifacts — 7 October
+
+Source: `176a8a815c375e140112c27b413f648308ed4f07`.
+
+- Android phone **1009** and Wear **1000001009**: clean production prebuild,
+  identity validation, paired release compilation and Wear unit tests passed
+  (Gradle 6m30s). Both use `com.imjstnick.sparkyrivals` and the permanent signer
+  SHA-256 recorded above; archived APKs passed independent verification.
+  Both were installed on the physical Galaxy A25/Galaxy Watch using
+  `adb install -r`, retaining data. Package readback confirmed the two new version
+  codes; their activities launched. This is not yet a physical navigation/layout
+  pass. Artifacts:
+  `~/.local/share/sparkyrivals/artifacts/milestone-8a7/android-1009/`.
+- Full EAS iOS production-internal **1013**
+  [succeeded](https://expo.dev/accounts/imjstnickdev/projects/sparkyrivals/builds/f1256785-8f7c-409c-b58a-1e04eb454d19),
+  reusing all existing credentials. Downloaded IPA inspection on Linux verified
+  all five build numbers, production bundle IDs, team, signed/profile App Groups,
+  internal provisioning, phone callback scheme and production APNs on the phone
+  only. This is embedded entitlement/profile inspection, not local Xcode or full
+  Apple `codesign` verification. Device installation/acceptance remains pending.
+  Artifacts: `~/.local/share/sparkyrivals/artifacts/milestone-8a7/ios-1013/`.
