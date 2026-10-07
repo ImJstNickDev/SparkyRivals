@@ -309,3 +309,23 @@ it('deduplicates simultaneous foreground refreshes from companion and widget obs
   await waitFor(() => expect(api.results).toHaveBeenCalledTimes(2));
   expect(api.list).toHaveBeenCalledTimes(2);
 });
+
+it('keeps authorized cached results on network errors, hides them on denial and cancellation', async () => {
+  const context = setup();
+  const { result, rerender } = renderHook(
+    ({ state }) => useChallengeResults({ ...challenge, lifecycle: state }),
+    {
+      ...context,
+      initialProps: { state: 'active' as typeof challenge.lifecycle },
+    }
+  );
+  await waitFor(() => expect(result.current.data).toEqual(results));
+  rerender({ state: 'cancelled' });
+  expect(result.current.data).toBeUndefined();
+  rerender({ state: 'active' });
+  api.results.mockRejectedValue(new ApiError('Denied', 403));
+  await act(async () => {
+    await result.current.refetch();
+  });
+  await waitFor(() => expect(result.current.data).toBeUndefined());
+});

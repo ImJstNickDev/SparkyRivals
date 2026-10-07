@@ -1,0 +1,43 @@
+{
+  "stage": "phase-a",
+  "captured_on": "2026-10-06",
+  "baseline_sha": "0e185e879042a6fec0613e57ebe534c00fd552ab",
+  "source_tree_digest": "367eaa11861b7187cc37f7de998d4b288b77d0c6e196b4b175885bf5dd33c09e",
+  "source_manifest": "../source-manifest.json",
+  "build": "local development debug, no distributed version allocated",
+  "application_id": "com.imjstnick.sparkyrivals.dev",
+  "apk_sha256": "8de5ef91f009ce476718995c83c7e3a130d5a4c1b299025792b8b552b2250b79",
+  "javascript": "Native Kotlin compiled from maintained target source",
+  "platform": "Wear OS 5.1 / API 35-ext15",
+  "device": "Dedicated small round Wear AVD",
+  "viewport_pixels": [
+    384,
+    384
+  ],
+  "density_dpi": 320,
+  "locale": "en-US",
+  "provenance": "Persisted receipt from actual production phone projection of synthetic server results; NOT Data Layer transport acceptance. Original observation timestamp retained.",
+  "captures": [
+    {
+      "file": "goal-progress-score.png",
+      "state": "goal-progress-score",
+      "theme": "dark",
+      "font_scale": 1.0,
+      "sha256": "0d7c9596c03ed77b0129acf8d1937944f78ddaa644a044d0f67088d6fe2c1584"
+    },
+    {
+      "file": "goal-progress.png",
+      "state": "goal-progress",
+      "theme": "dark",
+      "font_scale": 1.0,
+      "sha256": "d22551da461fd0adbcbb84aa26ad93ad84fdc4fbc94efde90e8ee6bfeba1a6a0"
+    },
+    {
+      "file": "list.png",
+      "state": "list",
+      "theme": "dark",
+      "font_scale": 1.0,
+      "sha256": "e3960435ee56f1e22a5d22734ddefb53850f58e8fceb12238bb14738253e28a7"
+    }
+  ]
+}

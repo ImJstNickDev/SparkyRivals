@@ -32,6 +32,9 @@
     "sparkyrivals-base": {
       "node": "24.20.0",
       "autoIncrement": true,
+      "ios": {
+        "resourceClass": "medium"
+      },
       "env": {
         "APP_IDENTITY": "custom",
         "EXPO_WEAR_ENABLED": "1",

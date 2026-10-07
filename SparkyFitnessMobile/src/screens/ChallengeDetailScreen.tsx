@@ -1,7 +1,12 @@
-import { challengeTypeText } from '../utils/challengeLabels';
+import {
+  challengeReadBlocked,
+  challengeMetricText,
+  challengeTypeText,
+  selectChallengeInvitees,
+} from '@workspace/shared';
 import { useState } from 'react';
-import { Text, View } from 'react-native';
-import { selectChallengeInvitees } from '@workspace/shared';
+import { Pressable, Text, View } from 'react-native';
+import { useCSSVariable } from 'uniwind';
 import type { RootStackScreenProps } from '../types/navigation';
 import {
   useChallengeConnections,
@@ -12,6 +17,7 @@ import {
 } from '../hooks/useChallenges';
 import { useScreenHeader } from '../hooks/useScreenHeader';
 import Button from '../components/ui/Button';
+import Icon from '../components/Icon';
 import {
   ChallengeFrame,
   ChallengeLoading,
@@ -19,9 +25,15 @@ import {
   useChallengeFormat,
 } from '../components/challenges/ChallengeChrome';
 import {
-  ChallengeScores,
   ChallengeDailyHistory,
+  ChallengeResultFacts,
 } from '../components/challenges/ChallengeScores';
+import {
+  ChallengeDates,
+  ChallengeUpdated,
+} from '../components/challenges/ChallengeTiming';
+import { ChallengeResultSummary } from '../components/challenges/ChallengeResultSummary';
+import { challengeIcon } from '../components/challenges/ChallengeCard';
 import { ChallengeLobby } from '../components/challenges/ChallengeLobby';
 import { ChallengeActions } from '../components/challenges/ChallengeActions';
 
@@ -35,8 +47,10 @@ export default function ChallengeDetailScreen({
   const connections = useChallengeConnections();
   const refresh = useChallengeScreenRefresh();
   const [refreshing, setRefreshing] = useState(false);
-  const [showMembers, setShowMembers] = useState(false);
-  const { t, day, number, statuses, locale } = useChallengeFormat();
+  const [showDetails, setShowDetails] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const { t, day, statuses } = useChallengeFormat();
+  const accent = useCSSVariable('--color-accent-primary') as string;
   const header = useScreenHeader({
     title: t('challenges.title', { defaultValue: 'Challenges' }),
     left: { kind: 'back' },
@@ -47,94 +61,66 @@ export default function ChallengeDetailScreen({
     connections.data ?? [],
     identity.actor
   ).find((p) => p.user_id === challenge?.creator_user_id)?.display_name;
+  const hasResults =
+    challenge?.lifecycle === 'active' || challenge?.lifecycle === 'completed';
   return (
     <ChallengeFrame
       header={header}
+      keyboard
       refreshing={refreshing}
       onRefresh={() => {
         setRefreshing(true);
         void refresh().finally(() => setRefreshing(false));
       }}
     >
-      {identity.isError ? (
-        <ChallengeProblem retry={() => void identity.refetch()} />
+      {identity.isError ||
+      challengeReadBlocked(detail.error) ||
+      challengeReadBlocked(results.error) ? (
+        <ChallengeProblem
+          error={detail.error ?? results.error}
+          retry={() => void refresh()}
+        />
       ) : detail.isPending ? (
         <ChallengeLoading />
-      ) : detail.isError || !challenge || !detail.data ? (
-        <ChallengeProblem retry={() => void detail.refetch()} />
+      ) : !challenge || !detail.data ? (
+        <ChallengeProblem
+          error={detail.error}
+          retry={() => void detail.refetch()}
+        />
       ) : (
         <>
+          {detail.isError && (
+            <ChallengeProblem
+              error={detail.error}
+              retry={() => void detail.refetch()}
+            />
+          )}
           <View className="gap-3">
-            <Text className="text-text-secondary">
-              {statuses[challenge.lifecycle]}
-            </Text>
+            <View className="flex-row items-center gap-2">
+              <Icon
+                name={challengeIcon[challenge.metric]}
+                color={accent}
+                size={22}
+              />
+              <Text className="text-text-secondary flex-1">
+                {challengeTypeText(t, challenge.metric, challenge.scoring_mode)}
+              </Text>
+            </View>
             <Text
               accessibilityRole="header"
-              className="text-text-primary text-3xl font-bold"
+              className="text-text-primary text-2xl font-bold"
             >
               {challenge.name}
             </Text>
-            <Text className="text-text-secondary">
-              {day(challenge.start_date)} – {day(challenge.end_date)} ·{' '}
-              {challenge.timezone}
-            </Text>
-            <Text className="text-text-primary font-semibold">
-              {challenge.scoring_mode !== 'sum' ||
-              !['steps', 'workout_time'].includes(challenge.metric)
-                ? challengeTypeText(t, challenge.metric, challenge.scoring_mode)
-                : challenge.metric === 'workout_time'
-                  ? t('challenges.workoutRules', {
-                      defaultValue: 'Workout time · Highest total wins',
-                    })
-                  : t('challenges.rules', {
-                      defaultValue: 'Steps · Highest total wins',
-                    })}
-            </Text>
-            {challenge.lifecycle === 'active' && (
-              <>
-                <Text className="text-text-primary">
-                  {t('challenges.dayProgress', {
-                    defaultValue:
-                      'Day {{current}} of {{total}} · {{remaining}} days left',
-                    current:
-                      challenge.progress.current_day === null
-                        ? '—'
-                        : number(challenge.progress.current_day),
-                    count: challenge.progress.days_remaining,
-                    total: number(challenge.progress.total_days),
-                    remaining: number(challenge.progress.days_remaining),
-                  })}
-                </Text>
-                <View
-                  accessibilityRole="progressbar"
-                  accessibilityLabel={t('challenges.dateProgress', {
-                    defaultValue: 'Challenge time elapsed',
-                  })}
-                  accessibilityValue={{
-                    min: 0,
-                    max: challenge.progress.total_days,
-                    now: challenge.progress.elapsed_days,
-                  }}
-                  className="h-2 rounded-full bg-raised overflow-hidden"
-                >
-                  <View
-                    className="h-full bg-accent-primary"
-                    style={{
-                      width: `${(challenge.progress.elapsed_days / challenge.progress.total_days) * 100}%`,
-                    }}
-                  />
-                </View>
-              </>
-            )}
-          </View>
-          {pending && (
-            <View className="rounded-3xl bg-surface p-5 gap-3">
-              <Text
-                accessibilityRole="header"
-                className="text-text-primary text-xl font-semibold"
-              >
-                {t('challenges.invitation', { defaultValue: 'Invitation' })}
+            {!pending && !['active', 'lobby'].includes(challenge.lifecycle) && (
+              <Text className="text-text-secondary">
+                {statuses[challenge.lifecycle]}
               </Text>
+            )}
+            <ChallengeDates challenge={challenge} />
+          </View>
+          {pending ? (
+            <>
               {inviter && (
                 <Text className="text-text-primary">
                   {t('challenges.invitedBy', {
@@ -143,164 +129,181 @@ export default function ChallengeDetailScreen({
                   })}
                 </Text>
               )}
-              <Text className="text-text-secondary">
-                {challenge.scoring_mode !== 'sum' ||
-                !['steps', 'workout_time'].includes(challenge.metric)
-                  ? t('challenges.aggregateConsent', {
-                      defaultValue:
-                        'Only daily aggregates for the chosen metric and your chosen target are shared after acceptance. Other health data stays private.',
-                    })
-                  : challenge.metric === 'workout_time'
-                    ? t('challenges.workoutAcceptHint', {
-                        defaultValue:
-                          'Accept to share daily aggregate workout time and session counts for the whole Challenge date range, including earlier days. Workout details and other health data stay private.',
-                      })
-                    : t('challenges.acceptPrivacy', {
-                        defaultValue:
-                          'Accept to share your daily step totals for the whole Challenge date range, including earlier days. Other health data stays private.',
-                      })}
-              </Text>
-              <Text className="text-text-secondary">
-                {challenge.lifecycle === 'completed' ||
-                challenge.lifecycle === 'cancelled'
-                  ? t('challenges.invitationClosed', {
-                      defaultValue:
-                        'This Challenge is closed. You can dismiss the invitation.',
-                    })
-                  : t('challenges.noScoresBeforeAccept', {
-                      defaultValue: 'Scores are visible after you accept.',
+              <View className="gap-2 py-2">
+                <Text
+                  accessibilityRole="header"
+                  className="text-text-primary font-semibold"
+                >
+                  {t('challenges.ux.sharingTitle', {
+                    defaultValue: 'What you share',
+                  })}
+                </Text>
+                <View className="flex-row flex-wrap gap-4">
+                  <View className="flex-row items-center gap-2">
+                    <Icon name="checkmark" size={18} color={accent} />
+                    <Icon
+                      name={challengeIcon[challenge.metric]}
+                      size={20}
+                      color={accent}
+                    />
+                    <Text className="text-text-primary">
+                      {challengeMetricText(t, challenge.metric)}
+                    </Text>
+                  </View>
+                  {challenge.scoring_mode !== 'sum' && (
+                    <View className="flex-row items-center gap-2">
+                      <Icon name="checkmark" size={18} color={accent} />
+                      <Text className="text-text-primary">
+                        {t('challenges.ux.targetLabel', {
+                          defaultValue: 'Daily target',
+                        })}
+                      </Text>
+                    </View>
+                  )}
+                  {challenge.metric.startsWith('workout_') && (
+                    <View className="flex-row items-center gap-2">
+                      <Icon name="checkmark" size={18} color={accent} />
+                      <Text className="text-text-primary">
+                        {t('challenges.ux.sessionsLabel', {
+                          defaultValue: 'Session count',
+                        })}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+                <Text className="text-text-secondary text-xs">
+                  {t('challenges.ux.otherDataPrivate', {
+                    defaultValue: 'Other health data stays private.',
+                  })}
+                </Text>
+              </View>
+              <ChallengeActions
+                key={challenge.id}
+                detail={detail.data}
+                onDepart={() => navigation.replace('Challenges')}
+              />
+            </>
+          ) : (
+            <>
+              {challenge.lifecycle === 'lobby' && (
+                <ChallengeLobby detail={detail.data} />
+              )}
+              {challenge.lifecycle === 'upcoming' && (
+                <View className="gap-3 py-4">
+                  <Text className="text-text-primary text-xl font-semibold">
+                    {t('challenges.ux.startsOn', {
+                      defaultValue: 'Starts {{date}}',
+                      date: day(challenge.start_date),
                     })}
-              </Text>
-            </View>
-          )}
-          {challenge.lifecycle === 'cancelled' ? (
-            <Text className="rounded-2xl bg-surface p-5 text-text-secondary">
-              {challenge.scoring_mode !== 'sum' ||
-              !['steps', 'workout_time'].includes(challenge.metric)
-                ? t('challenges.cancelledAggregate', {
+                  </Text>
+                  {challenge.scoring_mode !== 'sum' && (
+                    <Text className="text-text-secondary">
+                      {t('challenges.ux.targetsLocked', {
+                        defaultValue:
+                          'Targets are locked. Everything is ready.',
+                      })}
+                    </Text>
+                  )}
+                </View>
+              )}
+              {hasResults && (
+                <>
+                  {results.data ? (
+                    <ChallengeResultSummary
+                      result={results.data}
+                      actor={identity.actor}
+                    />
+                  ) : results.isError ? (
+                    <ChallengeProblem
+                      error={results.error}
+                      retry={() => void results.refetch()}
+                    />
+                  ) : (
+                    <ChallengeLoading />
+                  )}
+                  {results.data && (
+                    <>
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityState={{ expanded: showHistory }}
+                        onPress={() => setShowHistory(!showHistory)}
+                        className="self-start flex-row items-center gap-2 min-h-12 px-2"
+                      >
+                        <Icon name="calendar" size={18} color={accent} />
+                        <Text className="text-accent-primary text-sm">
+                          {t('challenges.ux.dailyHistory', {
+                            defaultValue: 'Daily history',
+                          })}
+                        </Text>
+                      </Pressable>
+                      {showHistory && (
+                        <ChallengeDailyHistory
+                          result={results.data}
+                          actor={identity.actor}
+                        />
+                      )}
+                    </>
+                  )}
+                </>
+              )}
+              {challenge.lifecycle === 'completed' && (
+                <Text className="text-text-secondary text-sm">
+                  {t('challenges.aggregateReconciles', {
+                    defaultValue:
+                      'Results can change when canonical data arrives late, is corrected or deleted. Locked targets stay unchanged.',
+                  })}
+                </Text>
+              )}
+              {challenge.lifecycle === 'cancelled' && (
+                <Text className="text-text-secondary">
+                  {t('challenges.cancelledAggregate', {
                     defaultValue:
                       'Cancelled. Challenge data sharing has stopped.',
-                  })
-                : challenge.metric === 'workout_time'
-                  ? t('challenges.workoutCancelledHint', {
-                      defaultValue:
-                        'Cancelled. Workout time sharing has stopped.',
+                  })}
+                </Text>
+              )}
+              {['completed', 'cancelled'].includes(challenge.lifecycle) && (
+                <Button
+                  onPress={() =>
+                    navigation.navigate('CreateChallenge', {
+                      rematchId: challenge.id,
                     })
-                  : t('challenges.cancelledHint', {
-                      defaultValue: 'Cancelled. Step sharing has stopped.',
-                    })}
-            </Text>
-          ) : (
-            !pending &&
-            challenge.lifecycle !== 'lobby' && (
-              <>
-                {challenge.lifecycle === 'completed' && (
-                  <View className="gap-2">
-                    <Text
-                      accessibilityRole="header"
-                      className="text-text-primary text-xl font-semibold"
-                    >
-                      {t('challenges.currentResults', {
-                        defaultValue: 'Current results',
-                      })}
-                    </Text>
-                    <Text className="text-text-secondary">
-                      {challenge.scoring_mode !== 'sum' ||
-                      !['steps', 'workout_time'].includes(challenge.metric)
-                        ? t('challenges.aggregateReconciles', {
-                            defaultValue:
-                              'Results can change when canonical data arrives late, is corrected or deleted. Locked targets stay unchanged.',
-                          })
-                        : challenge.metric === 'workout_time'
-                          ? t('challenges.workoutReconciles', {
-                              defaultValue:
-                                'Results can change when workouts arrive late, are edited or deleted.',
-                            })
-                          : t('challenges.reconciles', {
-                              defaultValue:
-                                'Results can change when step data arrives late or is corrected.',
-                            })}
-                    </Text>
-                  </View>
-                )}
-                {results.isError ? (
-                  <ChallengeProblem retry={() => void results.refetch()} />
-                ) : results.data ? (
-                  <>
-                    <ChallengeScores
-                      result={results.data}
-                      actor={identity.actor}
-                    />
-                    <ChallengeDailyHistory
-                      key={challenge.id}
-                      result={results.data}
-                      actor={identity.actor}
-                    />
-                    <Text className="text-text-secondary text-xs">
-                      {t('challenges.checkedAt', {
-                        defaultValue: 'Results refreshed {{time}}',
-                        time: new Date(
-                          results.data.calculated_at
-                        ).toLocaleString(locale),
-                      })}
-                    </Text>
-                  </>
-                ) : (
-                  <ChallengeLoading />
-                )}
-              </>
-            )
-          )}
-          {!pending &&
-            ['completed', 'cancelled'].includes(challenge.lifecycle) && (
+                  }
+                >
+                  {t('challenges.rematch', { defaultValue: 'Rematch' })}
+                </Button>
+              )}
               <Button
-                onPress={() =>
-                  navigation.navigate('CreateChallenge', {
-                    rematchId: challenge.id,
-                  })
-                }
+                variant="ghost"
+                accessibilityState={{ expanded: showDetails }}
+                onPress={() => setShowDetails(!showDetails)}
               >
-                {t('challenges.rematch', { defaultValue: 'Rematch' })}
+                {t('challenges.ux.detailsActions', {
+                  defaultValue: 'Details and actions',
+                })}
               </Button>
-            )}
-          {!pending && challenge.scoring_mode !== 'sum' && (
-            <ChallengeLobby detail={detail.data} />
-          )}
-          <ChallengeActions
-            key={challenge.id}
-            detail={detail.data}
-            onDepart={() => navigation.replace('Challenges')}
-          />
-          {!pending && (
-            <>
-              <Button
-                accessibilityRole="button"
-                accessibilityState={{ expanded: showMembers }}
-                variant="secondary"
-                onPress={() => setShowMembers(!showMembers)}
-              >
-                {t('challenges.participants', { defaultValue: 'Participants' })}
-              </Button>
-              {showMembers &&
-                detail.data.participants.map((p) => (
-                  <View
-                    key={p.user_id}
-                    className="flex-row flex-wrap justify-between gap-2"
-                  >
-                    <Text className="text-text-primary">{p.display_name}</Text>
-                    <Text className="text-text-secondary">
-                      {p.status === 'accepted'
-                        ? t('challenges.accepted', { defaultValue: 'Joined' })
-                        : p.status === 'pending'
-                          ? t('challenges.pending', { defaultValue: 'Invited' })
-                          : p.status === 'left'
-                            ? t('challenges.left', { defaultValue: 'Left' })
-                            : t('challenges.declined', {
-                                defaultValue: 'Declined',
-                              })}
-                    </Text>
-                  </View>
-                ))}
+              {showDetails && (
+                <View className="gap-4">
+                  <Text className="text-text-secondary">
+                    {challenge.timezone}
+                  </Text>
+                  {results.data && (
+                    <ChallengeResultFacts result={results.data} />
+                  )}
+                  {challenge.scoring_mode !== 'sum' &&
+                    challenge.lifecycle !== 'lobby' && (
+                      <ChallengeLobby detail={detail.data} />
+                    )}
+                  <ChallengeActions
+                    key={challenge.id}
+                    detail={detail.data}
+                    onDepart={() => navigation.replace('Challenges')}
+                  />
+                </View>
+              )}
+              {hasResults && results.data && (
+                <ChallengeUpdated timestamp={results.data.calculated_at} />
+              )}
             </>
           )}
         </>

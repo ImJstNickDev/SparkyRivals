@@ -6,6 +6,7 @@ struct exportWidgets: WidgetBundle {
     var body: some Widget {
         widget()
         macroWidget()
+        SelectableChallengeWidget()
         ChallengeWidget()
     }
 }

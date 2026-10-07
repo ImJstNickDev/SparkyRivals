@@ -66,12 +66,12 @@ it('renders Wear Material 3, round-screen scaffolds and swipe navigation with st
   expect(ui()).toContain('semantics(mergeDescendants = true)');
   expect(ui()).toContain('heading()');
 });
-it('uses current-account data and supplied rank/tie/gap without reranking', () => {
+it('uses current-account data and supplied rank/tie without reranking', () => {
   expect(ui()).toContain('key(state.receipt.snapshot.accountKey');
   expect(ui()).toContain('snapshot.items.firstOrNull');
   expect(ui()).toContain('row.rank');
   expect(ui()).toContain('row.tied');
-  expect(ui()).toContain('own.gapToLeader');
+  expect(ui()).toContain('score(row.total, item)');
   expect(ui()).not.toMatch(/\.sorted|\.sumOf|\.fold\(/);
   expect(ui()).toContain('noMetricData(item)');
   expect(
@@ -79,7 +79,7 @@ it('uses current-account data and supplied rank/tie/gap without reranking', () =
   ).toContain('R.string.no_workout');
   expect(
     wear('src/main/kotlin/com/sparkyrivals/wear/ChallengePresentation.kt')
-  ).toContain('workoutDurationParts(value.toLong())');
+  ).toContain('challengeDisplay(value, item)');
 });
 it('includes every requested developer preview only in debug sources', () => {
   const previews = wear(

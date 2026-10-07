@@ -1,0 +1,486 @@
+{
+  "stage": "phase-b-local-validation",
+  "source_commit": "ff10ef58265da5e726eeb24f4ead7ad0c5f5de6a",
+  "source_manifest": "source-manifest.json",
+  "apk_sha256": {
+    "phone_debug": "1c69632d603e0631fb6406ccef3c701e602cede8a45209816b02168253b3f6d6",
+    "wear_debug": "d80851d2b746f4e25c4406e6d9c07e8d10fbd4f522c8d3a12bc4534e28605e21"
+  },
+  "captures": [
+    {
+      "file": "android/dashboard-it-light.png",
+      "sha256": "d27f581d4ad44502e778b62e721d9cac12fb59f8d09d740531ea2103c172fe5c",
+      "captured_at_utc": "2026-10-06T20:37:14.039162+00:00",
+      "platform": "Android 16 / API 36",
+      "device": "Dedicated Pixel 6 AVD",
+      "viewport_pixels": [
+        1080,
+        2400
+      ],
+      "font_scale": 1.0,
+      "theme": "light",
+      "locale": "it-IT",
+      "state": "dashboard-it-light",
+      "source_commit": null,
+      "source_note": "Captured in the Phase B working tree before the source commits; no contemporaneous complete tree digest was retained. Earlier visual reference, not exact-final-build acceptance. Final implementation source is archived separately.",
+      "capture_method": "Android CLI screen capture; inspected when captured",
+      "build": "Development debug version 1, maintained native sources plus production JS via Metro",
+      "provenance": "Synthetic disposable account/server data; no HealthKit/Health Connect ingestion. Wear uses a persisted synthetic snapshot and honest source freshness.",
+      "inspected": true
+    },
+    {
+      "file": "android/goal-actuals-it-light.png",
+      "sha256": "0fe3711c9cecc2d0881775a086f7d33529b23efc0e0674cae0bfad869d16d848",
+      "captured_at_utc": "2026-10-06T20:49:49.996729+00:00",
+      "platform": "Android 16 / API 36",
+      "device": "Dedicated Pixel 6 AVD",
+      "viewport_pixels": [
+        1080,
+        2400
+      ],
+      "font_scale": 1.0,
+      "theme": "light",
+      "locale": "it-IT",
+      "state": "goal-actuals-it-light",
+      "source_commit": null,
+      "source_note": "Captured in the Phase B working tree before the source commits; no contemporaneous complete tree digest was retained. Earlier visual reference, not exact-final-build acceptance. Final implementation source is archived separately.",
+      "capture_method": "Android CLI screen capture; inspected when captured",
+      "build": "Development debug version 1, maintained native sources plus production JS via Metro",
+      "provenance": "Synthetic disposable account/server data; no HealthKit/Health Connect ingestion. Wear uses a persisted synthetic snapshot and honest source freshness.",
+      "inspected": true
+    },
+    {
+      "file": "android/goal-progress-de-amoled-large.png",
+      "sha256": "b8383e04d7fe6e5b3763747ba5e3ced8235877126b8af8938e98ea428643ae3f",
+      "captured_at_utc": "2026-10-06T21:18:39.731003+00:00",
+      "platform": "Android 16 / API 36",
+      "device": "Dedicated Pixel 6 AVD",
+      "viewport_pixels": [
+        1080,
+        2400
+      ],
+      "font_scale": 1.3,
+      "theme": "AMOLED",
+      "locale": "de-DE (English fallback for new keys)",
+      "state": "goal-progress-de-amoled-large",
+      "source_commit": null,
+      "source_note": "Captured in the Phase B working tree before the source commits; no contemporaneous complete tree digest was retained. Earlier visual reference, not exact-final-build acceptance. Final implementation source is archived separately.",
+      "capture_method": "adb exec-out screencap -p",
+      "build": "Development debug version 1, maintained native sources plus production JS via Metro",
+      "provenance": "Synthetic disposable account/server data; no HealthKit/Health Connect ingestion. Wear uses a persisted synthetic snapshot and honest source freshness.",
+      "inspected": true
+    },
+    {
+      "file": "android/goal-progress-it-dark-large.png",
+      "sha256": "4b0cbf96e2bbb1ed5e9a0054a4ece6833a7f4361d2ffcc08cb18fd503e1567b3",
+      "captured_at_utc": "2026-10-06T21:14:55.032800+00:00",
+      "platform": "Android 16 / API 36",
+      "device": "Dedicated Pixel 6 AVD",
+      "viewport_pixels": [
+        1080,
+        2400
+      ],
+      "font_scale": 1.3,
+      "theme": "dark",
+      "locale": "it-IT",
+      "state": "goal-progress-it-dark-large",
+      "source_commit": null,
+      "source_note": "Captured in the Phase B working tree before the source commits; no contemporaneous complete tree digest was retained. Earlier visual reference, not exact-final-build acceptance. Final implementation source is archived separately.",
+      "capture_method": "adb exec-out screencap -p",
+      "build": "Development debug version 1, maintained native sources plus production JS via Metro",
+      "provenance": "Synthetic disposable account/server data; no HealthKit/Health Connect ingestion. Wear uses a persisted synthetic snapshot and honest source freshness.",
+      "inspected": true
+    },
+    {
+      "file": "android/goal-progress-it-light.png",
+      "sha256": "84956a615bb3df8615298d15b526db7e7324dcf87cdf73543bdb08b728afa3f3",
+      "captured_at_utc": "2026-10-06T20:50:34.913610+00:00",
+      "platform": "Android 16 / API 36",
+      "device": "Dedicated Pixel 6 AVD",
+      "viewport_pixels": [
+        1080,
+        2400
+      ],
+      "font_scale": 1.0,
+      "theme": "light",
+      "locale": "it-IT",
+      "state": "goal-progress-it-light",
+      "source_commit": null,
+      "source_note": "Captured in the Phase B working tree before the source commits; no contemporaneous complete tree digest was retained. Earlier visual reference, not exact-final-build acceptance. Final implementation source is archived separately.",
+      "capture_method": "Android CLI screen capture; inspected when captured",
+      "build": "Development debug version 1, maintained native sources plus production JS via Metro",
+      "provenance": "Synthetic disposable account/server data; no HealthKit/Health Connect ingestion. Wear uses a persisted synthetic snapshot and honest source freshness.",
+      "inspected": true
+    },
+    {
+      "file": "android/goal-progress-pl-amoled-small-large.png",
+      "sha256": "4f844c4aeb82ff269217e283d592ee0232d6590a0083b99a7cb1316a2a5f12f0",
+      "captured_at_utc": "2026-10-06T21:29:31.421529+00:00",
+      "platform": "Android 16 / API 36",
+      "device": "Dedicated Pixel 6 AVD",
+      "viewport_pixels": [
+        840,
+        1867
+      ],
+      "font_scale": 1.3,
+      "theme": "AMOLED",
+      "locale": "pl-PL (English fallback for new keys)",
+      "state": "goal-progress-pl-amoled-small-large",
+      "source_commit": "ff10ef58265da5e726eeb24f4ead7ad0c5f5de6a",
+      "source_note": "Committed production component path.",
+      "capture_method": "adb exec-out screencap -p",
+      "build": "Development debug version 1, maintained native sources plus production JS via Metro",
+      "provenance": "Synthetic disposable account/server data; no HealthKit/Health Connect ingestion. Wear uses a persisted synthetic snapshot and honest source freshness.",
+      "inspected": true
+    },
+    {
+      "file": "android/goals-dirty-it.png",
+      "sha256": "feca684b5542d53eeb51528677d4e902bd547a440b8f9cd9b9e9911eb6d50e25",
+      "captured_at_utc": "2026-10-06T21:12:17.816646+00:00",
+      "platform": "Android 16 / API 36",
+      "device": "Dedicated Pixel 6 AVD",
+      "viewport_pixels": [
+        1080,
+        2400
+      ],
+      "font_scale": 1.0,
+      "theme": "light",
+      "locale": "it-IT",
+      "state": "goals-dirty-it",
+      "source_commit": null,
+      "source_note": "Captured in the Phase B working tree before the source commits; no contemporaneous complete tree digest was retained. Earlier visual reference, not exact-final-build acceptance. Final implementation source is archived separately.",
+      "capture_method": "adb exec-out screencap -p",
+      "build": "Development debug version 1, maintained native sources plus production JS via Metro",
+      "provenance": "Synthetic disposable account/server data; no HealthKit/Health Connect ingestion. Wear uses a persisted synthetic snapshot and honest source freshness.",
+      "inspected": true
+    },
+    {
+      "file": "android/goals-it-light.png",
+      "sha256": "ecf3811e16ce4328fe3d9592b69742a6a0bed22791936cd999ffa3b0e1d29dac",
+      "captured_at_utc": "2026-10-06T21:06:05.715214+00:00",
+      "platform": "Android 16 / API 36",
+      "device": "Dedicated Pixel 6 AVD",
+      "viewport_pixels": [
+        1080,
+        2400
+      ],
+      "font_scale": 1.0,
+      "theme": "light",
+      "locale": "it-IT",
+      "state": "goals-it-light",
+      "source_commit": null,
+      "source_note": "Captured in the Phase B working tree before the source commits; no contemporaneous complete tree digest was retained. Earlier visual reference, not exact-final-build acceptance. Final implementation source is archived separately.",
+      "capture_method": "Android CLI screen capture; inspected when captured",
+      "build": "Development debug version 1, maintained native sources plus production JS via Metro",
+      "provenance": "Synthetic disposable account/server data; no HealthKit/Health Connect ingestion. Wear uses a persisted synthetic snapshot and honest source freshness.",
+      "inspected": true
+    },
+    {
+      "file": "android/hub-it-light.png",
+      "sha256": "44f336b27e76486c48bc3af544bce1baca210f036735b5d90ecc7fca373069a5",
+      "captured_at_utc": "2026-10-06T20:50:03.415596+00:00",
+      "platform": "Android 16 / API 36",
+      "device": "Dedicated Pixel 6 AVD",
+      "viewport_pixels": [
+        1080,
+        2400
+      ],
+      "font_scale": 1.0,
+      "theme": "light",
+      "locale": "it-IT",
+      "state": "hub-it-light",
+      "source_commit": null,
+      "source_note": "Captured in the Phase B working tree before the source commits; no contemporaneous complete tree digest was retained. Earlier visual reference, not exact-final-build acceptance. Final implementation source is archived separately.",
+      "capture_method": "Android CLI screen capture; inspected when captured",
+      "build": "Development debug version 1, maintained native sources plus production JS via Metro",
+      "provenance": "Synthetic disposable account/server data; no HealthKit/Health Connect ingestion. Wear uses a persisted synthetic snapshot and honest source freshness.",
+      "inspected": true
+    },
+    {
+      "file": "android/invitation-it-light.png",
+      "sha256": "6866d2ce566fb13e197931d3a422f3a7453cba7c714ff579d46fe474c357eaa6",
+      "captured_at_utc": "2026-10-06T20:50:39.705697+00:00",
+      "platform": "Android 16 / API 36",
+      "device": "Dedicated Pixel 6 AVD",
+      "viewport_pixels": [
+        1080,
+        2400
+      ],
+      "font_scale": 1.0,
+      "theme": "light",
+      "locale": "it-IT",
+      "state": "invitation-it-light",
+      "source_commit": null,
+      "source_note": "Captured in the Phase B working tree before the source commits; no contemporaneous complete tree digest was retained. Earlier visual reference, not exact-final-build acceptance. Final implementation source is archived separately.",
+      "capture_method": "Android CLI screen capture; inspected when captured",
+      "build": "Development debug version 1, maintained native sources plus production JS via Metro",
+      "provenance": "Synthetic disposable account/server data; no HealthKit/Health Connect ingestion. Wear uses a persisted synthetic snapshot and honest source freshness.",
+      "inspected": true
+    },
+    {
+      "file": "android/lobby-it-light.png",
+      "sha256": "b8ca50203ac8b8a5272b5a37d6878f371378cf1e075852c39bc25b94263f4898",
+      "captured_at_utc": "2026-10-06T21:10:23.089524+00:00",
+      "platform": "Android 16 / API 36",
+      "device": "Dedicated Pixel 6 AVD",
+      "viewport_pixels": [
+        1080,
+        2400
+      ],
+      "font_scale": 1.0,
+      "theme": "light",
+      "locale": "it-IT",
+      "state": "lobby-it-light",
+      "source_commit": null,
+      "source_note": "Captured in the Phase B working tree before the source commits; no contemporaneous complete tree digest was retained. Earlier visual reference, not exact-final-build acceptance. Final implementation source is archived separately.",
+      "capture_method": "adb exec-out screencap -p",
+      "build": "Development debug version 1, maintained native sources plus production JS via Metro",
+      "provenance": "Synthetic disposable account/server data; no HealthKit/Health Connect ingestion. Wear uses a persisted synthetic snapshot and honest source freshness.",
+      "inspected": true
+    },
+    {
+      "file": "wear/goal-progress-en-stale.png",
+      "sha256": "d6dbde07cfda0794cf88a71336de775c922db6dfdbe0c11f58d8a7817ad20df5",
+      "captured_at_utc": "2026-10-06T20:23:49.086873+00:00",
+      "platform": "Wear OS 5.1 / API 35 ext 15",
+      "device": "Dedicated Wear AVD",
+      "viewport_pixels": [
+        384,
+        384
+      ],
+      "font_scale": 1.0,
+      "theme": "dark",
+      "locale": "en-US",
+      "state": "goal-progress-en-stale",
+      "source_commit": null,
+      "source_note": "Captured in the Phase B working tree before the source commits; no contemporaneous complete tree digest was retained. Earlier visual reference, not exact-final-build acceptance. Final implementation source is archived separately.",
+      "capture_method": "Android CLI screen capture; inspected when captured",
+      "build": "Development debug version 1, maintained native sources",
+      "provenance": "Synthetic disposable account/server data; no HealthKit/Health Connect ingestion. Wear uses a persisted synthetic snapshot and honest source freshness.",
+      "inspected": true
+    },
+    {
+      "file": "wear/goal-progress-it-large.png",
+      "sha256": "106b99bc5ba9dc7512fd3d964bdebce3a948be140bf2db36c15c6ad6b5d1b441",
+      "captured_at_utc": "2026-10-06T20:24:42.325813+00:00",
+      "platform": "Wear OS 5.1 / API 35 ext 15",
+      "device": "Dedicated Wear AVD",
+      "viewport_pixels": [
+        384,
+        384
+      ],
+      "font_scale": 1.3,
+      "theme": "dark",
+      "locale": "it-IT",
+      "state": "goal-progress-it-large",
+      "source_commit": null,
+      "source_note": "Captured in the Phase B working tree before the source commits; no contemporaneous complete tree digest was retained. Earlier visual reference, not exact-final-build acceptance. Final implementation source is archived separately.",
+      "capture_method": "Android CLI screen capture; inspected when captured",
+      "build": "Development debug version 1, maintained native sources",
+      "provenance": "Synthetic disposable account/server data; no HealthKit/Health Connect ingestion. Wear uses a persisted synthetic snapshot and honest source freshness.",
+      "inspected": true
+    },
+    {
+      "file": "wear/goal-progress-it.png",
+      "sha256": "04e7c86f21fcfa09f359338244042d1b67bb1b9d6704a2195560eaf264175dfb",
+      "captured_at_utc": "2026-10-06T20:30:23.435483+00:00",
+      "platform": "Wear OS 5.1 / API 35 ext 15",
+      "device": "Dedicated Wear AVD",
+      "viewport_pixels": [
+        384,
+        384
+      ],
+      "font_scale": 1.0,
+      "theme": "dark",
+      "locale": "it-IT",
+      "state": "goal-progress-it",
+      "source_commit": null,
+      "source_note": "Captured in the Phase B working tree before the source commits; no contemporaneous complete tree digest was retained. Earlier visual reference, not exact-final-build acceptance. Final implementation source is archived separately.",
+      "capture_method": "Android CLI screen capture; inspected when captured",
+      "build": "Development debug version 1, maintained native sources",
+      "provenance": "Synthetic disposable account/server data; no HealthKit/Health Connect ingestion. Wear uses a persisted synthetic snapshot and honest source freshness.",
+      "inspected": true
+    },
+    {
+      "file": "wear/list-en-stale.png",
+      "sha256": "da92d0b312c921622380a5da5c6a6a9a338bc7360f76843f4af3fc222ebfbdb3",
+      "captured_at_utc": "2026-10-06T20:22:54.637938+00:00",
+      "platform": "Wear OS 5.1 / API 35 ext 15",
+      "device": "Dedicated Wear AVD",
+      "viewport_pixels": [
+        384,
+        384
+      ],
+      "font_scale": 1.0,
+      "theme": "dark",
+      "locale": "en-US",
+      "state": "list-en-stale",
+      "source_commit": null,
+      "source_note": "Captured in the Phase B working tree before the source commits; no contemporaneous complete tree digest was retained. Earlier visual reference, not exact-final-build acceptance. Final implementation source is archived separately.",
+      "capture_method": "Android CLI screen capture; inspected when captured",
+      "build": "Development debug version 1, maintained native sources",
+      "provenance": "Synthetic disposable account/server data; no HealthKit/Health Connect ingestion. Wear uses a persisted synthetic snapshot and honest source freshness.",
+      "inspected": true
+    },
+    {
+      "file": "web/goal-progress-it-desktop.png",
+      "sha256": "9b19f0fb447d0c7ee772286738445d0e47b226776eda589a574eb57f9eb678a6",
+      "captured_at_utc": "2026-10-06T21:26:14.942376+00:00",
+      "platform": "Chromium Linux browser",
+      "device": "Desktop/mobile-web viewport; not a native iPhone",
+      "viewport_pixels": [
+        1440,
+        1100
+      ],
+      "font_scale": 1.0,
+      "theme": "light",
+      "locale": "it-IT",
+      "state": "goal-progress-it-desktop",
+      "source_commit": "ff10ef58265da5e726eeb24f4ead7ad0c5f5de6a",
+      "source_note": "Committed production component path.",
+      "capture_method": "Playwright full-page screenshot (fixed browser navigation stays viewport-positioned)",
+      "build": "Vite development; production web components and real disposable API",
+      "provenance": "Synthetic disposable account/server data; no HealthKit/Health Connect ingestion. Wear uses a persisted synthetic snapshot and honest source freshness.",
+      "inspected": true
+    },
+    {
+      "file": "web/goal-progress-it-mobile-web.png",
+      "sha256": "77ec96935616463ac3b2331b5916d76e4f7797877b56f1ca59dd6ea5c050ec6b",
+      "captured_at_utc": "2026-10-06T21:26:36.979394+00:00",
+      "platform": "Chromium Linux browser",
+      "device": "Desktop/mobile-web viewport; not a native iPhone",
+      "viewport_pixels": [
+        390,
+        844
+      ],
+      "font_scale": 1.0,
+      "theme": "light",
+      "locale": "it-IT",
+      "state": "goal-progress-it-mobile-web",
+      "source_commit": "ff10ef58265da5e726eeb24f4ead7ad0c5f5de6a",
+      "source_note": "Committed production component path.",
+      "capture_method": "Playwright full-page screenshot (fixed browser navigation stays viewport-positioned)",
+      "build": "Vite development; production web components and real disposable API",
+      "provenance": "Synthetic disposable account/server data; no HealthKit/Health Connect ingestion. Wear uses a persisted synthetic snapshot and honest source freshness.",
+      "inspected": true
+    },
+    {
+      "file": "web/hub-it-desktop.png",
+      "sha256": "404f9d7b4c3cd8b711e75028612df7b2f86bb8a8778d9d0d3b9674e62676e918",
+      "captured_at_utc": "2026-10-06T21:22:17.287186+00:00",
+      "platform": "Chromium Linux browser",
+      "device": "Desktop/mobile-web viewport; not a native iPhone",
+      "viewport_pixels": [
+        1440,
+        1100
+      ],
+      "font_scale": 1.0,
+      "theme": "light",
+      "locale": "it-IT",
+      "state": "hub-it-desktop",
+      "source_commit": "ff10ef58265da5e726eeb24f4ead7ad0c5f5de6a",
+      "source_note": "Committed production component path.",
+      "capture_method": "Playwright full-page screenshot (fixed browser navigation stays viewport-positioned)",
+      "build": "Vite development; production web components and real disposable API",
+      "provenance": "Synthetic disposable account/server data; no HealthKit/Health Connect ingestion. Wear uses a persisted synthetic snapshot and honest source freshness.",
+      "inspected": true
+    },
+    {
+      "file": "web/standings-it-mobile-web.png",
+      "sha256": "f5bdc1cd494017ee72cff12d87f46da7dc8f57646424082c833f3488f36003f9",
+      "captured_at_utc": "2026-10-06T21:33:53.655728+00:00",
+      "platform": "Chromium Linux browser",
+      "device": "Desktop/mobile-web viewport; not a native iPhone",
+      "viewport_pixels": [
+        390,
+        844
+      ],
+      "font_scale": 1.0,
+      "theme": "light",
+      "locale": "it-IT",
+      "state": "mobile-web standings after scrolling",
+      "source_commit": "ff10ef58265da5e726eeb24f4ead7ad0c5f5de6a",
+      "source_note": "Committed production component path.",
+      "capture_method": "Playwright viewport screenshot after keyboard score-toggle and history-disclosure checks and scrolling",
+      "build": "Vite development; production web components and real disposable API",
+      "provenance": "Synthetic disposable account/server data; no HealthKit/Health Connect ingestion. Wear uses a persisted synthetic snapshot and honest source freshness.",
+      "inspected": true
+    },
+    {
+      "file": "wear/wear-release-empty-en.png",
+      "sha256": "f983802ace6dbc44aa8db4ebd1b02b59fc1bf91e632c3c095e3ee89a754495b8",
+      "captured_at_utc": "2026-10-06T21:39:13.774967+00:00",
+      "platform": "Wear OS 5.1 / API 35 ext 15",
+      "device": "Dedicated 384x384 Wear AVD; 320 dpi",
+      "viewport_pixels": [
+        384,
+        384
+      ],
+      "font_scale": 1,
+      "theme": "native dark",
+      "locale": "en-US",
+      "state": "unsynced app",
+      "source_commit": "ff10ef58265da5e726eeb24f4ead7ad0c5f5de6a",
+      "build": "Production release 1000001008",
+      "apk_sha256": "cb8fafc30d430529a561cd0c752245baeda3e31c7c11cf704b274782c4554f16",
+      "capture_method": "adb exec-out screencap -p; Android CLI Tile host for Tile captures",
+      "provenance": "Empty production installation, then test-only persisted synthetic snapshot copied on the dedicated emulator. Original source timestamp retained; no live Data Layer/health ingestion.",
+      "inspected": true
+    },
+    {
+      "file": "wear/wear-release-tile-empty-en.png",
+      "sha256": "23225525039e6fc365a294417f8f326172331c8b4e5e3cda13ea40d00917f976",
+      "captured_at_utc": "2026-10-06T21:39:39.088986+00:00",
+      "platform": "Wear OS 5.1 / API 35 ext 15",
+      "device": "Dedicated 384x384 Wear AVD; 320 dpi",
+      "viewport_pixels": [
+        384,
+        384
+      ],
+      "font_scale": 1,
+      "theme": "native dark",
+      "locale": "en-US",
+      "state": "unsynced Tile",
+      "source_commit": "ff10ef58265da5e726eeb24f4ead7ad0c5f5de6a",
+      "build": "Production release 1000001008",
+      "apk_sha256": "cb8fafc30d430529a561cd0c752245baeda3e31c7c11cf704b274782c4554f16",
+      "capture_method": "adb exec-out screencap -p; Android CLI Tile host for Tile captures",
+      "provenance": "Empty production installation, then test-only persisted synthetic snapshot copied on the dedicated emulator. Original source timestamp retained; no live Data Layer/health ingestion.",
+      "inspected": true
+    },
+    {
+      "file": "wear/wear-release-tile-sum-stale-it.png",
+      "sha256": "2720e644292823585a0d84b468cb845b53abdff473d8ab72179f189ac314037a",
+      "captured_at_utc": "2026-10-06T21:41:21.507062+00:00",
+      "platform": "Wear OS 5.1 / API 35 ext 15",
+      "device": "Dedicated 384x384 Wear AVD; 320 dpi",
+      "viewport_pixels": [
+        384,
+        384
+      ],
+      "font_scale": 1,
+      "theme": "native dark",
+      "locale": "it-IT per-app OS locale",
+      "state": "sum Tile with stale synthetic data",
+      "source_commit": "ff10ef58265da5e726eeb24f4ead7ad0c5f5de6a",
+      "build": "Production release 1000001008",
+      "apk_sha256": "cb8fafc30d430529a561cd0c752245baeda3e31c7c11cf704b274782c4554f16",
+      "capture_method": "adb exec-out screencap -p; Android CLI Tile host for Tile captures",
+      "provenance": "Empty production installation, then test-only persisted synthetic snapshot copied on the dedicated emulator. Original source timestamp retained; no live Data Layer/health ingestion.",
+      "inspected": true
+    }
+  ],
+  "limits": [
+    "No M8A.7 physical device capture yet.",
+    "No iOS/Apple Watch runtime or screenshot yet.",
+    "Wear Tile empty/sum-stale renders are included. No phone-widget or complication render in this set.",
+    "Earlier captures have explicitly incomplete source provenance and do not establish exact-final-source acceptance.",
+    "Italian is an authored draft, not linguistically approved. German/Polish exercise fallback and locale formatting only.",
+    "Android CLI produced stale/incomplete frames in one paired capture; subsequent phone captures use direct ADB. No speculative header source change was retained."
+  ],
+  "browser_interactions": [
+    "Keyboard Enter toggles points to canonical actual and back without changing rank.",
+    "Keyboard Enter expands/collapses daily history.",
+    "Both standings are visible above the existing bottom navigation after scrolling at 390x844."
+  ]
+}

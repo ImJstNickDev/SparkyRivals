@@ -5,7 +5,8 @@ import './global.css'
 import { getAppUrl } from './src/utils/appLinks';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { StatusBar, Platform } from 'react-native';
-import { useTranslation } from 'react-i18next';
+import { I18nextProvider, useTranslation } from 'react-i18next';
+import i18n from './src/localization/i18n';
 import * as SplashScreen from 'expo-splash-screen';
 import * as NavigationBar from 'expo-navigation-bar';
 import {
@@ -234,7 +235,7 @@ function WatchWorkoutGate() {
 }
 
 function AppContent() {
-  const { t } = useTranslation();
+  const { t, ready: localeReady } = useTranslation();
   const { theme } = useUniwind();
   const {
     showReauthModal, showSetupModal, showApiKeySwitchModal,
@@ -284,7 +285,7 @@ function AppContent() {
   } = useAddSheetActions({ syncMutation });
 
   const { enabled: cycleEnabled, mode: cycleMode, discreetMode: cycleDiscreet } = useCycleMode();
-  const cycleSheetLabel = cycleDiscreet
+  const cycleSheetLabel = !localeReady ? '' : cycleDiscreet
     ? t('addSheet.wellness', { defaultValue: 'Wellness' })
     : cycleMode === 'pregnant' || cycleMode === 'postpartum'
       ? t('addSheet.logPregnancyEntry', { defaultValue: 'Log Pregnancy Entry' })
@@ -1066,6 +1067,7 @@ function UniwindInsetsBridge() {
 
 function App() {
   return (
+    <I18nextProvider i18n={i18n}>
     <QueryClientProvider client={queryClient}>
       <KeyboardProvider>
         <GestureHandlerRootView className="flex-1">
@@ -1080,6 +1082,7 @@ function App() {
         </GestureHandlerRootView>
       </KeyboardProvider>
     </QueryClientProvider>
+    </I18nextProvider>
   );
 }
 

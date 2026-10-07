@@ -56,6 +56,7 @@ export const DailyGoals = ({
     saveAllPreferences,
   } = usePreferences();
   const { t } = useTranslation();
+  const [activityValid, setActivityValid] = useState(true);
   const { user } = useAuth();
   const { data: customNutrients } = useCustomNutrients();
   const { data: mealTypes = [] } = useMealTypes();
@@ -123,7 +124,7 @@ export const DailyGoals = ({
     useSaveGoalsMutation();
 
   const handleSaveGoals = async () => {
-    if (!user) return;
+    if (!user || !activityValid) return;
     const finalGoals = { ...goals };
     if (macroInputType === 'percentages') {
       const cal = finalGoals.calories;
@@ -380,6 +381,7 @@ export const DailyGoals = ({
 
           <Separator className="my-5" />
           <WaterAndExerciseFields
+            onValidityChange={setActivityValid}
             state={goals}
             setState={(val) => setGoals(val)}
           />
@@ -402,7 +404,12 @@ export const DailyGoals = ({
             <Button
               onClick={handleSaveGoals}
               className="w-full"
-              disabled={saving || !isTotalPercentageValid || !isMacroValid}
+              disabled={
+                !activityValid ||
+                saving ||
+                !isTotalPercentageValid ||
+                !isMacroValid
+              }
             >
               {saving
                 ? t('goals.goalsSettings.saving', 'Saving...')

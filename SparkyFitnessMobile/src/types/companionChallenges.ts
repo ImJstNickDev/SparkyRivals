@@ -30,6 +30,8 @@ export interface CompanionChallengeItem {
   metric?: ChallengeMetric;
   scoringMode?: ChallengeScoringMode;
   scoreUnit?: ChallengeScoreUnit;
+  /** Optional presentation-only unit. Older receivers safely ignore it. */
+  displayUnit?: 'km' | 'mi' | 'kcal' | 'kJ' | 'ml' | 'L' | 'fl_oz';
   id: string;
   name: string;
   lifecycle: 'upcoming' | 'active' | 'completed' | 'lobby';
@@ -43,6 +45,8 @@ export interface CompanionChallengeItem {
   participantCount?: number;
   calculatedAt?: string;
   leadMargin?: number;
+  /** Only the phone-widget projection carries an adjacent server-row window. */
+  rowsAreAdjacent?: true;
   rows: CompanionChallengeRow[];
 }
 export interface CompanionChallengeSnapshot {

@@ -1523,6 +1523,139 @@ export function Test({ condition }) {
 });
 
 describe('Multilingual source-first regressions', () => {
+  const ordinalEnglish = {
+    place_ordinal_one: '{{number}}st place',
+    place_ordinal_two: '{{number}}nd place',
+    place_ordinal_few: '{{number}}rd place',
+    place_ordinal_other: '{{number}}th place',
+  };
+  const ordinalCall = `export const label = t('place', {
+    count: 2, ordinal: true, number: '2',
+    defaultValue: '{{number}}th place',
+    defaultValue_ordinal_one: '{{number}}st place',
+    defaultValue_ordinal_two: '{{number}}nd place',
+    defaultValue_ordinal_few: '{{number}}rd place',
+    defaultValue_ordinal_other: '{{number}}th place',
+  });`;
+  it('validates ordinal categories separately from cardinal categories and target coverage', () => {
+    const tmpDir = createFixtureStructure(
+      {
+        en: JSON.stringify(ordinalEnglish),
+        pl: JSON.stringify({ place_ordinal_other: '{{number}}. miejsce' }),
+        de: JSON.stringify({ place_ordinal_other: '{{number}}. Platz' }),
+      },
+      { 'place.ts': ordinalCall }
+    );
+    const result = auditRun(tmpDir);
+    expect(result.hasErrors).toBe(false);
+    expect(result.report.translationCoverage.pl).toMatchObject({
+      total: 1,
+      translated: 1,
+    });
+    expect(result.report.translationCoverage.de).toMatchObject({
+      total: 1,
+      translated: 1,
+    });
+  });
+  it('rejects missing English ordinal forms', () => {
+    const { place_ordinal_two: _second, ...incomplete } = ordinalEnglish;
+    const result = auditRun(
+      createFixtureStructure(
+        { en: JSON.stringify(incomplete), pl: '{}' },
+        { 'place.ts': ordinalCall }
+      )
+    );
+    expect(result.hasErrors).toBe(true);
+    expect(result.report.pluralErrors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          rule: 'missing-plural-form',
+          key: 'place_ordinal',
+          form: '_two',
+        }),
+        expect.objectContaining({
+          rule: 'count-requires-plural-group',
+          key: 'place',
+        }),
+      ])
+    );
+  });
+  it('rejects incorrect ordinal fallbacks and translated placeholders', () => {
+    const result = auditRun(
+      createFixtureStructure(
+        {
+          en: JSON.stringify(ordinalEnglish),
+          pl: JSON.stringify({ place_ordinal_other: '{{wrong}}. miejsce' }),
+        },
+        {
+          'place.ts': ordinalCall.replace(
+            "defaultValue_ordinal_two: '{{number}}nd place'",
+            "defaultValue_ordinal_two: '{{number}}th place'"
+          ),
+        }
+      )
+    );
+    expect(result.hasErrors).toBe(true);
+    expect(result.report.missingFallbackFindings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          rule: 'default-value-mismatch',
+          key: 'place',
+        }),
+      ])
+    );
+    expect(result.report.placeholderErrors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ key: 'place_ordinal_other', locale: 'pl' }),
+      ])
+    );
+  });
+  it('does not satisfy a cardinal count lookup with ordinal-only keys', () => {
+    const result = auditRun(
+      createFixtureStructure(
+        { en: JSON.stringify(ordinalEnglish), pl: '{}' },
+        { 'place.ts': ordinalCall.replace('ordinal: true', 'ordinal: false') }
+      )
+    );
+    expect(result.hasErrors).toBe(true);
+    expect(result.report.pluralErrors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          rule: 'count-requires-plural-group',
+          key: 'place',
+        }),
+      ])
+    );
+  });
+  it('rejects ordinal zero overrides and categories unsupported by a target locale', () => {
+    const result = auditRun(
+      createFixtureStructure(
+        {
+          en: JSON.stringify({
+            ...ordinalEnglish,
+            place_ordinal_zero: '{{number}}th place',
+          }),
+          pl: JSON.stringify({ place_ordinal_one: '{{number}}. miejsce' }),
+        },
+        { 'place.ts': ordinalCall }
+      )
+    );
+    expect(result.hasErrors).toBe(true);
+    expect(result.report.localeStructuralErrors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          rule: 'invalid-plural-category',
+          key: 'place_ordinal_zero',
+          locale: 'en',
+        }),
+        expect.objectContaining({
+          rule: 'invalid-plural-category',
+          key: 'place_ordinal_one',
+          locale: 'pl',
+        }),
+      ])
+    );
+  });
   it('discovers sibling locale directories from the locale root', () => {
     const tmpDir = createFixtureStructure({
       en: '{"dashboard": {"weeklyProgress": "Weekly progress"}}',

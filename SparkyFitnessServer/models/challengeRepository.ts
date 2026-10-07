@@ -10,6 +10,7 @@ import { getClient } from '../db/poolManager.js';
 
 export type ChallengeWithMembership = Challenge & {
   my_membership: ChallengeMembershipStatus;
+  my_ready?: boolean;
 };
 export type ChallengeRosterRow = ChallengeParticipant & {
   display_name: string;
@@ -126,8 +127,36 @@ async function list(
     actor,
     async (client) => {
       const result = await client.query<ChallengeWithMembership>(
-        "SELECT c.*, cp.status AS my_membership FROM public.challenge_participants cp JOIN public.challenges c ON c.id=cp.challenge_id WHERE cp.user_id=$1 AND cp.status IN ('pending','accepted') AND ($4 OR (c.scoring_mode='sum' AND c.metric IN ('steps','workout_time'))) ORDER BY c.created_at DESC, c.id DESC LIMIT $2 OFFSET $3",
-        [actor, query.limit + 1, query.offset, includeNewTypes]
+        `SELECT c.*, cp.status AS my_membership, cp.ready_at IS NOT NULL AS my_ready
+         FROM public.challenge_participants cp
+         JOIN public.challenges c ON c.id=cp.challenge_id
+         CROSS JOIN LATERAL (SELECT CASE
+           WHEN c.cancelled_at IS NOT NULL THEN 'cancelled'
+           WHEN c.start_date IS NULL OR c.end_date IS NULL THEN 'lobby'
+           WHEN (CURRENT_TIMESTAMP AT TIME ZONE c.timezone)::date < c.start_date THEN 'upcoming'
+           WHEN (CURRENT_TIMESTAMP AT TIME ZONE c.timezone)::date > c.end_date THEN 'completed'
+           ELSE 'active' END AS state) lifecycle
+         WHERE cp.user_id=$1 AND cp.status IN ('pending','accepted')
+           AND ($4 OR (c.scoring_mode='sum' AND c.metric IN ('steps','workout_time')))
+           AND ($5::text IS NULL
+             OR ($5='history' AND lifecycle.state IN ('completed','cancelled'))
+             OR ($5='invitations' AND cp.status='pending' AND lifecycle.state NOT IN ('completed','cancelled'))
+             OR ($5='mine' AND cp.status='accepted' AND lifecycle.state NOT IN ('completed','cancelled'))
+             OR ($5='active' AND cp.status='accepted' AND lifecycle.state='active')
+             OR ($5='summary' AND lifecycle.state NOT IN ('completed','cancelled')))
+         ORDER BY CASE WHEN $5='summary' THEN CASE
+           WHEN cp.status='pending' THEN 0
+           WHEN lifecycle.state='lobby' AND cp.ready_at IS NULL THEN 1
+           WHEN lifecycle.state='active' THEN 2
+           WHEN lifecycle.state='lobby' THEN 3 ELSE 4 END ELSE 0 END,
+           c.created_at DESC, c.id DESC LIMIT $2 OFFSET $3`,
+        [
+          actor,
+          query.limit + 1,
+          query.offset,
+          includeNewTypes,
+          query.view ?? null,
+        ]
       );
       return result.rows;
     },
@@ -284,6 +313,21 @@ async function withdraw(
     return (result.rowCount ?? 0) === 1;
   });
 }
+async function removeParticipant(
+  actor: string,
+  id: string,
+  userId: string
+): Promise<boolean> {
+  return withClient(actor, async (client) => {
+    await lockChallenge(client, id);
+    const result = await client.query(
+      `UPDATE public.challenge_participants SET status='left'
+       WHERE challenge_id=$1 AND user_id=$2 AND user_id<>$3 AND status='accepted'`,
+      [id, userId, actor]
+    );
+    return (result.rowCount ?? 0) === 1;
+  });
+}
 export default {
   create,
   detail,
@@ -295,4 +339,5 @@ export default {
   configureTarget,
   setReady,
   withdraw,
+  removeParticipant,
 };

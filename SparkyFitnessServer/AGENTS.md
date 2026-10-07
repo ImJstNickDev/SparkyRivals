@@ -1,6 +1,6 @@
 # AGENTS.md
 
-_Last updated: 2026-10-05_
+_Last updated: 2026-10-06_
 
 SparkyFitness Server is the backend API package for the SparkyFitness monorepo. Use this file as the primary guide for work inside `SparkyFitnessServer/`.
 
@@ -356,3 +356,10 @@ Connection labels use `familyAccessRepository` and the narrow
 `family_access_display_names` startup SQL projection. Only relationship parties
 in self context receive the two display names; never broaden profile or diary
 RLS to make the Challenge invitation picker display names.
+
+M8A.7 lobby removal: `DELETE /api/v2/challenges/:id/participants/:userId`
+reuses the `left` transition for an accepted member. Creator-only, goal lobby
+only, before lock; existing pending-invitation withdrawal stays separate.
+Migration `20261006120000_challenge_lobby_removal.sql` and startup RLS enforce
+the same boundary. Target/Ready mutation remains self-only; parent locking and
+activation triggers re-evaluate the roster. No new columns or read permissions.

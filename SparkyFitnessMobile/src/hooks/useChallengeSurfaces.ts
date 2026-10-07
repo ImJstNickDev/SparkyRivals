@@ -2,6 +2,10 @@ import {
   remotePushRegistration,
   remoteInvitationsEligible,
 } from '../services/remotePushRegistration';
+import { useQueryClient } from '@tanstack/react-query';
+import { usePreferences } from './usePreferences';
+import { preferencesQueryKey } from './queryKeys';
+import type { UserPreferences } from '../types/preferences';
 import * as Notifications from 'expo-notifications';
 import { useEffect, useMemo, useSyncExternalStore } from 'react';
 import { AppState, Platform } from 'react-native';
@@ -30,9 +34,25 @@ import type { CompanionChallengeSnapshot } from '../types/companionChallenges';
  * Apple/Wear observers use identical keys; TanStack deduplicates their requests. */
 export function useChallengeSurfaces(connected: boolean) {
   const supported = Platform.OS === 'ios' || Platform.OS === 'android';
-  const { snapshot, observation, refresh, sessionRevision, configId } =
-    useCompanionChallenges(connected, supported);
+  const {
+    snapshot,
+    widgetSnapshot,
+    observation,
+    refresh,
+    sessionRevision,
+    configId,
+  } = useCompanionChallenges(connected, supported);
   const { t, i18n } = useTranslation();
+  const client = useQueryClient();
+  const { preferences: displayPreferences } = usePreferences({
+    enabled: connected && supported,
+  });
+  const presentationKey = JSON.stringify([
+    i18n.language,
+    displayPreferences?.default_distance_unit,
+    displayPreferences?.energy_unit,
+    displayPreferences?.water_display_unit,
+  ]);
 
   const preferences = useAppPreferencesStore((s) => s.challengeNotifications);
   const master = useAppPreferencesStore((s) => s.notificationsEnabled);
@@ -45,11 +65,18 @@ export function useChallengeSurfaces(connected: boolean) {
       new CompanionChallengePublisher(
         async (json) => {
           const value = JSON.parse(json) as CompanionChallengeSnapshot;
+          const units =
+            client.getQueryData<UserPreferences>(preferencesQueryKey);
           await publishChallengeWidget(
             buildChallengeWidget(
               value,
               translation.t.bind(translation),
-              translation.language
+              translation.language,
+              {
+                distance: units?.default_distance_unit,
+                energy: units?.energy_unit,
+                water: units?.water_display_unit,
+              }
             )
           );
         },
@@ -61,7 +88,7 @@ export function useChallengeSurfaces(connected: boolean) {
           );
         }
       ),
-    []
+    [client]
   );
   const notifications = useMemo(
     () =>
@@ -148,7 +175,12 @@ export function useChallengeSurfaces(connected: boolean) {
   ]);
   useEffect(() => {
     if (!supported) return;
-    void widget.offer(snapshot, sessionRevision, configId, i18n.language);
+    void widget.offer(
+      widgetSnapshot,
+      sessionRevision,
+      configId,
+      presentationKey
+    );
     if (hydrated)
       void notifications.reconcile(
         {
@@ -174,7 +206,8 @@ export function useChallengeSurfaces(connected: boolean) {
     master,
     hydrated,
     t,
-    i18n.language,
+    presentationKey,
+    widgetSnapshot,
     supported,
     widget,
     notifications,

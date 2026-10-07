@@ -89,8 +89,10 @@ function translatedValueIsPresent(value) {
   return true;
 }
 
-function requiredPluralForms(intlLocale) {
-  return new Intl.PluralRules(intlLocale)
+function requiredPluralForms(intlLocale, ordinal = false) {
+  return new Intl.PluralRules(intlLocale, {
+    type: ordinal ? 'ordinal' : 'cardinal',
+  })
     .resolvedOptions()
     .pluralCategories.map((category) => `_${category}`);
 }
@@ -254,11 +256,18 @@ class LocaleValidator {
     }
     errors.push(...detectSingularPluralCollisions(sourceGroups, sourceLocale));
 
-    const sourceRequiredForms = requiredPluralForms(sourceIntlLocale);
     for (const group of sourceGroups.filter((item) => item.isPlural)) {
+      const ordinal = group.base.endsWith('_ordinal');
+      const sourceRequiredForms = requiredPluralForms(
+        sourceIntlLocale,
+        ordinal
+      );
       for (const key of group.keys) {
         const suffix = getPluralSuffix(key);
-        if (suffix !== '_zero' && !sourceRequiredForms.includes(suffix)) {
+        if (
+          (ordinal || suffix !== '_zero') &&
+          !sourceRequiredForms.includes(suffix)
+        ) {
           errors.push({
             rule: 'invalid-plural-category',
             locale: sourceLocale,
@@ -326,7 +335,6 @@ class LocaleValidator {
       }
       translations[target.locale] = translated;
       const targetIntlLocale = target.intlLocale || target.locale;
-      const targetRequiredForms = requiredPluralForms(targetIntlLocale);
       const targetGroups = groupPluralKeys(Object.keys(translated));
       errors.push(
         ...detectSingularPluralCollisions(targetGroups, target.locale)
@@ -353,6 +361,11 @@ class LocaleValidator {
           continue;
         }
         const canonical = canonicalPluralPlaceholders(source, sourceGroup);
+        const ordinal = sourceGroup.base.endsWith('_ordinal');
+        const targetRequiredForms = requiredPluralForms(
+          targetIntlLocale,
+          ordinal
+        );
         requiredTotal += targetRequiredForms.length;
         for (const form of targetRequiredForms) {
           const targetKey = `${sourceGroup.base}${form}`;
@@ -388,7 +401,7 @@ class LocaleValidator {
           (group) => group.base === sourceGroup.base
         )?.keys || []) {
           const suffix = getPluralSuffix(key);
-          if (suffix === '_zero') {
+          if (suffix === '_zero' && !ordinal) {
             const targetKey = `${sourceGroup.base}_zero`;
             if (
               translatedValueIsPresent(translated[targetKey]) &&

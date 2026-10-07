@@ -8,6 +8,7 @@ swiftc \
   targets/watch/Domain/CheckInModels.swift \
   targets/watch/Domain/WorkoutModels.swift \
   targets/watch/Domain/WatchPage.swift \
+  targets/watch/Domain/ChallengePresentationFormat.swift \
   targets/watch/Domain/ChallengeModels.swift \
   targets/watch/Domain/ChallengeSurfaceSnapshot.swift \
   targets/watch/Adapters/ContextPayloadMapper.swift \

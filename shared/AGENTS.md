@@ -1,6 +1,6 @@
 # AGENTS.md
 
-*Last updated: 2026-10-04*
+*Last updated: 2026-10-06*
 
 `@workspace/shared` is a source-first TypeScript workspace library package for schemas, constants, and timezone/day helpers consumed by SparkyFitnessServer, SparkyFitnessFrontend, and SparkyFitnessMobile.
 
@@ -62,3 +62,13 @@ scores, health records, participant identity or remote URLs to notification data
 ## M8A.6 Challenge domain source map
 
 `src/challenges/types.ts` owns the Challenge combination matrix, target precision and personal-goal suggestion mapping. `format.ts` formats canonical client values; `Challenges.api.zod.ts` validates legacy v1/v2 and negotiated v3 results. Keep metric units separate from score units and preserve null dates for unactivated lobbies. See `docs/fork/CHALLENGE_TYPES.md`.
+
+## M8A.7 presentation source map
+
+`src/challenges/presentation/` owns localized labels, display units, deterministic
+point precision, calendar ranges, freshness and daily presence descriptions. It
+accepts the caller's translator/locale; never import a second i18next instance or
+React state here. Presentation must retain server ranks, ties and exact scores.
+`targetDraft.ts` coordinates acknowledged target-save/Ready revisions with actor
+guards; it does not change activation rules. `utils/numericInput.ts` separates
+locale-aware user input from API numbers. Validate these through all consumers.

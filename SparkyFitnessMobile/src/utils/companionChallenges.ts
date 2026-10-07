@@ -1,5 +1,6 @@
-import { challengeScoreUnit } from '@workspace/shared';
-import type {
+import {
+  challengeScoreUnit,
+  type ChallengeDisplayPreferences,
   ChallengeLeaderboardResponse,
   ChallengeResponse,
 } from '@workspace/shared';
@@ -77,7 +78,10 @@ export function buildCompanionChallenges(input: {
   challenges: readonly ChallengeResponse[];
   listUpdatedAt: number;
   hasMore: boolean;
+  displayPreferences?: ChallengeDisplayPreferences;
   results: ReadonlyMap<string, CompanionChallengeResult>;
+  /** Phone widgets use adjacent server rows; watch payload stays unchanged. */
+  rowWindow?: 'self';
 }): CompanionChallengeSnapshot {
   if (!input.accountKey || !input.actor || !input.listUpdatedAt)
     return emptyCompanionChallenges();
@@ -109,10 +113,14 @@ export function buildCompanionChallenges(input: {
     const metadata = result?.challenge ?? challenge;
     if (result && cached)
       generatedAt = Math.min(generatedAt, cached.dataUpdatedAt);
+    const selfIndex =
+      result?.entries.findIndex((row) => row.user_id === input.actor) ?? -1;
     const rows =
       result?.ranking_available && challenge.lifecycle !== 'upcoming'
-        ? result.entries.filter(
-            (row, index) => index < 3 || row.user_id === input.actor
+        ? result.entries.filter((row, index) =>
+            input.rowWindow === 'self'
+              ? selfIndex >= 0 && Math.abs(index - selfIndex) <= 1
+              : index < 3 || row.user_id === input.actor
           )
         : [];
     items.push({
@@ -129,6 +137,23 @@ export function buildCompanionChallenges(input: {
         : metadata.metric === 'workout_time'
           ? { metric: 'workout_time' as const, scoreUnit: 'seconds' as const }
           : {}),
+      ...(metadata.scoring_mode === 'sum' && input.displayPreferences
+        ? ['distance', 'workout_distance'].includes(metadata.metric)
+          ? {
+              displayUnit:
+                input.displayPreferences.distance === 'miles'
+                  ? ('mi' as const)
+                  : ('km' as const),
+            }
+          : ['active_calories', 'workout_calories'].includes(metadata.metric)
+            ? {
+                displayUnit:
+                  input.displayPreferences.energy === 'kJ'
+                    ? ('kJ' as const)
+                    : ('kcal' as const),
+              }
+            : {}
+        : {}),
       id: challenge.id,
       name: clip(metadata.name),
       lifecycle: challenge.lifecycle,
@@ -150,6 +175,7 @@ export function buildCompanionChallenges(input: {
       ...(result?.lead_margin != null
         ? { leadMargin: result.lead_margin }
         : {}),
+      ...(input.rowWindow === 'self' ? { rowsAreAdjacent: true as const } : {}),
       rows: rows.map((row) => ({
         id: row.user_id,
         name: clip(row.display_name),

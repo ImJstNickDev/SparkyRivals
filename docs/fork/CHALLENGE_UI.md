@@ -183,3 +183,36 @@ production remains a separate checkout with bind-mounted `dockerdata/` only.
 ## Functional Challenge types
 
 M8A.6 adds the existing-component type selector, dated personal activity goals and self-target/Ready/withdrawal lobby controls to phone/web. It introduces no visual redesign. See [CHALLENGE_TYPES.md](CHALLENGE_TYPES.md); M8A.7 owns polish.
+
+## M8A.7 presentation and interactions
+
+The earlier verification sections describe their original milestone. Current
+implementation and capture boundaries are in [CHALLENGE_UX.md](CHALLENGE_UX.md).
+The hub separates My Challenges, Invitations and History using bounded server
+filters before pagination. A loaded-page count is never a complete badge.
+Dashboard selection is bounded and independent of nutrition dates; hiding its
+ordered card does not stop reconciliation or Library header access.
+The Dashboard entry opens the hub unless the bounded `view=active&limit=1`
+response proves exactly one accepted active Challenge (`has_more=false`). That
+shortcut installs the hub behind detail in the existing root navigation stack:
+Back visits the hub, then the Dashboard. There is no extra all-Challenges button
+inside detail. Loading, failed or incomplete active reads open the hub safely.
+The entry reads the container's `getRootState()` before dispatching a targeted
+action. A container dispatch callback receives the focused tab/tab-local stack
+state, which cannot accept root Challenge routes. Regression tests mount a real
+container with nested navigators and exercise entry plus Back in both structures.
+
+Invitations show metric-specific consent without scores. Goal lobbies show
+projected dates, own target/Ready and compact authorized participant rows.
+Target edits save on blur or Back; Ready awaits the saved revision. Failure or
+conflict retains the draft and never optimistically activates a Challenge.
+Creator removal of an accepted participant requires an unlocked goal lobby and
+confirmation; pending withdrawal remains separate. Personal goals use explicit
+acknowledged Save followed by Back; dirty navigation asks whether to discard.
+
+Results use an own-total card, server ranks/ties, compact standings and secondary
+history/details. Tapping a goal row switches score/actual display only. Shared
+presentation consumes locale, translator and display preferences; it never
+reranks. Query signals, actor revisions and denied/unsupported-cache suppression
+protect obsolete screens. Fork English/Italian sources feed existing catalogs;
+other languages keep honest fallback. Native and physical checks remain separate.

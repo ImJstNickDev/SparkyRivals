@@ -132,4 +132,27 @@ See `../docs/fork/CHALLENGE_POLISH.md` and the Challenge screen/helper tests.
 
 ## M8A.6 Challenge domain source map
 
-`pages/Challenges/ChallengeLobby.tsx` handles self-target/Ready and creator-only pending withdrawal. Creation maps friendly types to shared metric/mode contracts. The existing Goals editor includes steps/distance/active-energy fields. Request header `X-Challenge-Contract-Version: 3` opts into the extended domain; never calculate rank on clients. See `docs/fork/CHALLENGE_TYPES.md`.
+`pages/Challenges/ChallengeLobby.tsx` handles self-target/Ready, pending withdrawal
+and creator removal before goal-lobby lock. Creation maps friendly types to shared
+metric/mode contracts. The existing Goals editor includes steps/distance/active-energy
+fields. Request header `X-Challenge-Contract-Version: 3` opts into the extended
+domain; never calculate rank on clients. See `docs/fork/CHALLENGE_TYPES.md`.
+
+M8A.7 uses shared `challenges/presentation/` helpers with the active locale and
+display-unit preferences. Hub views filter on the server and preserve their URL
+selection. `ChallengeTargetForm` awaits server target revisions before Ready;
+`useUnsavedFormGuard` protects ordinary dirty forms through React Router blockers.
+Query signals and actor revisions suppress obsolete responses/navigation.
+See `../docs/fork/CHALLENGE_UX.md` for the state map and evidence boundaries.
+
+## Fork translation sources (M8A.7)
+
+The maintainer approved repository-local ownership of fork-only translations.
+`localization/fork/ownership.json` (relative to the repository root) restricts
+imports to Challenge keys and explicitly listed activity-goal keys. Edit Italian
+source files under `localization/fork/`, then run root `pnpm i18n:fork:import`.
+Do not hand-edit other non-English catalog entries. English remains canonical;
+run `pnpm i18n:fork:export` after owned English changes and retain existing package
+plural/placeholder/registry checks. This narrow approved exception does not
+transfer ownership of upstream translations. Keep the upstream translation
+workflow guarded; do not create external translation resources without approval.

@@ -1,3 +1,6 @@
+// Hermes lacks Intl.PluralRules. Load the standard polyfill before i18next
+// builds its resolver, so cardinal and ordinal rules use the same locale data.
+import 'intl-pluralrules';
 import { useSyncExternalStore } from 'react';
 import { createInstance } from 'i18next';
 import { initReactI18next } from 'react-i18next';
@@ -19,7 +22,6 @@ export { SUPPORTED_LANGUAGES } from './localeRegistry';
 export type { SupportedLanguage } from './localeRegistry';
 export type LanguagePreference = 'system' | SupportedLanguage;
 
-const i18n = createInstance();
 const I18N_INIT_OPTIONS = {
   resources: RESOURCE_MAP,
   fallbackLng: FALLBACK_LOCALE,
@@ -29,6 +31,7 @@ const I18N_INIT_OPTIONS = {
   returnEmptyString: false,
   react: { useSuspense: false },
 };
+const i18n = createInstance(I18N_INIT_OPTIONS);
 
 export function normalizeLanguage(
   language: string | null | undefined

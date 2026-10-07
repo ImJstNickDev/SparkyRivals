@@ -220,6 +220,7 @@ describe('DashboardScreen Health Trends spacing', () => {
     // appends unlisted keys to the end regardless of order).
     store.setDashboardCardOrder(['healthTrends', 'askSparky']);
     store.setCalorieRingCardVisible(false);
+    store.setChallengesCardVisible(false);
     store.setMacrosCardVisible(false);
     store.setExerciseCardVisible(false);
     store.setHydrationCardVisible(false);

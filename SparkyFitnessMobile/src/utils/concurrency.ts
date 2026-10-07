@@ -19,17 +19,25 @@ export const AI_TIMEOUT_MS = 120_000;
 
 /**
  * Wraps fetch with an AbortController that auto-aborts after timeoutMs.
- * Caller-provided signals are excluded from the type because they would be
- * clobbered by the timeout signal; if a caller ever needs cancellation, the
- * two signals must be combined here (AbortSignal.any isn't available in RN).
+ * An optional caller signal is forwarded to the timeout controller. Hermes does
+ * not require AbortSignal.any. Cancellation remains distinct from a timeout.
  */
 export const fetchWithTimeout = async (
   url: string,
   options: Omit<RequestInit, 'signal'>,
-  timeoutMs: number
+  timeoutMs: number,
+  signal?: AbortSignal
 ): Promise<Response> => {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const abort = () => controller.abort();
+  if (signal?.aborted)
+    throw Object.assign(new Error('Request cancelled'), { name: 'AbortError' });
+  signal?.addEventListener('abort', abort);
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, timeoutMs);
 
   try {
     const response = await fetch(url, {
@@ -38,12 +46,17 @@ export const fetchWithTimeout = async (
     });
     return response;
   } catch (error) {
-    if (error instanceof Error && error.name === 'AbortError') {
+    if (
+      error instanceof Error &&
+      error.name === 'AbortError' &&
+      (timedOut || !signal?.aborted)
+    ) {
       throw new TimeoutError('Request', timeoutMs);
     }
     throw error;
   } finally {
     clearTimeout(timer);
+    signal?.removeEventListener('abort', abort);
   }
 };
 

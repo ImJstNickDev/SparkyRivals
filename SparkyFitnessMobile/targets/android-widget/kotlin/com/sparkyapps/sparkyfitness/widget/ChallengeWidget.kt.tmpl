@@ -8,6 +8,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.glance.ColorFilter
+import androidx.glance.Image
+import androidx.glance.ImageProvider
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
@@ -20,6 +23,13 @@ import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
 import androidx.glance.background
 import androidx.glance.currentState
+import androidx.glance.layout.Alignment
+import androidx.glance.layout.Row
+import androidx.glance.layout.Spacer
+import androidx.glance.layout.size
+import androidx.glance.layout.width
+import androidx.glance.layout.height
+import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.Column
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.padding
@@ -28,38 +38,82 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import {{APPLICATION_ID}}.R
-import org.json.JSONObject
 
 /** Latest presentation only. No auth, server access or independent scoring. */
 class ChallengeWidget : GlanceAppWidget() {
     override val stateDefinition = PreferencesGlanceStateDefinition
-    override val sizeMode = SizeMode.Responsive(setOf(DpSize(160.dp,180.dp),DpSize(300.dp,180.dp)))
+    override val sizeMode = SizeMode.Responsive(setOf(DpSize(130.dp, 110.dp), DpSize(250.dp, 110.dp)))
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val stored = context.getSharedPreferences(ChallengeWidgetReceiver.PREFS_NAME,Context.MODE_PRIVATE).getString("snapshot",null)
         provideContent {
+            currentState(WidgetLocale.LOCALE_RENDER_REVISION_STATE_KEY)
             val json = currentState<Preferences>()[SNAPSHOT_STATE_KEY] ?: stored
-            val value = runCatching { JSONObject(json ?: "{}") }.getOrNull()
-                ?.takeIf { it.optInt("version")==1 && it.optString("state")=="ready" }
+            val selection = currentState<Preferences>()[SELECTION_STATE_KEY]
+            val value = ChallengeWidgetData.select(ChallengeWidgetData.load(json), selection)
             val localized = WidgetLocale.localizedContext(context)
             val url = value?.optString("url")?.takeIf { it.startsWith("{{APP_URL_SCHEME}}://challenges/") } ?: "{{APP_URL_SCHEME}}://challenges"
             GlanceTheme {
-                Column(GlanceModifier.fillMaxSize().background(GlanceTheme.colors.surface).cornerRadius(20.dp).padding(16.dp)
-                    .clickable(actionStartActivity(Intent(Intent.ACTION_VIEW,Uri.parse(url)).setPackage(context.packageName)))) {
-                    Text(value?.optString("title") ?: localized.getString(R.string.sparky_challenge_widget_name),style=TextStyle(color=GlanceTheme.colors.onSurface,fontWeight=FontWeight.Bold,fontSize=16.sp),maxLines=1)
-                    Text(value?.optString("status") ?: localized.getString(R.string.challenge_widget_not_synced),style=TextStyle(color=GlanceTheme.colors.onSurfaceVariant,fontSize=12.sp),maxLines=2)
-                    if (value != null) {
-                        if (value.optString("score").isEmpty()) Text(value.optString("metric"),style=TextStyle(color=GlanceTheme.colors.onSurfaceVariant,fontSize=12.sp),maxLines=1)
-                        Text(value.optString("score"),style=TextStyle(color=GlanceTheme.colors.primary,fontSize=24.sp,fontWeight=FontWeight.Bold),maxLines=1)
-                        Text(value.optString("rank"),style=TextStyle(color=GlanceTheme.colors.onSurface,fontSize=13.sp),maxLines=1)
-                        Text(value.optString("gap"),style=TextStyle(color=GlanceTheme.colors.onSurface,fontSize=13.sp),maxLines=1)
-                        if (LocalSize.current.width>=300.dp) Text(value.optString("peer"),style=TextStyle(color=GlanceTheme.colors.onSurface,fontSize=13.sp),maxLines=1)
-                        val age=System.currentTimeMillis()-value.optLong("generatedAt")
-                        // Periodic OS rendering changes age only, never verified time.
-                        if (age>900000 || age < -300000) Text(value.optString("staleLabel"),style=TextStyle(color=GlanceTheme.colors.onSurfaceVariant,fontSize=11.sp),maxLines=1)
+                val wide = LocalSize.current.width >= 250.dp
+                Column(
+                    GlanceModifier.fillMaxSize().background(GlanceTheme.colors.surface)
+                        .cornerRadius(20.dp).padding(14.dp)
+                        .clickable(actionStartActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).setPackage(context.packageName))),
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Image(ImageProvider(R.drawable.ic_widget_challenge), contentDescription = null,
+                            modifier = GlanceModifier.size(16.dp),
+                            colorFilter = ColorFilter.tint(GlanceTheme.colors.onSurfaceVariant))
+                        Spacer(GlanceModifier.width(6.dp))
+                        Text(value?.optString("title") ?: localized.getString(R.string.sparky_challenge_widget_name),
+                            style = TextStyle(color = GlanceTheme.colors.onSurface, fontWeight = FontWeight.Medium, fontSize = 13.sp),
+                            maxLines = 2)
                     }
+                    Spacer(GlanceModifier.defaultWeight())
+                    if (value != null) {
+                        val score = value.optString("score")
+                        val rank = value.optString("rank")
+                        if (score.isEmpty()) {
+                            Text(value.optString("metric"), style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 14.sp), maxLines = 2)
+                        } else if (wide && (value.optJSONArray("neighbors")?.length() ?: 0) > 0) {
+                            Text(rank, style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 14.sp, fontWeight = FontWeight.Bold), maxLines = 1)
+                            Spacer(GlanceModifier.height(4.dp))
+                            val neighbors = value.getJSONArray("neighbors")
+                            for (slot in listOf("above", "self", "below")) {
+                                val row = (0 until neighbors.length()).mapNotNull { neighbors.optJSONObject(it) }.firstOrNull { it.optString("slot") == slot }
+                                if (row == null) {
+                                    Spacer(GlanceModifier.height(18.dp))
+                                } else {
+                                    val style = TextStyle(
+                                        color = if (slot == "self") GlanceTheme.colors.primary else GlanceTheme.colors.onSurfaceVariant,
+                                        fontSize = 12.sp, fontWeight = if (slot == "self") FontWeight.Bold else FontWeight.Normal)
+                                    Row(GlanceModifier.fillMaxWidth().padding(vertical = 1.dp), verticalAlignment = Alignment.CenterVertically) {
+                                        Text(row.optString("rank"), modifier = GlanceModifier.width(32.dp), style = style, maxLines = 1)
+                                        Text(row.optString("name"), modifier = GlanceModifier.defaultWeight(), style = style, maxLines = 1)
+                                        Spacer(GlanceModifier.width(8.dp))
+                                        Text(row.optString("score"), style = style, maxLines = 1)
+                                    }
+                                }
+                            }
+                        } else {
+                            Text(score, style = TextStyle(color = GlanceTheme.colors.primary, fontSize = 20.sp, fontWeight = FontWeight.Bold), maxLines = 2)
+                            Spacer(GlanceModifier.height(4.dp))
+                            Text(rank, style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 12.sp), maxLines = 1)
+                        }
+                    }
+                    Spacer(GlanceModifier.defaultWeight())
+                    val age = System.currentTimeMillis() - (value?.optLong("generatedAt") ?: 0)
+                    // OS rendering changes age only; it never advances verified time.
+                    val footer = if (value == null) localized.getString(
+                        if (selection != null && selection != ChallengeWidgetData.AUTOMATIC) R.string.challenge_widget_unavailable else R.string.challenge_widget_not_synced)
+                        else if (age > 900000 || age < -300000) value.optString("staleLabel")
+                        else value.optString("status")
+                    Text(footer, style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 11.sp), maxLines = 2)
                 }
             }
         }
     }
-    companion object { val SNAPSHOT_STATE_KEY = stringPreferencesKey("challengeSnapshot") }
+    companion object {
+        val SNAPSHOT_STATE_KEY = stringPreferencesKey("challengeSnapshot")
+        val SELECTION_STATE_KEY = stringPreferencesKey("challengeSelection")
+    }
 }

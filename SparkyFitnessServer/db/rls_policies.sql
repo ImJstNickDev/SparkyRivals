@@ -1084,8 +1084,8 @@ USING (
 CREATE POLICY challenge_participant_invite ON public.challenge_participants FOR INSERT
 WITH CHECK (public.owns_challenge(challenge_id) AND invited_by_user_id = public.challenge_actor());
 CREATE POLICY challenge_participant_respond ON public.challenge_participants FOR UPDATE
-USING (user_id = public.challenge_actor() OR (status = 'pending' AND public.owns_challenge(challenge_id) AND EXISTS (SELECT 1 FROM public.challenges c WHERE c.id=challenge_id AND c.scoring_mode<>'sum' AND c.locked_at IS NULL AND c.cancelled_at IS NULL)))
-WITH CHECK (user_id = public.challenge_actor() OR (status = 'withdrawn' AND public.owns_challenge(challenge_id)));
+USING (user_id = public.challenge_actor() OR (user_id <> public.challenge_actor() AND status IN ('pending','accepted') AND public.owns_challenge(challenge_id) AND EXISTS (SELECT 1 FROM public.challenges c WHERE c.id=challenge_id AND c.scoring_mode<>'sum' AND c.locked_at IS NULL AND c.cancelled_at IS NULL)))
+WITH CHECK (user_id = public.challenge_actor() OR (user_id <> public.challenge_actor() AND status IN ('withdrawn','left') AND public.owns_challenge(challenge_id) AND EXISTS (SELECT 1 FROM public.challenges c WHERE c.id=challenge_id AND c.scoring_mode<>'sum' AND c.locked_at IS NULL AND c.cancelled_at IS NULL)));
 -- No DELETE policies: departure is an audited transition; user deletion cascades.
 
 -- Serialize a self-context member's mutations before locking participant rows.

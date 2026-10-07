@@ -30,14 +30,15 @@
     "typecheck": "tsc --noEmit",
     "format": "prettier . --write --log-level warn",
     "format:check": "prettier . --check",
-    "validate": "pnpm run i18n:generate:check && pnpm run muscle-figure:generate:check && pnpm run typecheck && pnpm run lint && pnpm run i18n:audit && pnpm run knip && pnpm run native-locales:check && pnpm run format:check",
+    "validate": "pnpm run i18n:fork:check && pnpm run i18n:generate:check && pnpm run muscle-figure:generate:check && pnpm run typecheck && pnpm run lint && pnpm run i18n:audit && pnpm run knip && pnpm run native-locales:check && pnpm run format:check",
     "i18n:generate": "node scripts/generate-locale-resources.mjs",
     "i18n:generate:check": "node scripts/generate-locale-resources.mjs --check",
     "muscle-figure:generate": "node scripts/generate-muscle-figure.mjs",
     "muscle-figure:generate:check": "node scripts/generate-muscle-figure.mjs --check",
-    "native-locales:check": "node scripts/validate-native-widget-locales.mjs",
+    "native-locales:check": "node scripts/validate-native-widget-locales.mjs && node scripts/validate-native-challenge-locales.mjs",
     "build:profile": "node scripts/with-build-profile.mjs",
-    "validate:native": "node scripts/validate-native-identity.mjs"
+    "validate:native": "node scripts/validate-native-identity.mjs",
+    "i18n:fork:check": "node ../scripts/sync-fork-locales.mjs --check"
   },
   "dependencies": {
     "@assistant-ui/react-ai-sdk": "^1.4.10",
@@ -93,6 +94,7 @@
     "expo-web-browser": "~57.0.3",
     "expo-widgets": "~57.0.21",
     "i18next": "26.4.2",
+    "intl-pluralrules": "2.0.1",
     "ipaddr.js": "^2.5.0",
     "react": "19.2.3",
     "react-i18next": "17.0.13",

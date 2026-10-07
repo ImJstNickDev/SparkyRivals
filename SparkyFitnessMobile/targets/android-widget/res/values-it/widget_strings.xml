@@ -17,4 +17,12 @@
     <string name="widget_preview_grams_protein">51 g</string>
     <string name="widget_preview_grams_carbs">136 g</string>
     <string name="widget_preview_grams_fat">32 g</string>
+    <string name="sparky_challenge_widget_name">Sfide</string>
+    <string name="challenge_widget_not_synced">Apri l’app per sincronizzare le sfide.</string>
+    <string name="challenge_widget_description">Il risultato della tua sfida a colpo d’occhio.</string>
+    <string name="challenge_widget_choose">Sfida</string>
+    <string name="challenge_widget_automatic">Automatica</string>
+    <string name="challenge_widget_unavailable">Sfida non disponibile</string>
+    <string name="challenge_widget_synced_choices">Scegli tra le ultime otto sfide sincronizzate. Apri l’app per aggiornarle.</string>
+    <string name="challenge_widget_save_failed">Salvataggio non riuscito. Riprova.</string>
 </resources>

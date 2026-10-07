@@ -908,3 +908,652 @@ new secret material. Documentation build and 39 local link-target checks passed.
 
 M8A.7 visual redesign and M8B production deployment remain deferred. No production
 server, NPM, push credentials or upstream repository was mutated.
+
+## M8A.7 — approved direction, implementation and local validation
+
+The maintainer approved Phase A revision 3 and repository-local translation
+ownership on 2026-10-06. See [CHALLENGE_UX.md](CHALLENGE_UX.md) for the source audit,
+before/after captures, manifest and explicit translation coverage. M8A.7 is not
+complete: physical Apple/Android and auxiliary-surface acceptance remain open.
+
+Runtime source for the first release pair/build is
+`ff10ef58265da5e726eeb24f4ead7ad0c5f5de6a`. Later documentation and trailing SQL
+whitespace cleanup do not change these client binaries. This source preserves
+server scoring/ranks and adds the authorized unlocked-lobby creator removal,
+bounded hub read filters, target autosave/Ready orchestration and the redesigned
+mobile/web/native presentation.
+
+### Automated and local rendered evidence
+
+- Mobile full CI: **521 suites / 8,011 tests**, all passed.
+- Web full CI: **188 suites / 1,805 tests**, passed. Final focused web checks:
+  **33 tests / 2 suites**, passed; production build passed.
+- Server bounded full CI: **454 files / 5,649 tests passed**, **18 files /
+  514 tests skipped**. Disposable DB/RLS integration: **376 tests / 4 files**,
+  passed. Remote push startup recovery and deny-all protections remain covered.
+- Companion focused Jest: **89 tests / 6 suites**, passed. Wear JVM: **44 tests**,
+  passed. Fork translation importer: **5 tests**; native Challenge locale
+  validation: **7 tests**, passed. Counts overlap package suites.
+- Mobile/web/server validation, localization generation/audit, native resources,
+  shared presentation and workflow-safety checks passed. Known React `act`
+  warnings remain visible. No tests or audit rules were disabled.
+- Clean production/preview/development/upstream native matrix: each profile had
+  two clean prebuilds with identical validated metadata. Real development Gradle
+  phone/Wear compile and Wear unit tests passed. No local Xcode execution.
+- Android emulator: Italian light/dark, German AMOLED fallback, Polish fallback
+  at 320 dp width and font scale 1.3, long title/emoji, target/Ready, score toggle,
+  goal-save/back/discard, existing language picker. Wear emulator: English and
+  Italian, normal/large text, honest stale snapshot. Browser: Italian desktop
+  and 390 px mobile-web production components with a synthetic auth fixture.
+  These are not physical-device or health-ingestion acceptance.
+
+### Native artifacts and pending device acceptance
+
+- Android phone **1008**, Wear **1000001008**: production release Gradle build
+  and Wear unit tests passed in 6m46s (1,351 tasks). Both packages are
+  `com.imjstnick.sparkyrivals`; `apksigner` verified the permanent SHA-256
+  `3E:B2:F9:50:8D:15:9C:C1:50:14:1A:9A:57:0D:37:71:24:4F:59:10:59:D0:AE:09:E9:61:28:1E:B6:42:D5:2A`.
+  Bundled Expo identity and phone scheme/FCM, Wear Tile/complication/Data Layer
+  manifest registrations passed inspection. Artifacts and verification are under
+  `~/.local/share/sparkyrivals/artifacts/milestone-8a7/android-1008/`.
+  Installed as updates on the physical Galaxy A25 and Galaxy Watch on 7 October,
+  preserving data; ADB package readback verified both version codes.
+- Full EAS iOS production-internal **1012** reused existing credentials for all
+  five targets. [Build](https://expo.dev/accounts/imjstnickdev/projects/sparkyrivals/builds/f0907076-eb2d-402d-b5df-d82ab86d24c1).
+  EAS compilation succeeded from the recorded source. Exported IPA inspection
+  verified all five build-1012 identities, team, internal provisioning, signed and
+  profile App Groups, callback scheme and production APNs on the phone only.
+  Compiled Italian Watch/watch-widget resources are present. Artifacts are under
+  `~/.local/share/sparkyrivals/artifacts/milestone-8a7/ios-1012/`.
+  Linux inspected profile CMS/embedded Mach-O entitlements; it did not run Xcode
+  or full Apple `codesign` verification. The maintainer installed the iPhone
+  update and supplied native invitation/lobby screenshots in Italian and dark
+  appearance (1290 × 2796 pixels). Exact text scale/glass preference is unverified.
+- The maintainer authorized a temporary HTTPS tunnel to the disposable test
+  backend on 7 October. Remote push and scheduled jobs remain disabled; the
+  gateway blocks health uploads and unnecessary admin/diagnostic endpoints.
+  No new health permission or live remote notification was requested.
+- Wear release 1000001008 launched on the dedicated round emulator. Android
+  CLI hosted the actual Tile service for empty and synthetic sum/stale renders
+  in English/Italian. The snapshot was injected only into emulator storage, with
+  its original timestamp; this does not prove paired transport. Phone widgets and
+  complications still require rendered acceptance; the CLI complication command
+  requires a specific host watch face/slot and did not activate a preview.
+  VoiceOver/TalkBack, iOS glass on/off and gesture checks remain open.
+- Italian linguistic review and broader error/offline/very-large-value visual
+  checks remain open. German/Polish new keys intentionally use English fallback.
+- M8A.6 health-source/writeback gaps remain exactly as previously documented.
+
+No production/NPM/DNS/store deployment, credential rotation or upstream write.
+Test infrastructure runs on the laptop with synthetic accounts and retained data;
+its temporary public URL exists only for the authorized physical session.
+Do not mark M8A.7 complete or begin M8B from these local results.
+
+### Physical session and navigation correction — 7 October
+
+- Both phones accepted the synthetic invitation. Server readback confirmed
+  membership. The iPhone invitation and lobby screenshots show wrapped long
+  titles, projected calendar dates and compact Italian consent without visible
+  clipping. They do not validate other themes/scales or Apple Watch layout.
+- iPhone target 9,000 persisted after Back; Android target 10,000 persisted after
+  blur/Back and cleared Ready. The maintainer confirmed reopening both forms;
+  server readback matched the saved targets and not-ready state.
+- A subsequent Dashboard navigation check **failed discoverability**: the entry
+  opened the current priority Challenge, and the hub was only found after using
+  the Library trophy. The maintainer approved hub-first entry with a single-active
+  shortcut and ordinary detail → hub → Dashboard Back. The initial artifacts
+  above do not contain the correction. Replacement builds are recorded below;
+  physical navigation verification remains pending. The direct detail header
+  gains no extra button.
+- Starting the existing synthetic Hydration lobby was explained by the final
+  participant's Ready action, not automatic readiness on accepting an invitation.
+  The 140/140.05 values belong to the separate close-score fixture.
+- Physical watch layout/transport, score/actual toggle and remaining auxiliary
+  surface acceptance are still open. No complete physical pass is claimed.
+- Navigation follow-up validation: mobile/server/web `validate` passed; full
+  mobile CI passed **522 suites / 8,022 tests**. A subsequent explicit assertion
+  that detail has no extra hub button passed in the focused **96-test / 2-suite**
+  run. These groups overlap and are not additive. Server unit/API tests passed
+  **77 / 3 files**; disposable Challenge database/RLS tests passed **35 / 3 files**,
+  including an active Challenge behind more than one page of preparation rows.
+  Docs build and 88 local links passed. The restarted test backend returned
+  `has_more=true` for both physical accounts' one-item active query, correctly
+  selecting hub navigation once the new mobile builds are installed.
+
+### Navigation correction artifacts — 7 October
+
+Source: `176a8a815c375e140112c27b413f648308ed4f07`.
+
+- Android phone **1009** and Wear **1000001009**: clean production prebuild,
+  identity validation, paired release compilation and Wear unit tests passed
+  (Gradle 6m30s). Both use `com.imjstnick.sparkyrivals` and the permanent signer
+  SHA-256 recorded above; archived APKs passed independent verification.
+  Both were installed on the physical Galaxy A25/Galaxy Watch using
+  `adb install -r`, retaining data. Package readback confirmed the two new version
+  codes; their activities launched. This is not yet a physical navigation/layout
+  pass. Artifacts:
+  `~/.local/share/sparkyrivals/artifacts/milestone-8a7/android-1009/`.
+- Full EAS iOS production-internal **1013**
+  [succeeded](https://expo.dev/accounts/imjstnickdev/projects/sparkyrivals/builds/f1256785-8f7c-409c-b58a-1e04eb454d19),
+  reusing all existing credentials. Downloaded IPA inspection on Linux verified
+  all five build numbers, production bundle IDs, team, signed/profile App Groups,
+  internal provisioning, phone callback scheme and production APNs on the phone
+  only. This is embedded entitlement/profile inspection, not local Xcode or full
+  Apple `codesign` verification. Device installation/acceptance remains pending.
+  Artifacts: `~/.local/share/sparkyrivals/artifacts/milestone-8a7/ios-1013/`.
+
+### Nested-container regression found on devices — 7 October
+
+The maintainer reported that Dashboard → Challenges did nothing on both phones,
+while Library → trophy still opened the hub. The 1009/1013 navigation correction
+therefore failed physical acceptance; its successful builds/router tests were
+insufficient. Private app logs collected around repeated taps showed no matching
+JavaScript exception or navigation error, so they do not independently establish
+the cause.
+
+The installed React Navigation implementation forwards container `dispatch`
+callbacks to the deepest focused navigator. The entry incorrectly treated that
+callback state as the root stack, targeting a reset with Challenge routes at the
+tab or tab-local stack. A new real-container regression test reproduced all four
+failures (hub/single-active entry, with/without a tab-local stack). Explicitly
+reading `getRootState()` and dispatching the resulting root-targeted action fixes
+all four. The tests also verify detail → hub → Dashboard, retained tab state and
+no dispatch before readiness. The focused group passed **101 tests / 3 suites**.
+Full mobile CI passed **523 suites / 8,028 tests**; mobile `validate`, docs build
+and 16 relative file-link checks passed. Test groups overlap. Existing React
+`act` warnings remain visible.
+New phone artifacts and physical confirmation are required; no device pass is
+claimed from the automated result. Scoring, server queries and watch sources are
+unchanged by this correction.
+
+Source `d66d8fa8352470956915a7c9b099624977a034a8` produced Android phone
+**1010** and Wear **1000001010** after clean owned prebuild/identity checks.
+Gradle release compilation and Wear unit tests passed in 5m38s. Both archived
+APKs passed production package/version and permanent-certificate verification;
+phone bundled Expo identity also passed. Artifacts are under
+`~/.local/share/sparkyrivals/artifacts/milestone-8a7/android-1010/`.
+
+The production phone APK was installed on the dedicated API 36 emulator and
+logged into the synthetic test account through the normal UI. Fresh-layout taps
+and inspected screenshots verified Dashboard card → hub → Close scores → header
+Back → hub → header Back → Dashboard. No extra detail hub button is present.
+Screenshots, viewport/text-scale metadata and journey evidence are in the
+artifact directory's `navigation-emulator/`. The emulator was stopped afterward,
+retaining its data. This is emulator evidence, not an iPhone or hardware pass.
+
+Samsung was updated to **1010** using `adb install -r`; package readback matched,
+data was retained and the app launched. The maintainer then confirmed the full
+Dashboard → hub → detail → Back → hub → Back → Dashboard journey works on the
+physical Samsung. This closes that Android navigation regression, not all
+remaining visual/companion acceptance. The physical Watch remains on
+**1000001009**, with unchanged source.
+Full EAS production-internal
+[iOS 1014](https://expo.dev/accounts/imjstnickdev/projects/sparkyrivals/builds/300dc12f-c31f-484e-8646-33d31807949e)
+finished successfully from the same source, using existing credentials and the
+remote version counter. Downloaded IPA inspection on Linux verified all five
+build numbers and production bundle IDs, team, signed/profile App Groups,
+internal provisioning, the phone callback scheme and production APNs on the
+phone only. This is not local Xcode execution or full Apple `codesign`
+verification. The maintainer subsequently confirmed Dashboard → hub → detail →
+Back → hub → Back → Dashboard on iPhone. Read-only USB `installation_proxy`
+Lookup independently returned phone bundle version **1014**. This closes the
+iPhone navigation regression, not all remaining phone acceptance. The phone
+version is not evidence of the installed Watch version.
+IPA and verification evidence are under
+`~/.local/share/sparkyrivals/artifacts/milestone-8a7/ios-1014/`.
+
+### Physical Galaxy Watch presentation — 7 October
+
+Release **1000001009**, source `176a8a815c375e140112c27b413f648308ed4f07`,
+was inspected on physical **SM-R930**, **432×432 / 340 dpi**, font scale **1.0**,
+system locale **it-IT**, native dark theme, paired with phone **1010**. Wear
+native source is unchanged by the later phone navigation fix. The
+[capture manifest](assets/challenge-ux/physical/wear-1000001009/manifest.json)
+records five inspected screenshots with source/build, timestamps and hashes.
+
+- List rows distinguish raw steps from hydration with missing data.
+- The centered long row wraps to two lines then ellipsis; opening it shows the
+  full title and emoji without visible overflow at this viewport/text scale.
+- Close scores shows own **140 pt**, server **position 2**, and missing data
+  today; missing is not presented as an observed zero.
+- Lobby shows generic read-only phone-readiness guidance, **3 participants** and
+  source age. It does not claim this participant is unready or offer mutations.
+- Fresh-layout taps, bounded scrolling and Back from active details worked.
+  The last Back attempt from the lobby was not executed after the display timed
+  out; no successful lobby return is inferred from it.
+
+All data is synthetic disposable-server data received through the normal phone
+companion path. No health samples were injected into physical health providers.
+This is one physical viewport/font scale, not a full Wear acceptance matrix or a
+measurement of Data Layer latency. Rotary/swipe-back gestures, TalkBack, physical
+Tile/complication remain unverified. Apple Watch evidence is recorded separately
+below. Private original captures/journey are under
+`~/.local/share/sparkyrivals/artifacts/milestone-8a7/physical/galaxy-watch-1000001009/`.
+
+### Physical Apple Watch screenshots — 7 October
+
+The maintainer supplied two native screenshots at **396×484**, Italian visible
+strings and native dark theme, showing the synthetic long-title Challenge list
+row and upper detail. The icon and complete two-line name stay inside the row;
+detail shows the full name/emoji, **50 pt** and server **position 2** without the
+reported overflow. Captures and limitations are in the
+[manifest](assets/challenge-ux/physical/apple-watch/manifest.json). Build
+confirmation was requested; the exact installed build and text-scale setting
+remain unconfirmed. Native Watch sources are unchanged between the 1012 and 1014
+source commits, but this is not used to infer the installed build number.
+The iPhone was independently verified at **1014** through USB; its available
+application-filtered log did not expose a Watch bundle version.
+
+Public copies omit text/EXIF metadata; image/color chunks and decompressed image
+data match the private originals.
+This is evidence for the captured elements, not the complete standings, gestures,
+other Watch sizes/Dynamic Type, VoiceOver or the complication. Originals are
+retained privately under
+`~/.local/share/sparkyrivals/artifacts/milestone-8a7/physical/apple-watch/`.
+
+### Close-score rendering regression — 7 October
+
+The maintainer confirmed points → steps → points on Android **1010**, but reported
+an error opening Close scores on iPhone **1014**. The exact device error text is
+now supplied: `[ChallengeDetail] Screen crashed`, `TypeError: undefined is not a
+function` at `formatChallengePoints`, then `ChallengeResultSummary`, at 04:20:32
+local time. A fetch-cancelled entry at the same instant is separate evidence,
+not proof of a server outage. Do not record the iPhone close-score flow as passed
+from the earlier navigation check.
+
+An independent reproduction found that the shared fractional-point formatter
+called `Intl.NumberFormat.formatToParts`, which Hermes documents as
+[Android-only](https://github.com/facebook/hermes/blob/static_h/doc/IntlAPIs.md).
+Removing that method reproduces a TypeError for **140.05**; simulating an
+implementation that throws also fails. Both new regression cases were red before
+the fix. The formatter now uses localized `format()` output for the decimal
+suffix and grouping pattern. Scaled BigInt truncation, exact large integers,
+server ranks and ties stay unchanged; no polyfill/dependency was added.
+
+Focused mobile validation passed **105 tests / 2 suites**, including close-score
+detail rendering, points/activity toggling, daily-history open/close, Italian
+decimals and large English/Italian/Indian/Arabic integers without `formatToParts`.
+Web Challenge UX tests passed **17 tests / 1 suite**; mobile/server validation and
+web validation/production build passed. Full mobile CI passed **523 suites /
+8,031 tests**; focused groups overlap this total. New native artifacts and their
+separate physical acceptance are recorded below; local regression tests alone
+do not establish physical acceptance of the correction.
+
+Corrected source **`4fd8a974fbda3f1387eb19e281cce887c15d3406`** produced Android
+phone **1011** and Wear **1000001011**. Clean production prebuild/native validation,
+both release assemblies and **44 Wear JVM tests** passed. Both APKs use
+`com.imjstnick.sparkyrivals` and the permanent certificate documented above.
+Artifacts, checksums and signer verification are retained privately under
+`~/.local/share/sparkyrivals/artifacts/milestone-8a7/android-1011/`.
+
+The production phone APK passed a focused Android API 36 emulator journey at
+1080×2400, 420 dpi, font scale **1.3**, English/light: Dashboard → hub → Close
+scores; **140.05** and **140** retain separate ranks; other-participant
+points/activity/points; daily-history open, scroll and close. Missing and future
+days have distinct labels. The dedicated emulator was then stopped with its
+data retained. [Before](assets/challenge-ux/close-score-regression/points-before.png),
+[after](assets/challenge-ux/close-score-regression/points-after.png),
+[activity](assets/challenge-ux/close-score-regression/activity-after.png), and
+[history](assets/challenge-ux/close-score-regression/history-after.png) are actual
+Android captures with a [manifest](assets/challenge-ux/close-score-regression/manifest.json).
+They do not establish physical Android or iOS acceptance of this source.
+
+Samsung Galaxy A25 was updated in place to **1011**, with the installed version
+read back and no app-data clearing. The maintainer then confirmed Close scores
+opens, points → steps → points works, and daily history opens/closes correctly
+on this physical build. This is separate from the emulator evidence above.
+
+The full internal iOS [build **1015**](https://expo.dev/accounts/imjstnickdev/projects/sparkyrivals/builds/05ba85eb-a830-4ece-bfaa-95326f929cf7)
+finished from the same **`4fd8a974f`** source using existing EAS-managed credentials.
+Exported IPA inspection verified all five bundle identities/build numbers, team
+**U5K88Y67DL**, shared App Group, ad-hoc provisioning, callback scheme and
+production APNs on the phone only. This is EAS compilation plus Linux inspection
+of provisioning profiles and embedded Mach-O entitlements, not local Xcode,
+full Apple codesign verification or a physical acceptance pass. IPA, build
+metadata, source and verification are retained privately under
+`~/.local/share/sparkyrivals/artifacts/milestone-8a7/ios-1015/`.
+
+The maintainer confirmed the same journey on physical iPhone **1015**: Close
+scores opens without the reported error, points → steps → points works, and
+daily history opens/closes correctly. Read-only USB application lookup separately
+confirmed installed version **1015**. Private confirmation is retained alongside
+the IPA as `physical-close-scores.json`. This closes the reported fractional-score
+crash regression on both phones; it does not establish widget, screen-reader or
+additional companion acceptance. Watch native source is unchanged by this fix;
+the earlier Watch capture/version limitations remain. M8A.7 is not complete.
+
+### M8A.7 phone widget correction (2026-10-07)
+
+Physical feedback identified raw iOS gallery keys and an oversized, verbose
+phone-widget layout. Android API 36 reproduced the old tall 2×3 default and
+truncated title/result at font scale 1.3. The correction uses a compact
+score/rank composition and a native gallery fallback, plus three fork-owned
+Italian native strings per platform. Existing nutrition-widget translations are
+preserved by a bounded import. No scoring, ranks or companion transport changed.
+
+Source `07610b9fa771f380f17a2d89db060afa0657b018` passed mobile `validate`,
+**8,031 tests / 523 suites**, **7** separate translation-import tests and the docs
+build. The **50** focused surface/resource tests overlap the mobile total.
+Jest exited successfully with its existing worker-teardown warning. A command
+with an extra pnpm `--` initially matched no tests; the actual CI invocation
+was `pnpm run test:ci --watchman=false`.
+
+An additional Android-only sizing correction,
+`18324728fc6b247ff35645505b200ce4351229a9`, lowers minimum height so launchers can
+honor two rows. Its **5** focused native-surface contracts passed (overlapping
+the full suite). Clean prebuild/native-identity checks passed for owned
+development, preview and production, plus upstream/default development.
+The minimum-size follow-up changes no iOS source; the iOS artifact remains built
+from `07610b9fa`.
+
+Final Android **1012** / Wear **1000001012** built from `18324728f`, with clean
+production prebuild, native validation, release assembly, **44 Wear JVM tests**
+and permanent signer/package verification. Artifacts and checksums are private:
+`~/.local/share/sparkyrivals/artifacts/milestone-8a7/android-1012/`.
+The earlier local candidate at the same code was installed only on the dedicated
+emulator; the final pair above is the retained release source. Galaxy A25 was
+updated in place to final **1012**, installed version read back, data preserved.
+Physical widget appearance is awaiting maintainer confirmation.
+
+The API 36 launcher now offers and adds the widget at **4×2**, and manual resize
+to **2×2** works. Italian/light, Italian/dark and English/light at font scale
+**1.3** show the full sample score and rank without the previous truncation.
+A widget tap opened the matching authorized Step Race. The
+[before](assets/challenge-ux/phone-widgets/before-en-light.png),
+[wide Italian](assets/challenge-ux/phone-widgets/wide-it-light.png),
+[compact Italian](assets/challenge-ux/phone-widgets/compact-it-light.png),
+[dark](assets/challenge-ux/phone-widgets/compact-it-dark.png) and
+[English after](assets/challenge-ux/phone-widgets/compact-en-light.png) captures
+have a [provenance manifest](assets/challenge-ux/phone-widgets/manifest.json).
+The data are synthetic test-server results. The old launcher instance retained
+its old allocation; fresh placement used the corrected dimensions. Launcher
+metadata was refreshed during the emulator test. The emulator was stopped with
+its data retained. No private physical home-screen images are committed.
+
+Full internal iOS [**1016**](https://expo.dev/accounts/imjstnickdev/projects/sparkyrivals/builds/a8f1c519-d9eb-4ab1-9f19-e727bbd61c65)
+finished from `07610b9fa`. Exported-IPA inspection passed for all five identities,
+build numbers, team, provisioning, App Group, callback scheme and phone-only
+APNs. The compiled WidgetKit Italian resource contains **Sfide** and
+**Il risultato della tua sfida a colpo d’occhio.** for gallery name/description.
+The artifact and inspection records are retained privately under
+`~/.local/share/sparkyrivals/artifacts/milestone-8a7/ios-1016/`. This proves
+compilation/resource inclusion, not physical gallery behavior or readable layout;
+both iPhone widget sizes are awaiting a new screenshot/maintainer check.
+
+This correction does not validate Tiles, complications, additional widget
+metrics/states, screen readers or inherited health-source/writeback gaps.
+M8A.7 remains incomplete while the required visual/device checks are pending.
+
+### M8A.7 configurable widgets and recovery (2026-10-07)
+
+The wide widget now shows the server position and at most three adjacent rows:
+the participant above, self in the center, and the participant below. Missing
+neighbors leave an empty slot; missing metric data keeps its explicit label.
+The compact widget keeps the own-score/rank layout. Each widget independently
+selects Automatic or an accepted Challenge from the existing bounded set of up
+to eight recently synchronized results. No extra leaderboard requests, scoring,
+watch mutations or private health fields were added. Selections retain the
+account binding; unavailable/removed selections do not fall through to another
+Challenge or account.
+
+Signed source `b4a5f855c873140e442fd76cfe5724bef206ff09` passed mobile `validate`
+and **523 suites / 8,043 tests**. Clean Android and iOS prebuild/identity checks
+passed for owned production, preview and development, plus upstream/default
+production. Fork translation import/export validation passed. Android **1013**
+and Wear **1000001013** compiled and passed package, version and permanent signer
+verification, with **44 Wear JVM tests**. These were emulator candidates.
+
+The actual API 36 launcher journey selected a three-player synthetic Challenge
+on the wide widget and a different Challenge on the compact widget. The first
+showed Jules above, Alex in the center and Sam below with an explicit missing-data
+label. Tapping it opened that selected Challenge through the existing account
+guard. Reconfiguring the compact widget did not change the wide selection.
+The synthetic test connection URL was restored in the emulator's saved settings
+after the old temporary tunnel stopped; this is fixture setup, not manual login
+evidence or health-provider ingestion.
+
+Native rendering exposed two additional defects. Android's inset handling
+replaced the configuration form's gutters and left light system icons on a light
+background. Android-only source `2f1ea423f72d1d4b84bfd68c7b497919227978c8` fixed
+both. Android **1014** / Wear **1000001014** compiled from that source, passed the
+same signer/identity checks and **44 Wear tests**. The **34** focused mobile tests
+passed. The emulator confirmed the corrected light/dark picker, upgrade-preserved
+independent selections, the three-row layout and a tap into the selected result.
+
+The app language then changed to Italian: published scores translated correctly,
+but the picker stayed English. The inherited widget language hook only forwarded
+English or Polish to the native rendering cache. Registry-based resolution in
+`fd7dde6c91599d39476db2a3a9e63e00c60804e9` fixes all registered languages and keeps
+the existing locale authority. The regression first failed **16 of 28** hook
+cases, then passed. Final mobile `validate` and CI passed **523 suites / 8,062
+tests**; the **62** focused tests overlap that total. No totals here should be
+added together as independent coverage.
+
+The [wide Italian capture](assets/challenge-ux/phone-widget-selection/neighbors-it-dark.png)
+and corrected [light](assets/challenge-ux/phone-widget-selection/picker-en-light.png)
+and [dark](assets/challenge-ux/phone-widget-selection/picker-en-dark.png) pickers
+are real Android native captures with a
+[manifest](assets/challenge-ux/phone-widget-selection/manifest.json). They use a
+1080×2400 Pixel 6 emulator, 420 dpi and font scale **1.3**, with synthetic data.
+Their exact source/build is recorded individually; they are not iPhone evidence.
+
+Full internal iOS [**1018**](https://expo.dev/accounts/imjstnickdev/projects/sparkyrivals/builds/4efe2f3e-dc73-4823-95b9-128dafba979d)
+compiled the configurable WidgetKit extension from `b4a5f855c`. Linux IPA
+inspection verified all five bundle identities/versions, team, App Groups,
+ad-hoc profiles, callback scheme, phone-only production APNs, AppIntents metadata
+and **seven** compiled Italian widget keys. Build number 1017 was consumed by
+an archive preparation failure and has no accepted artifact. Physical gallery,
+configuration and layout acceptance remain separate from this compile result.
+
+Final source `fd7dde6c91599d39476db2a3a9e63e00c60804e9` produced Android **1015**
+and Wear **1000001015**, with production prebuild/native validation, release
+assembly, **44 Wear tests** and permanent signer/package/version verification.
+This pass retained the compiled native intermediates from the clean 1014 build;
+only the registry-based JS language hook changed. Private APKs, checksums,
+verification and source manifests are in `.local/m8a7/artifacts/android-1015/`.
+The final emulator update preserved both widget selections. The native
+[Italian picker](assets/challenge-ux/phone-widget-selection/picker-it-dark.png)
+now follows the selected app language; the
+[wide widget](assets/challenge-ux/phone-widget-selection/neighbors-it-light.png)
+and independently selected
+[compact widget](assets/challenge-ux/phone-widget-selection/compact-selected-it-light.png)
+render correctly at font scale 1.3. Tapping the compact widget opened Close
+scores with separate server ranks for **140** and **140.05** points. No physical
+Android installation/appearance was claimed at that checkpoint; the
+Samsung was not connected. The emulator was stopped with its data retained.
+
+Full internal iOS [**1019**](https://expo.dev/accounts/imjstnickdev/projects/sparkyrivals/builds/d16a56da-0920-4163-aaed-19e624295222)
+finished from the same `fd7dde6c9` source. All five identities/versions, team,
+App Groups, ad-hoc profiles, callback and phone-only APNs passed exported IPA
+inspection. All seven Italian widget keys match the approved fork source;
+AppIntents metadata is included. IPA and inspection records are in
+`.local/m8a7/artifacts/ios-1019/`. Physical widget selection/layout verification
+was requested at that checkpoint; the physical failure is recorded below. These Linux inspections
+are not an Apple codesign execution, local Xcode run or physical installation.
+Docs production build and local documentation-link checks passed.
+
+#### Physical widget upgrade diagnosis (7 October, evening)
+
+Samsung and Galaxy Watch were updated in place to **1015 / 1000001015** with
+versions read back. The maintainer subsequently confirmed Android widgets work;
+this does not independently validate every family or the updated Wear app.
+The iPhone installation registry reports **1019**. Initially all three phone
+widget kinds failed with WidgetKit's bundle-version mismatch error despite the
+IPA containing matching app/extension versions. A normal user restart restored
+the calorie and macro widgets.
+
+Challenge widgets remained blank, showed raw localization keys and offered no
+Edit Widget action, including a newly added instance. USB logs show the stored
+descriptor has no intent and CHSErrorDomain **1103** rejects its timeline:
+`Intent configuration is required but was not provided.` The packaged extension
+does contain the AppIntent and Italian strings; packaged resource checks were
+therefore insufficient to establish upgrade behavior.
+
+The fix restores the original static `challengeWidget` provider and adds the
+separate configurable `challengeSelectionWidget` kind. Both share the view/data
+and are reloaded on publication/account clearing, even if one reload fails.
+The focused publisher/configuration/localization group passes **44 tests in
+4 suites** (included in full mobile CI: **523 suites / 8,065 tests**). Mobile
+validation and clean iOS prebuild/identity checks pass for owned development,
+preview, production-internal and upstream production. The first CI invocation
+misplaced the pnpm argument separator and ran zero tests; the corrected full run
+passed. Source contract tests do not execute WidgetKit on Linux. A new full
+iOS build and physical upgrade/selection check remain required. Private USB
+logs and version evidence are retained under `.local/m8a7/`; no raw diagnostics
+or device identifiers are published.
+
+Fix source **`593fbf249670bcb246b92dd852516a7d43e096ca`** was submitted using the
+existing production-internal profile and all five existing Apple credentials.
+EAS allocated **1020**, uploaded the archive, then rejected build creation because
+the account's monthly free iOS build allowance was exhausted (reported reset:
+**1 November 2026**). There is **no 1020 IPA and no successful native compile**.
+No billing change, credential rotation or store submission was made. The fix's
+physical upgrade, gallery name, selection and rendering checks were blocked
+on an available iOS build route; Android's accepted **1015** remains unchanged.
+
+After the maintainer enabled additional build capacity, one full internal iOS
+[**1021**](https://expo.dev/accounts/imjstnickdev/projects/sparkyrivals/builds/e2316137-4896-4561-b120-d61dffd64c5b)
+completed from **`3c086d0c05ecbe0f7e339d248b6978c3e5350f0f`**. Owned profiles now
+explicitly inherit the **Medium** worker; the resolved EAS build log confirms
+that class. Existing credentials were reused without interactive authentication.
+The additional profile suite passes **16 tests**; formatting and the docs build
+pass. This focused group overlaps the previously reported full mobile suite and
+is not an additional milestone-wide test total.
+
+The exported IPA passes five-target identity/version, team, App Group,
+ad-hoc-profile, callback and phone-only APNs entitlement inspection on Linux.
+It contains both static `challengeWidget` and configurable
+`challengeSelectionWidget`, the selection AppIntent/entity/query metadata and
+all eight owned Italian widget strings. Artifact and private inspection evidence:
+`.local/m8a7/artifacts/ios-1021/`. These checks do not execute WidgetKit or replace
+Apple code-signature/device verification. Physical upgrade, gallery labels,
+Edit Widget, independent selection and populated rendering remain pending.
+Android/Wear were not rebuilt for this iOS-only fix. The authorized disposable
+test API/tunnel was resumed for this pending check; credentials remain in the
+ignored local workspace, with public admin/diagnostic/health-data routes blocked.
+
+The maintainer subsequently confirmed that the widget flow now works, in response
+to the iOS **1021** installation and gallery/selection/rendering check. Together
+with the earlier Android **1015** confirmation, this closes the reported physical
+widget defects. Evidence is the maintainer's device confirmation; no new capture
+or independent installed-version lookup was supplied in this step. It does not
+establish every widget family/state, account-transition scenario or screen-reader
+behavior, nor does it validate watch Tiles/complications.
+
+After the desktop session crash, retained helpers, diagnostics and artifacts
+were moved to repository-root **`.local/m8a7/`**, excluded from Git, Docker and
+EAS. Earlier paths in this document are historical; the corresponding artifact
+subdirectories now live under `.local/m8a7/artifacts/`. No signing or service
+credentials were moved into the repository. EAS requires transient archive
+staging outside its source tree; its retained outputs remain in `.local/`.
+Builds, full tests and emulators run sequentially with memory limits after the
+observed global out-of-memory event. Interrupted runs are not counted as passes.
+
+The authorized disposable test backend/tunnel was restarted for widget checks,
+with remote push disabled and public admin, diagnostic and health-data routes
+blocked. No production, NPM, DNS, upstream or credential changes occurred.
+Additional widget families/states,
+screen readers, Tiles/complications and inherited health-source/writeback
+boundaries remain open; M8A.7 is not declared complete.
+
+### Autonomous Android/Wear emulator acceptance (2026-10-08)
+
+At the maintainer's request, the next Android acceptance pass used dedicated
+emulators without physical-device interaction. It reused production phone
+**1015** and Wear **1000001015**, source
+`fd7dde6c91599d39476db2a3a9e63e00c60804e9`; no new build was needed.
+The [capture manifest](assets/challenge-ux/emulator-acceptance-1015/manifest.json)
+records seven unedited captures, sizes, language, font scale and fixture provenance.
+
+- **Phone:** API 36 Pixel 6, 1080×2400, 420 dpi, Italian/light, font scale 1.3.
+  Dashboard → hub → detail → hub → Dashboard passed. Hiding the Dashboard card
+  retained the independent Library entry; visibility was restored. Invitations
+  and History showed their empty states for this authorized test account.
+  Close scores retained ranks 1/2 for 140.05/140 points; points → steps → points
+  and daily-history open/close passed. Missing days remained explicitly missing.
+  Previously loaded detail remained visible with emulator Wi-Fi/data disabled;
+  both were restored. This does not establish offline mutation or restart behavior.
+- **Personal goals:** entering `5,75` in the Italian distance field persisted and
+  reopened correctly. Both header Back and Android Back prompted for a dirty form;
+  cancelling retained input. Explicit Save returned after acknowledgment. The
+  original synthetic goal `5,5` was restored through the normal form. No health
+  samples were written or provider synchronization enabled.
+- **Wear:** API 35-ext15, 384×384 round, 320 dpi, Italian, font scales 1.0/1.3.
+  Seven metric layout cases and five state cases passed: explicit zero, missing,
+  lobby, invitation and cleared snapshot. Long title/emoji, uncapped points,
+  singular goal day, rotary scrolling and edge-swipe return were inspected.
+  Synthetic receipts were injected only into this emulator; this is not paired
+  Data Layer delivery evidence.
+- **Tile:** the native CLI Tile host rendered a stale sum snapshot and fresh goal
+  points with rank; tapping opened the corresponding detail. This closes a
+  representative emulator rendering gap, not physical launcher acceptance.
+- **Complication remains unverified:** the CLI required launch flags its wrapper
+  did not expose; the stock watch-face editor returned Home without opening.
+  No complication render or app regression is inferred from that tooling limit.
+  Accessibility nodes were inspected, but TalkBack speech was not exercised.
+
+Retained journey notes, assertions and diagnostics are in ignored
+`.local/m8a7/emulator-final/`. Both emulators, the owned temporary tunnel and all
+three disposable stack services were stopped after testing; data was preserved.
+Remote push stayed disabled. No physical devices, production, NPM, DNS, upstream
+or credentials were changed. Broader visual/accessibility and Apple auxiliary
+surface acceptance remain open; this pass does not mark M8A.7 complete.
+
+### Review handoff and accepted Italian wording (2026-10-08)
+
+The maintainer accepted the current Italian coverage after five mobile wording
+corrections and requested the fork PR without waiting for deeper linguistic QA.
+Commit `c7a7dfe655615d348d6dea583839167fb1ac710c` imports those corrections into
+the normal mobile catalog. No runtime logic, native resources or scoring changed.
+At the maintainer's explicit request, no new release build is produced for these
+five strings. Installed phone builds retain the previous wording until the next
+necessary build; existing captures do not validate the final copy.
+
+An additional autonomous Wear check reused **1000001015**, source
+`fd7dde6c91599d39476db2a3a9e63e00c60804e9`. The official deployer broadcast
+attached the real provider to Utility/Numerique slot 0 as SHORT_TEXT. The
+[capture manifest](assets/challenge-ux/emulator-acceptance-1015/manifest.json)
+now includes fresh rank, unavailable-receipt and TalkBack-focus screenshots.
+
+- Fresh points rendered `PUNTI #2`; tap opened the matching detail with 140 pt
+  and the supplied rank 2.
+- After injecting an unavailable synthetic receipt and explicitly rebinding the
+  provider, the complication showed a dash, with the host abbreviating its status
+  title. Tap opened `Telefono non disponibile`, without the old title or score.
+  This tests rendering/guarded navigation, not live account-clear transport.
+- TalkBack **14.1.0.622776723 wear** was bound with touch exploration enabled;
+  the actual focus outline appeared on the long title without a crash. Complete
+  swipe traversal, action activation and speech were not verified.
+- Runtime: API 35-ext15, 384×384 round, 320 dpi, Italian, actual font scale **1.24**.
+  Original receipt/accessibility settings were restored, the temporary provider
+  association removed and the emulator stopped. The test server/tunnel remained
+  stopped; retained data was not deleted.
+
+Final copy validation: **196 mobile tests / 12 suites** and **7 fork importer
+tests** passed. These overlap prior full-suite coverage and are not added to it.
+Fresh mobile, server and web `validate`, fork import consistency, native locale
+checks, changed-file formatting and the documentation build passed. The docs
+build retains its existing bundle-size warning.
+The latest full mobile run remains **8,065 tests / 523 suites**. The recorded
+web **1,805 tests / 188 suites**, server **5,649 passed / 514 skipped**, and
+disposable DB/RLS **376 tests / 4 files** are earlier milestone runs, not fresh
+full-suite executions for this wording-only change.
+
+#### Explicit residual acceptance
+
+- iOS glass on/off, larger accessibility text, full keyboard/header/swipe dirty
+  form behavior and VoiceOver have not all been exercised physically.
+- Physical Apple/Wear complications, Wear launcher Tile interaction, additional
+  widget families/states and complete screen-reader operation remain unverified.
+  Native short-text Wear host evidence does not cover LONG_TEXT or Apple hosts.
+- The broader error/offline/very-large-score visual matrix is incomplete; the
+  tested Android cached-detail offline case is narrower. Large-text daily history
+  is dense and deserves further visual review.
+- Deeper Italian linguistic review is deferred; other new fork languages use
+  documented English fallback. M8A.6 health-source/writeback gaps remain unchanged.
+- Remote push was disabled in the synthetic UI stack. M8A.5 automated regressions
+  remain covered; this milestone does not claim a fresh APNs/FCM delivery pass.
+
+The PR is an implementation/evidence review handoff. Full visual acceptance is
+not declared and M8B remains deferred. No production, NPM, DNS, credential,
+upstream or store changes occurred.

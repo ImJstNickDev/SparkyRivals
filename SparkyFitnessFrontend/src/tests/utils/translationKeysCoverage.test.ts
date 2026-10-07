@@ -107,6 +107,28 @@ function flattenTranslations(
   return out;
 }
 
+function hasEnglishOrdinalForms(
+  entries: Map<string, FlatEntry>,
+  key: string
+): boolean {
+  return ['one', 'two', 'few', 'other'].every(
+    (category) => entries.get(`${key}_ordinal_${category}`)?.type === 'string'
+  );
+}
+
+it('requires every English ordinal form and preserves missing-key failures', () => {
+  const entries = flattenTranslations({
+    rank_ordinal_one: '1st',
+    rank_ordinal_two: '2nd',
+    rank_ordinal_few: '3rd',
+    rank_ordinal_other: '4th',
+  });
+  expect(hasEnglishOrdinalForms(entries, 'rank')).toBe(true);
+  expect(hasEnglishOrdinalForms(entries, 'absent')).toBe(false);
+  entries.delete('rank_ordinal_other');
+  expect(hasEnglishOrdinalForms(entries, 'rank')).toBe(false);
+});
+
 describe('i18n: English translation coverage', () => {
   it('has an en/translation.json entry for every t()/Trans key used in src', () => {
     const sourceFiles = collectSourceFiles(SRC_ROOT);
@@ -166,6 +188,9 @@ describe('i18n: English translation coverage', () => {
         (suffix) => flatTranslations.get(`${key}${suffix}`)?.type === 'string'
       );
       if (hasPluralForm) continue;
+      // English ordinal calls require all four CLDR categories. A partial
+      // catalog must still fail, rather than treating any suffix as coverage.
+      if (hasEnglishOrdinalForms(flatTranslations, key)) continue;
 
       if (entry?.type === 'object') {
         typeMismatch.push(

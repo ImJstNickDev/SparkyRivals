@@ -1,0 +1,64 @@
+{
+  "stage": "before",
+  "captured_on": "2026-10-06",
+  "baseline_sha": "0e185e879042a6fec0613e57ebe534c00fd552ab",
+  "artifact_source_sha": "312ea4d1d9496087c44ccc1668ff1f82598f49d9",
+  "source_equivalence": "Only package AGENTS.md changed in Mobile/shared between artifact source and baseline.",
+  "build": 1007,
+  "apk_sha256": "5d8a66339f55fd1b852e0bc16fc72f0b611d49d1f5221ea2153c3c40eb6e917f",
+  "platform": "Android 16 / API 36, native app on local emulator",
+  "device": "Dedicated Pixel 6 AVD",
+  "viewport_pixels": [1080, 2400],
+  "density_dpi": 420,
+  "locale": "en-US",
+  "provenance": "Synthetic accounts and server-side fixture values in an isolated disposable database; no provider ingestion.",
+  "captures": [
+    {
+      "file": "dashboard-light.png",
+      "state": "dashboard-light",
+      "theme": "light",
+      "font_scale": 1.0,
+      "sha256": "fac526f280cfafc14dfc33ba55266c18463f5147e5194d845df02280cd74e26e"
+    },
+    {
+      "file": "goal-progress-dark-large-text.png",
+      "state": "goal-progress-dark-large-text",
+      "theme": "dark",
+      "font_scale": 1.3,
+      "sha256": "a00512fb485d94ce97ac75674948986efd6e9a24873baf387355cd61bbb7cb6b"
+    },
+    {
+      "file": "goal-progress-light.png",
+      "state": "goal-progress-light",
+      "theme": "light",
+      "font_scale": 1.0,
+      "sha256": "167cac803a20266d4633de2afb98ae7354959600c3774e2e5acf1953bbd3cc7a"
+    },
+    {
+      "file": "hub-light.png",
+      "state": "hub-light",
+      "theme": "light",
+      "font_scale": 1.0,
+      "sha256": "73b54e7b26921362924272241e9a8c3aed129e63c03eb00349cdd629dd5e5104"
+    },
+    {
+      "file": "invitation-light.png",
+      "state": "invitation-light",
+      "theme": "light",
+      "font_scale": 1.0,
+      "sha256": "52ac4daf921c1b27c50bf3ca54415515779c0db2b0f48f6af58af5aac46846b2"
+    },
+    {
+      "file": "lobby-light.png",
+      "state": "lobby-light",
+      "theme": "light",
+      "font_scale": 1.0,
+      "sha256": "e1390d0efe995bdfc5ea1e9fdeb6e92b188160d609c967830a099f0c6f07601a"
+    }
+  ],
+  "limits": [
+    "No iOS or watchOS render yet.",
+    "No physical device acceptance.",
+    "No remote-push delivery test."
+  ]
+}

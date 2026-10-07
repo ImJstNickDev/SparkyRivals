@@ -96,6 +96,12 @@ const DashboardSettingsScreen: React.FC<DashboardSettingsScreenProps> = ({
   const setHydrationCardVisible = useAppPreferencesStore(
     (s) => s.setHydrationCardVisible
   );
+  const challengesCardVisible = useAppPreferencesStore(
+    (s) => s.challengesCardVisible
+  );
+  const setChallengesCardVisible = useAppPreferencesStore(
+    (s) => s.setChallengesCardVisible
+  );
   const caffeineCardVisible = useAppPreferencesStore(
     (s) => s.caffeineCardVisible
   );
@@ -150,6 +156,7 @@ const DashboardSettingsScreen: React.FC<DashboardSettingsScreenProps> = ({
     exercise: exerciseCardVisible,
     hydration: hydrationCardVisible,
     caffeine: caffeineCardVisible,
+    challenges: challengesCardVisible,
     fasting: fastingCardVisible,
     cycle: cycleCardVisible,
     medications: medicationsCardVisible,
@@ -175,6 +182,9 @@ const DashboardSettingsScreen: React.FC<DashboardSettingsScreenProps> = ({
           break;
         case 'hydration':
           setHydrationCardVisible(isVisible);
+          break;
+        case 'challenges':
+          setChallengesCardVisible(isVisible);
           break;
         case 'caffeine':
           setCaffeineCardVisible(isVisible);
@@ -206,6 +216,7 @@ const DashboardSettingsScreen: React.FC<DashboardSettingsScreenProps> = ({
       setExerciseCardVisible,
       setHydrationCardVisible,
       setCaffeineCardVisible,
+      setChallengesCardVisible,
       setFastingCardVisible,
       setCycleCardVisible,
       setMedicationsCardVisible,

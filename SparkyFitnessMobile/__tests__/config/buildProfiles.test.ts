@@ -103,6 +103,9 @@ it('uses remote incrementing versions without any submission destination', () =>
     /6757314392|498a86c5|autoSubmit|withoutCredentials/
   );
 });
+it('pins owned iOS builds to the medium worker', () => {
+  expect(profiles.build['sparkyrivals-base'].ios.resourceClass).toBe('medium');
+});
 it.each(['0', '-1', '1.5', 'NaN', '2100000001', ''])(
   'rejects invalid build number %s',
   (number) => {

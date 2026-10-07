@@ -18,6 +18,7 @@ interface ApiFetchOptions {
   body?: unknown;
   headers?: Record<string, string>;
   timeoutMs?: number;
+  signal?: AbortSignal;
 }
 
 export async function apiFetch<T>(options: ApiFetchOptions): Promise<T> {
@@ -29,6 +30,7 @@ export async function apiFetch<T>(options: ApiFetchOptions): Promise<T> {
     body,
     headers: customHeaders,
     timeoutMs = DEFAULT_API_TIMEOUT_MS,
+    signal,
   } = options;
 
   const config = await getActiveServerConfig();
@@ -74,7 +76,8 @@ export async function apiFetch<T>(options: ApiFetchOptions): Promise<T> {
         },
         ...(body ? { body: JSON.stringify(body) } : {}),
       },
-      timeoutMs
+      timeoutMs,
+      signal
     );
 
     if (!response.ok) {
@@ -103,6 +106,7 @@ export async function apiFetch<T>(options: ApiFetchOptions): Promise<T> {
 
     return await response.json();
   } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') throw error;
     const message = error instanceof Error ? error.message : String(error);
     addLog(`[${serviceName}] Failed to ${operation}: ${message}`, 'ERROR');
     throw error;

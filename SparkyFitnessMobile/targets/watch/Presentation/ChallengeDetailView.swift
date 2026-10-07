@@ -17,14 +17,13 @@ struct ChallengeDetailView: View {
             ScrollView {
                 VStack(spacing: 10) {
                     Text(item.metricLabel).font(.caption2).foregroundStyle(.secondary)
-                    Text(item.statusLabel).font(.caption2).foregroundStyle(.secondary)
                     Text(item.name).font(.headline).multilineTextAlignment(.center)
                         .accessibilityAddTraits(.isHeader)
                     if item.isInvitation {
                         invitation(item)
                     } else if item.lifecycle == .lobby {
                         Text("Waiting for players").font(.headline)
-                        Text("Set target and Ready on iPhone").font(.caption)
+                        Text("Review readiness on iPhone").font(.caption)
                     } else if item.lifecycle == .upcoming {
                         Label("Starts \(ChallengeFormat.date(item.startDate))", systemImage: "calendar")
                             .font(.headline)
@@ -34,12 +33,6 @@ struct ChallengeDetailView: View {
                     } else {
                         ChallengeScoresView(item: item)
                         if item.lifecycle == .active {
-                            if let day = item.currentDay {
-                                ProgressView(value: Double(day), total: Double(item.totalDays))
-                                    .tint(.accentColor)
-                                    .accessibilityLabel("Day \(day) of \(item.totalDays)")
-                                Text("Day \(day) of \(item.totalDays)").font(.caption2)
-                            }
                             if item.daysRemaining == 1 {
                                 Text("Last day").font(.caption)
                             } else {
@@ -59,7 +52,7 @@ struct ChallengeDetailView: View {
                     }
                     ChallengeFreshness(updatedAt: snapshot.generatedAt)
                 }
-                .padding(.horizontal, 4)
+                .padding(.horizontal, 8)
                 .padding(.bottom, 6)
             }
         } else {
@@ -85,7 +78,7 @@ struct ChallengeDetailView: View {
 
     @ViewBuilder
     private func rules(_ item: WatchChallenge) -> some View {
-        Label(item.metricLabel, systemImage: item.isWorkoutTime ? "timer" : "figure.walk").font(.caption)
+        Label(item.metricLabel, systemImage: item.metricSymbol).font(.caption)
         if let count = item.participantCount {
             Text("\(count) participants").font(.caption).foregroundStyle(.secondary)
         }

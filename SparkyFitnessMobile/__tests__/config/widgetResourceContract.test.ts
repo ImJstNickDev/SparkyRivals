@@ -1,3 +1,5 @@
+import { configureWidgetManifest } from '../../plugins/withCalorieWidget';
+import type { AndroidConfig } from 'expo/config-plugins';
 import fs from 'fs';
 import path from 'path';
 import { createRequire } from 'node:module';
@@ -471,7 +473,27 @@ describe('Android widget localization contract', () => {
       // broadcasts remain deliverable to non-exported manifest receivers.
       expect(pluginSrc).toMatch(/'android:exported': 'false'/);
       expect(pluginSrc).toMatch(/for \(const receiver of WIDGET_RECEIVERS\)/);
-      expect(pluginSrc).not.toMatch(/'android:exported': 'true'/);
+      const manifest: AndroidConfig.Manifest.AndroidManifest = {
+        manifest: {
+          $: {
+            'xmlns:android': 'http://schemas.android.com/apk/res/android',
+            package: 'test.app',
+          },
+          application: [{ $: {} }],
+        },
+      };
+      configureWidgetManifest(manifest);
+      configureWidgetManifest(manifest);
+      const app = manifest.manifest.application![0];
+      expect(app.receiver).toHaveLength(3);
+      for (const receiver of app.receiver!)
+        expect(receiver.$['android:exported']).toBe('false');
+      // Only the launcher configuration activity is exported, not the receivers.
+      expect(app.activity).toHaveLength(1);
+      expect(app.activity![0].$['android:name']).toContain(
+        'ChallengeWidgetConfigureActivity'
+      );
+      expect(app.activity![0].$['android:exported']).toBe('true');
     });
 
     it('restores the classic macro size mode (single 200x200 responsive size)', () => {

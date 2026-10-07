@@ -323,3 +323,30 @@ server checkout's bind-mounted `dockerdata/`; no Docker changes are needed.
 ## Companion snapshot v3
 
 M8A.6 adds metric/mode/unit-aware scores and an explicit lobby directing configuration and Ready to iPhone. v1/v2 stay supported. Account clearing, source staleness and the single composed publisher remain. See [CHALLENGE_TYPES.md](CHALLENGE_TYPES.md).
+
+## M8A.7 presentation
+
+`ChallengePresentationFormat` supplies compact locale-aware scores and units to
+Watch views and the Challenge surface projection. List rows bound the title and
+metric icon; detail uses an own-result section and compact server-ranked rows.
+Invitations/lobbies never expose results. Missing observations and stale source
+timestamps stay distinct from zero; rendering never advances freshness. Optional
+`displayUnit` respects phone distance/energy preferences without changing
+canonical values, payload versions, account guards or transport.
+
+Watch and watch-widget own separate English/Italian `Localizable.xcstrings`
+catalogs with typed numeric goal-day plurals. Xcode synchronized groups include
+these resources; Linux prebuild is only project/configuration evidence. Text
+follows native system language independently of the phone's in-app choice.
+Italian is a draft awaiting review; other languages fall back to English.
+
+Two maintainer-supplied physical screenshots at 396×484 show the long title and
+metric icon inside the centered row, and the full title/emoji, own **50 pt** and
+server **position 2** inside the upper detail. This verifies the reported overflow
+fix for those visible elements at one viewport. The
+[capture manifest](assets/challenge-ux/physical/apple-watch/manifest.json)
+leaves the installed build and text scale unconfirmed. Watch sources are unchanged
+across EAS 1012–1014, which compiled all five targets. Other Watch sizes,
+Dynamic Type, VoiceOver, gestures, the Swift model harness and complication
+rendering remain gates in [CHALLENGE_UX.md](CHALLENGE_UX.md).
+No Watch target, Ready, invitation or scoring mutation was added.

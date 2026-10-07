@@ -11,6 +11,21 @@ jest.mock('../../src/services/api/apiClient', () => ({ apiFetch: jest.fn() }));
 const api = jest.mocked(apiFetch);
 beforeEach(() => jest.resetAllMocks());
 describe('Challenge API transport', () => {
+  it('checks active uniqueness with one result and the server pagination sentinel', async () => {
+    api.mockResolvedValue({
+      challenges: [challenge],
+      limit: 1,
+      offset: 0,
+      has_more: true,
+    });
+    expect((await challengesApi.list(0, 'active')).has_more).toBe(true);
+    expect(api).toHaveBeenCalledWith(
+      expect.objectContaining({
+        endpoint: '/api/v2/challenges?limit=1&offset=0&view=active',
+        headers: { 'X-Challenge-Contract-Version': '3' },
+      })
+    );
+  });
   it('parses list, detail and server results', async () => {
     api
       .mockResolvedValueOnce({

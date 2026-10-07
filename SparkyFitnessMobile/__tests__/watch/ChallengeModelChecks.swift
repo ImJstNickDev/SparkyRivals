@@ -128,6 +128,21 @@ struct ChallengeModelChecks {
             goal["items"] = [modern]
             check(ChallengePayloadMapper.snapshot(from: goal)!.items[0].unit == unit, "canonical metric unit")
         }
+        check(ChallengePresentationFormat.number(140, locale: Locale(identifier: "en_US")) == "140", "compact points without trailing zeros")
+        check(ChallengePresentationFormat.number(13.12, locale: Locale(identifier: "it_IT")) == "13,1", "Italian compact decimals")
+        check(ChallengePresentationFormat.number(0.001).contains("0"), "tiny nonzero threshold remains explicit")
+        var unitsItem = (goal["items"] as! [[String: Any]])[0]
+        unitsItem["metric"] = "distance"
+        unitsItem["scoreUnit"] = "meters"
+        unitsItem["displayUnit"] = "mi"
+        goal["items"] = [unitsItem]
+        let unitsSnapshot = ChallengePayloadMapper.snapshot(from: goal)!
+        check(unitsSnapshot.items[0].displayUnit == "mi", "preferred unit optional wire field")
+        let restoredUnits = try JSONDecoder().decode(ChallengeSnapshot.self, from: JSONEncoder().encode(unitsSnapshot))
+        check(restoredUnits == unitsSnapshot, "preferred unit persists")
+        unitsItem["displayUnit"] = "points"
+        goal["items"] = [unitsItem]
+        check(ChallengePayloadMapper.snapshot(from: goal)!.items[0].displayUnit == nil, "incompatible display unit ignored")
         var workout = payload
         workout["version"] = 2
         var workoutItem = (payload["items"] as! [[String: Any]])[0]

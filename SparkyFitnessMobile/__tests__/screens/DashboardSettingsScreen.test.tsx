@@ -127,7 +127,7 @@ describe('DashboardSettingsScreen', () => {
     moveRow('calorieRing', 'increment');
 
     const state = useAppPreferencesStore.getState();
-    expect(state.dashboardCardOrder[0]).toBe('askSparky');
+    expect(state.dashboardCardOrder[0]).toBe('challenges');
     expect(state.dashboardCardOrder[1]).toBe('calorieRing');
   });
 });

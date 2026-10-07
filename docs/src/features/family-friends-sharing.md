@@ -138,7 +138,7 @@ the repository guide `docs/fork/REMOTE_PUSH.md`.
 
 ## Challenge targets and Ready
 
-Private goal-based Challenges let each accepted member choose and confirm their own daily target. Targets are visible to accepted participants and lock when the final roster is Ready. Pending invitations block activation; the creator may withdraw pending invitations, but cannot set another member’s target. Sharing includes only the chosen metric’s daily aggregates, without general diary access.
+Private goal-based Challenges let each accepted member choose and confirm their own daily target. Targets are visible to accepted participants and lock when the final roster is Ready. Pending invitations block activation; the creator may withdraw pending invitations or remove accepted/Ready members only before the lobby locks, with confirmation in the client. The creator cannot set another member’s target, remove themselves through this action, or remove members after activation/scheduling. Removal preserves the consent history as a departure and revokes result access. Sharing includes only the chosen metric’s daily aggregates, without general diary access.
 
 Family & Friends lists show each connection's display names even when no diary
 permissions are shared. This exposes only names to the two parties in that

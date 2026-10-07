@@ -1,5 +1,6 @@
 import {
   createConcurrencyLimiter,
+  fetchWithTimeout,
   runTasksInBatches,
   TimeoutError,
   withTimeout,
@@ -140,5 +141,50 @@ describe('createConcurrencyLimiter', () => {
     expect(started).toEqual([1, 2, 3, 4]);
     expect(results[2]).toEqual({ status: 'fulfilled', value: 3 });
     expect(results[3]).toEqual({ status: 'fulfilled', value: 4 });
+  });
+});
+
+describe('fetch cancellation', () => {
+  const originalFetch = global.fetch;
+  afterEach(() => {
+    global.fetch = originalFetch;
+    jest.useRealTimers();
+  });
+  test('an already cancelled read never reaches the network', async () => {
+    global.fetch = jest.fn();
+    const controller = new AbortController();
+    controller.abort();
+    await expect(
+      fetchWithTimeout(
+        'https://example.invalid/read',
+        {},
+        1000,
+        controller.signal
+      )
+    ).rejects.toHaveProperty('name', 'AbortError');
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+  test('caller cancellation stays distinct from timeout and removes its listener', async () => {
+    const controller = new AbortController();
+    const remove = jest.spyOn(controller.signal, 'removeEventListener');
+    global.fetch = jest.fn(
+      (_url, options) =>
+        new Promise((_resolve, reject) => {
+          options?.signal?.addEventListener('abort', () =>
+            reject(
+              Object.assign(new Error('cancelled'), { name: 'AbortError' })
+            )
+          );
+        })
+    );
+    const request = fetchWithTimeout(
+      'https://example.invalid/read',
+      {},
+      1000,
+      controller.signal
+    );
+    controller.abort();
+    await expect(request).rejects.toHaveProperty('name', 'AbortError');
+    expect(remove).toHaveBeenCalledWith('abort', expect.any(Function));
   });
 });

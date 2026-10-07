@@ -1,0 +1,49 @@
+{
+  "stage": "before",
+  "captured_on": "2026-10-06",
+  "baseline_sha": "0e185e879042a6fec0613e57ebe534c00fd552ab",
+  "artifact_source_sha": "312ea4d1d9496087c44ccc1668ff1f82598f49d9",
+  "source_equivalence": "Only package AGENTS.md changed in Mobile/shared between artifact source and baseline.",
+  "build": 1000001007,
+  "apk_sha256": "2885e80c2980a6d383b3a8711946b44ab48e87a90be41aaedf549d8b035da5ba",
+  "platform": "Wear OS 5.1 / API 35-ext15, native app on local emulator",
+  "device": "Dedicated small round Wear AVD",
+  "viewport_pixels": [384, 384],
+  "density_dpi": 320,
+  "locale": "en-US",
+  "theme": "dark",
+  "font_scale": 1.0,
+  "provenance": "Synthetic server responses projected by the unchanged production buildCompanionChallenges adapter. The resulting receipt was placed in the dedicated emulator store for rendering; no paired Data Layer transport was tested.",
+  "captures": [
+    {
+      "file": "goal-progress-score.png",
+      "state": "goal-progress-score",
+      "sha256": "824a370f90b894a5c97f832ce266b4ebad236d91f08ec80a0282eeff96f3ca13",
+      "provenance": "Persisted synthetic projection fixture; original source observation timestamp preserved."
+    },
+    {
+      "file": "goal-progress.png",
+      "state": "goal-progress",
+      "sha256": "8a583cd838e64542ffccb5bf5847c2a623c15dbf30773f636177e706ab29cd57",
+      "provenance": "Persisted synthetic projection fixture; original source observation timestamp preserved."
+    },
+    {
+      "file": "list.png",
+      "state": "list",
+      "sha256": "d6a00107bcdca6ef0c3b78791c2a0c5fbfe3dd4b182a4c6b3b65979716c9a588",
+      "provenance": "Persisted synthetic projection fixture; original source observation timestamp preserved."
+    },
+    {
+      "file": "unsynced.png",
+      "state": "unsynced",
+      "sha256": "e66f61c3802236f2d75cddfe38cebdf55e1e40bfddfcce252cf193b2248a4115",
+      "provenance": "Empty installation, no snapshot."
+    }
+  ],
+  "limits": [
+    "No physical Wear acceptance.",
+    "No phone/watch pairing or Data Layer acceptance.",
+    "No Tile or complication render.",
+    "No watchOS render."
+  ]
+}

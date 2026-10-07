@@ -1,9 +1,16 @@
+import React from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { preferencesQueryKey } from '../../src/hooks/queryKeys';
 import {
   remotePushRegistration,
   remoteInvitationsEligible,
 } from '../../src/services/remotePushRegistration';
 import { useAppPreferencesStore } from '../../src/stores/appPreferencesStore';
-import { act, renderHook, waitFor } from '@testing-library/react-native';
+import {
+  act,
+  renderHook as nativeRenderHook,
+  waitFor,
+} from '@testing-library/react-native';
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { useChallengeSurfaces } from '../../src/hooks/useChallengeSurfaces';
@@ -35,12 +42,20 @@ jest.mock('../../src/services/remotePushRegistration', () => ({
   },
   remoteInvitationsEligible: jest.fn(() => false),
 }));
+let client: QueryClient;
+const renderHook = (callback: () => void) =>
+  nativeRenderHook(callback, {
+    wrapper: ({ children }: { children: React.ReactNode }) => (
+      <QueryClientProvider client={client}>{children}</QueryClientProvider>
+    ),
+  });
 const publish = jest.mocked(publishChallengeWidget);
 const snapshot = fixture as CompanionChallengeSnapshot;
 const refresh = jest.fn();
 function state(value = snapshot) {
   return {
     snapshot: value,
+    widgetSnapshot: value,
     observation: { challenges: [], freshList: false, freshResultIds: [] },
     sessionRevision: getCompanionChallengeSession().revision,
     configId: 'config',
@@ -49,6 +64,8 @@ function state(value = snapshot) {
 }
 beforeEach(() => {
   jest.clearAllMocks();
+  client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  client.setQueryData(preferencesQueryKey, {});
   invalidateCompanionChallengeSession(false);
   jest.mocked(getActiveServerConfigId).mockResolvedValue('config');
   jest.mocked(useCompanionChallenges).mockReturnValue(state());
@@ -159,4 +176,50 @@ it('forwards native rotation data and ignores duplicate callbacks', () => {
     expect.objectContaining({ account: snapshot.accountKey }),
     changed
   );
+});
+
+it('republishes unit preference changes without changing source freshness', async () => {
+  const changed = JSON.parse(
+    JSON.stringify(snapshot)
+  ) as CompanionChallengeSnapshot;
+  changed.version = 3;
+  changed.items[0].metric = 'distance';
+  changed.items[0].scoringMode = 'sum';
+  changed.items[0].scoreUnit = 'meters';
+  changed.items[0].rows.forEach((row) => {
+    row.total = 1609.34;
+    row.daysWithData = 1;
+  });
+  jest.mocked(useCompanionChallenges).mockReturnValue(state(changed));
+  renderHook(() => useChallengeSurfaces(true));
+  await waitFor(() =>
+    expect(publish.mock.calls.at(-1)?.[0].score).toContain('km')
+  );
+  act(() => {
+    client.setQueryData(preferencesQueryKey, {
+      default_distance_unit: 'miles',
+    });
+  });
+  await waitFor(() =>
+    expect(publish.mock.calls.at(-1)?.[0].score).toBe('1 mi')
+  );
+  expect(publish.mock.calls.at(-1)?.[0].generatedAt).toBe(changed.generatedAt);
+});
+
+it('publishes the adjacent widget projection without changing the companion snapshot', async () => {
+  const value = state();
+  value.widgetSnapshot = {
+    ...snapshot,
+    items: snapshot.items.map((item) => ({
+      ...item,
+      name: 'Widget projection',
+      rowsAreAdjacent: true,
+    })),
+  };
+  jest.mocked(useCompanionChallenges).mockReturnValue(value);
+  renderHook(() => useChallengeSurfaces(true));
+  await waitFor(() =>
+    expect(publish.mock.calls.at(-1)?.[0].title).toBe('Widget projection')
+  );
+  expect(snapshot.items[0].name).not.toBe('Widget projection');
 });

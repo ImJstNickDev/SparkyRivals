@@ -1,0 +1,10 @@
+{
+  "sparky_challenge_widget_name": "Sfide",
+  "challenge_widget_not_synced": "Apri l’app per sincronizzare le sfide.",
+  "challenge_widget_description": "Il risultato della tua sfida a colpo d’occhio.",
+  "challenge_widget_choose": "Sfida",
+  "challenge_widget_automatic": "Automatica",
+  "challenge_widget_unavailable": "Sfida non disponibile",
+  "challenge_widget_synced_choices": "Scegli tra le ultime otto sfide sincronizzate. Apri l’app per aggiornarle.",
+  "challenge_widget_save_failed": "Salvataggio non riuscito. Riprova."
+}

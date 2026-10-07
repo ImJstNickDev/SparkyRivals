@@ -65,6 +65,13 @@ See [database security tiers](../src/developer/database-security-tiers.md) and
 All endpoints are under `/api/v2/challenges`, use existing session/API-key auth,
 require self context and return `Cache-Control: no-store`.
 
+M8A.7 adds optional `view=mine|invitations|history|summary|active` list filters,
+applied before pagination under the same caller context and RLS. `active`
+includes only accepted membership with active lifecycle. A request with
+`view=active&limit=1` reads at most two rows: one response item and the
+`has_more` sentinel, allowing the Dashboard to identify exactly one active
+Challenge without fetching every page. Omitting `view` preserves the legacy list.
+
 | Method / suffix         | Contract                                                                                                         |
 | ----------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | `POST /`                | Name, start/end dates, timezone, optional `metric=steps                                                          | workout_time`, `scoring_mode=sum`, `participant_ids`; 201 detail |

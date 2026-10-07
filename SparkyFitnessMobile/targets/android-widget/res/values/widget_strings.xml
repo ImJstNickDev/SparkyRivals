@@ -19,4 +19,10 @@
     <string name="widget_preview_grams_fat">32 g</string>
     <string name="sparky_challenge_widget_name">Challenges</string>
     <string name="challenge_widget_not_synced">Open the app to sync Challenges.</string>
+    <string name="challenge_widget_description">Your latest Challenge result at a glance.</string>
+    <string name="challenge_widget_choose">Challenge</string>
+    <string name="challenge_widget_automatic">Automatic</string>
+    <string name="challenge_widget_unavailable">Challenge unavailable</string>
+    <string name="challenge_widget_synced_choices">Choose from up to eight recently synced Challenges. Open the app to refresh.</string>
+    <string name="challenge_widget_save_failed">Could not save. Try again.</string>
 </resources>

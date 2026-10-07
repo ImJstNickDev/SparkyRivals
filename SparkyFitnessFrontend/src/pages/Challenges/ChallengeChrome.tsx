@@ -1,6 +1,7 @@
+import { challengeReadIssue } from '@workspace/shared';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Footprints } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useActiveUser } from '@/contexts/ActiveUserContext';
@@ -60,15 +61,29 @@ export function ChallengeLoading() {
     </div>
   );
 }
-export function ChallengeError({ retry }: { retry?: () => void }) {
+export function ChallengeError({
+  retry,
+  error,
+}: {
+  retry?: () => void;
+  error?: unknown;
+}) {
   const { t } = useChallengeFormat();
   return (
     <div role="alert" className="space-y-3 rounded-2xl border p-5">
       <p>
-        {t(
-          'challenges.loadError',
-          'Could not load Challenges. Check your connection and try again.'
-        )}
+        {challengeReadIssue(error) === 'unavailable'
+          ? t('challenges.ux.unavailable', {
+              defaultValue: 'This Challenge is no longer available.',
+            })
+          : challengeReadIssue(error) === 'unsupported'
+            ? t('challenges.ux.unsupported', {
+                defaultValue: 'Update the app or server to use this Challenge.',
+              })
+            : t(
+                'challenges.loadError',
+                'Could not load Challenges. Check your connection and try again.'
+              )}
       </p>
       {retry && (
         <Button variant="outline" onClick={retry}>
@@ -76,27 +91,5 @@ export function ChallengeError({ retry }: { retry?: () => void }) {
         </Button>
       )}
     </div>
-  );
-}
-export function ChallengeEmpty() {
-  const { t } = useChallengeFormat();
-  return (
-    <section className="flex flex-col items-center gap-5 rounded-3xl border border-dashed bg-muted/30 px-6 py-16 text-center">
-      <Footprints aria-hidden className="h-12 w-12" />
-      <h2 className="text-3xl font-semibold tracking-tight">
-        {t('challenges.emptyTitle', 'Go a little further, together')}
-      </h2>
-      <p className="max-w-md text-muted-foreground">
-        {t(
-          'challenges.emptyDescription',
-          'Turn everyday steps into friendly competition. Start with a day or make it a week.'
-        )}
-      </p>
-      <Button asChild>
-        <Link to="/challenges/new">
-          {t('challenges.create', 'Create Challenge')}
-        </Link>
-      </Button>
-    </section>
   );
 }

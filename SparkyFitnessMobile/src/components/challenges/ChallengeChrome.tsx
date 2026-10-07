@@ -1,21 +1,31 @@
 import {
+  challengeReadIssue,
   challengeTypeText,
-  challengeUnitText,
-} from '../../utils/challengeLabels';
+  formatChallengeDisplay,
+  challengeDisplayUnitText,
+} from '@workspace/shared';
+import { usePreferences } from '../../hooks/usePreferences';
 import type { ReactNode } from 'react';
-import { RefreshControl, ScrollView, Text, View } from 'react-native';
+import {
+  FlatList,
+  type ListRenderItem,
+  RefreshControl,
+  ScrollView,
+  Text,
+  View,
+} from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useCSSVariable } from 'uniwind';
 import {
-  formatChallengeDuration,
-  formatChallengeValue,
+  challengeDisplayQuantity,
+  type ChallengeScoreUnit,
   challengeScoreUnit,
   type ChallengeResponse,
   type ChallengeLifecycle,
 } from '@workspace/shared';
-import { useAppLocale, formatLocalizedNumber } from '../../localization';
+import { useAppLocale } from '../../localization';
 import { useNativeIOSHeadersActive } from '../../services/nativeTabBarPreference';
 import { useActiveWorkoutBarPadding } from '../ActiveWorkoutBar';
 import StatusView from '../StatusView';
@@ -26,8 +36,32 @@ export function useChallengeFormat(
 ) {
   const { t } = useTranslation();
   const locale = useAppLocale();
-  const day = (value: string | null) =>
-    value === null
+  const { preferences } = usePreferences();
+  const displayPreferences = {
+    distance: preferences?.default_distance_unit,
+    energy: preferences?.energy_unit,
+    water: preferences?.water_display_unit,
+  };
+  const value = (amount: number, unit: ChallengeScoreUnit, withUnit = true) =>
+    formatChallengeDisplay(
+      amount,
+      unit,
+      locale,
+      t,
+      displayPreferences,
+      withUnit
+    );
+  const scoreUnit = challengeScoreUnit(metric, mode);
+  const score = (amount: number) => value(amount, scoreUnit, false);
+  const scoreWithUnit = (amount: number) => value(amount, scoreUnit);
+  const unitLabel = (amount = 2) =>
+    challengeDisplayUnitText(
+      t,
+      challengeDisplayQuantity(amount, scoreUnit, displayPreferences).unit,
+      amount
+    );
+  const day = (date: string | null) =>
+    date === null
       ? t('challenges.waitingDates', {
           defaultValue: 'Dates set when everyone is Ready',
         })
@@ -36,92 +70,9 @@ export function useChallengeFormat(
           day: 'numeric',
           year: 'numeric',
           timeZone: 'UTC',
-        }).format(new Date(`${value}T12:00:00Z`));
-  const number = formatLocalizedNumber;
-  const workout = metric === 'workout_time';
-  const score = (value: number) =>
-    workout ? formatChallengeDuration(value, locale) : number(value);
-  const rules = workout
-    ? t('challenges.workoutRules', {
-        defaultValue: 'Workout time · Highest total wins',
-      })
-    : t('challenges.rules', { defaultValue: 'Steps · Highest total wins' });
-  const noData = workout
-    ? t('challenges.noWorkout', { defaultValue: 'No workout recorded' })
-    : t('challenges.noData', { defaultValue: 'No step data' });
-  const totalLabel = workout
-    ? t('challenges.workoutTime', { defaultValue: 'Workout time' })
-    : t('challenges.totalSteps', { defaultValue: 'total steps' });
-  const coverageHint = workout
-    ? t('challenges.workoutCoverageHint', {
-        defaultValue:
-          'No workout recorded does not mean all devices have synced. Ambiguous unfinished workouts are excluded; available data may still change.',
-      })
-    : t('challenges.coverageHint', {
-        defaultValue:
-          'Missing data counts as zero in the score, but does not mean no steps were taken. Available data may still change.',
-      });
-  const workoutCount = (count: number) =>
-    t('challenges.workoutCount', {
-      count,
-      number: number(count),
-      defaultValue: '{{number}} workouts',
-      defaultValue_one: '{{number}} workout',
-    });
-  const leading = (name: string, value: number) =>
-    workout
-      ? t('challenges.workoutLeading', {
-          defaultValue: '{{name}} leads by {{duration}}',
-          name,
-          duration: score(value),
-        })
-      : t('challenges.leading', {
-          defaultValue: '{{name}} leads by {{steps}} steps',
-          name,
-          count: value,
-          steps: number(value),
-        });
-  const behind = (value: number) =>
-    workout
-      ? t('challenges.workoutBehind', {
-          defaultValue: '{{duration}} behind the lead',
-          duration: score(value),
-        })
-      : t('challenges.behind', {
-          defaultValue: '{{steps}} steps behind the lead',
-          count: value,
-          steps: number(value),
-        });
-  const coverage = (present: number, eligible: number) =>
-    workout
-      ? t('challenges.workoutCoverage', {
-          defaultValue:
-            '{{present}} of {{eligible}} elapsed days have recorded workouts',
-          present: number(present),
-          eligible: number(eligible),
-        })
-      : t('challenges.coverage', {
-          defaultValue:
-            '{{present}} of {{eligible}} elapsed days have step data',
-          count: eligible,
-          present: number(present),
-          eligible: number(eligible),
-        });
-  const scoreWithUnit = (value: number) =>
-    workout
-      ? score(value)
-      : t('challenges.stepsValue', {
-          defaultValue: '{{steps}} steps',
-          count: value,
-          steps: number(value),
-        });
-  const solo = workout
-    ? t('challenges.workoutStart', {
-        defaultValue: 'Your next workout starts here',
-      })
-    : t('challenges.oneCompetitor', {
-        defaultValue: 'Your next step starts here',
-      });
+        }).format(new Date(`${date}T12:00:00Z`));
+  const number = (amount: number) =>
+    new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(amount);
   const statuses: Record<ChallengeLifecycle, string> = {
     lobby: t('challenges.lobby', { defaultValue: 'Waiting for players' }),
     active: t('challenges.active', { defaultValue: 'Active' }),
@@ -135,76 +86,46 @@ export function useChallengeFormat(
     day,
     number,
     statuses,
-    workout,
     score,
-    rules,
-    noData,
-    totalLabel,
-    coverageHint,
-    workoutCount,
-    leading,
-    behind,
-    coverage,
     scoreWithUnit,
-    solo,
-    ...(mode !== 'sum' || !['steps', 'workout_time'].includes(metric)
-      ? {
-          workout: metric.startsWith('workout_'),
-          score: (value: number) =>
-            formatChallengeValue(
-              value,
-              challengeScoreUnit(metric, mode),
-              locale,
-              false
-            ),
-          scoreWithUnit: (value: number) =>
-            formatChallengeValue(
-              value,
-              challengeScoreUnit(metric, mode),
-              locale
-            ),
-          totalLabel: challengeUnitText(t, challengeScoreUnit(metric, mode)),
-          rules: challengeTypeText(t, metric, mode),
-          noData: metric.startsWith('workout_')
-            ? t('challenges.noWorkout', { defaultValue: 'No workout recorded' })
-            : t('challenges.noMetricData', {
-                defaultValue: 'No data recorded',
-              }),
-          coverageHint: t('challenges.metricCoverageHint', {
-            defaultValue:
-              'Missing data scores zero. It does not mean all devices have synced. Results can change when data is corrected.',
-          }),
-          leading: (name: string, value: number) =>
-            t('challenges.metricLeading', {
-              defaultValue: '{{name}} leads by {{value}}',
-              name,
-              value: formatChallengeValue(
-                value,
-                challengeScoreUnit(metric, mode),
-                locale
-              ),
-            }),
-          behind: (value: number) =>
-            t('challenges.metricBehind', {
-              defaultValue: '{{value}} behind the lead',
-              value: formatChallengeValue(
-                value,
-                challengeScoreUnit(metric, mode),
-                locale
-              ),
-            }),
-          coverage: (present: number, eligible: number) =>
-            t('challenges.metricCoverage', {
-              defaultValue:
-                '{{present}} of {{eligible}} elapsed days have data',
-              present: number(present),
-              eligible: number(eligible),
-            }),
-          solo: t('challenges.yourChallenge', {
-            defaultValue: 'Your Challenge',
-          }),
-        }
-      : {}),
+    value,
+    unitLabel,
+    displayPreferences,
+    workout: metric.startsWith('workout_'),
+    rules: challengeTypeText(t, metric, mode),
+    noData: metric.startsWith('workout_')
+      ? t('challenges.noWorkout', { defaultValue: 'No workout recorded' })
+      : t('challenges.noMetricData', { defaultValue: 'No data recorded' }),
+    totalLabel: unitLabel(),
+    coverageHint: t('challenges.metricCoverageHint', {
+      defaultValue:
+        'Missing data scores zero. It does not mean all devices have synced. Results can change when data is corrected.',
+    }),
+    workoutCount: (count: number) =>
+      t('challenges.workoutCount', {
+        count,
+        number: number(count),
+        defaultValue: '{{number}} workouts',
+        defaultValue_one: '{{number}} workout',
+      }),
+    leading: (name: string, amount: number) =>
+      t('challenges.metricLeading', {
+        defaultValue: '{{name}} leads by {{value}}',
+        name,
+        value: scoreWithUnit(amount),
+      }),
+    behind: (amount: number) =>
+      t('challenges.metricBehind', {
+        defaultValue: '{{value}} behind the lead',
+        value: scoreWithUnit(amount),
+      }),
+    coverage: (present: number, eligible: number) =>
+      t('challenges.metricCoverage', {
+        defaultValue: '{{present}} of {{eligible}} elapsed days have data',
+        present: number(present),
+        eligible: number(eligible),
+      }),
+    solo: t('challenges.yourChallenge', { defaultValue: 'Your Challenge' }),
   };
 }
 export function ChallengeFrame({
@@ -214,6 +135,7 @@ export function ChallengeFrame({
   onRefresh,
   keyboard = false,
   footer,
+  list,
 }: {
   header: ReactNode;
   children: ReactNode;
@@ -221,6 +143,12 @@ export function ChallengeFrame({
   onRefresh?: () => void;
   keyboard?: boolean;
   footer?: ReactNode;
+  list?: {
+    key: string;
+    data: ChallengeResponse[];
+    renderItem: ListRenderItem<ChallengeResponse>;
+    footer?: ReactNode;
+  };
 }) {
   const insets = useSafeAreaInsets();
   const nativeHeader = useNativeIOSHeadersActive();
@@ -233,26 +161,49 @@ export function ChallengeFrame({
       style={nativeHeader ? undefined : { paddingTop: insets.top }}
     >
       {header}
-      <Container
-        testID="challenge-scroll"
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{
-          padding: 16,
-          gap: 20,
-          paddingBottom: insets.bottom + 24 + bar,
-        }}
-        refreshControl={
-          onRefresh ? (
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor={accent}
-            />
-          ) : undefined
-        }
-      >
-        {children}
-      </Container>
+      {list ? (
+        <FlatList
+          testID="challenge-list"
+          className="flex-1"
+          key={list.key}
+          data={list.data}
+          renderItem={list.renderItem}
+          keyExtractor={(item) => item.id}
+          initialNumToRender={12}
+          windowSize={5}
+          ListHeaderComponent={<View className="gap-5 pb-4">{children}</View>}
+          ListFooterComponent={<View className="py-4">{list.footer}</View>}
+          contentContainerStyle={{
+            padding: 16,
+            paddingBottom: insets.bottom + 24 + bar,
+          }}
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          keyboardShouldPersistTaps="handled"
+        />
+      ) : (
+        <Container
+          testID="challenge-scroll"
+          style={{ flex: 1 }}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{
+            padding: 16,
+            gap: 20,
+            paddingBottom: insets.bottom + 24 + bar,
+          }}
+          refreshControl={
+            onRefresh ? (
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={accent}
+              />
+            ) : undefined
+          }
+        >
+          {children}
+        </Container>
+      )}
       {footer}
     </View>
   );
@@ -267,16 +218,32 @@ export function ChallengeLoading() {
     />
   );
 }
-export function ChallengeProblem({ retry }: { retry: () => void }) {
+export function ChallengeProblem({
+  retry,
+  error,
+}: {
+  retry: () => void;
+  error?: unknown;
+}) {
   const { t } = useTranslation();
   return (
     <StatusView
       inline
       icon="alert-circle"
-      title={t('challenges.loadError', {
-        defaultValue:
-          'Could not load Challenges. Check your connection and try again.',
-      })}
+      title={
+        challengeReadIssue(error) === 'unavailable'
+          ? t('challenges.ux.unavailable', {
+              defaultValue: 'This Challenge is no longer available.',
+            })
+          : challengeReadIssue(error) === 'unsupported'
+            ? t('challenges.ux.unsupported', {
+                defaultValue: 'Update the app or server to use this Challenge.',
+              })
+            : t('challenges.loadError', {
+                defaultValue:
+                  'Could not load Challenges. Check your connection and try again.',
+              })
+      }
       action={{
         label: t('challenges.retry', { defaultValue: 'Try again' }),
         onPress: retry,

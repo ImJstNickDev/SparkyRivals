@@ -1,3 +1,4 @@
+import { ChallengeResultSummary as ChallengeScores } from '@/pages/Challenges/ChallengeResultSummary';
 import { ChallengeLobby } from '@/pages/Challenges/ChallengeLobby';
 import { useDailyGoals } from '@/hooks/Goals/useGoals';
 import type { ChallengeDetailResponse } from '@workspace/shared';
@@ -12,7 +13,7 @@ import {
   within,
 } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { createInstance } from 'i18next';
 import { I18nextProvider } from 'react-i18next';
 import english from '../../../public/locales/en/translation.json';
@@ -20,7 +21,7 @@ import ChallengesPage from '@/pages/Challenges/ChallengesPage';
 import ChallengeDetailPage from '@/pages/Challenges/ChallengeDetailPage';
 import CreateChallengePage from '@/pages/Challenges/CreateChallengePage';
 import {
-  ChallengeScores,
+  ChallengeResultFacts,
   ChallengeDailyHistory,
 } from '@/pages/Challenges/ChallengeScores';
 import * as hooks from '@/hooks/Challenges/useChallenges';
@@ -64,16 +65,21 @@ const query = <T,>(data: T) => ({
   refetch,
 });
 function show(ui: React.ReactElement, path = '/challenges') {
+  const router = createMemoryRouter(
+    [
+      { path: '/challenges/:id', element: ui },
+      { path: '/challenges', element: ui },
+    ],
+    { initialEntries: [path] }
+  );
   return render(
     <I18nextProvider i18n={i18n}>
-      <MemoryRouter initialEntries={[path]}>
-        <Routes>
-          <Route path="/challenges/:id" element={ui} />
-          <Route path="/challenges" element={ui} />
-        </Routes>
-      </MemoryRouter>
+      <RouterProvider router={router} />
     </I18nextProvider>
   );
+}
+function openDetails() {
+  fireEvent.click(screen.getByText('Challenge details'));
 }
 beforeEach(() => {
   jest.clearAllMocks();
@@ -113,46 +119,61 @@ beforeEach(() => {
   mutateAsync.mockResolvedValue(detail);
 });
 describe('Challenge hub', () => {
-  it('groups invitations, active, upcoming, completed and cancelled', () => {
-    h.useChallenges.mockReturnValue({
-      ...query({
-        pages: [
-          {
-            challenges: [
-              { ...challenge, id: 'pending', my_membership: 'pending' },
-              challenge,
-              ...(['upcoming', 'completed', 'cancelled'] as const).map(
-                (lifecycle) => ({ ...challenge, id: lifecycle, lifecycle })
-              ),
+  it('requests each complete hub view and does not load row leaderboards', async () => {
+    h.useChallenges.mockImplementation(
+      (view) =>
+        ({
+          ...query({
+            pages: [
+              {
+                challenges:
+                  view === 'invitations'
+                    ? [{ ...challenge, my_membership: 'pending' }]
+                    : view === 'history'
+                      ? [{ ...challenge, lifecycle: 'completed' }]
+                      : [challenge],
+              },
             ],
-          },
-        ],
-      }),
-      hasNextPage: false,
-    } as unknown as ReturnType<typeof hooks.useChallenges>);
+          }),
+          hasNextPage: false,
+        }) as unknown as ReturnType<typeof hooks.useChallenges>
+    );
     show(<ChallengesPage />);
-    for (const name of [
-      'Invitations',
-      'Active',
-      'Upcoming',
-      'Completed',
-      'Cancelled',
-    ])
-      expect(screen.getByRole('heading', { name })).toBeInTheDocument();
-    expect(
-      screen.getByRole('link', { name: /Review invitation/ })
-    ).toBeInTheDocument();
-    expect(screen.getAllByText('54,280').length).toBeGreaterThan(0);
+    expect(h.useChallenges).toHaveBeenLastCalledWith('mine');
+    expect(screen.getByRole('tab', { name: 'My Challenges' })).toHaveAttribute(
+      'aria-selected',
+      'true'
+    );
+    expect(screen.getByText(/Ends /)).toBeInTheDocument();
+    fireEvent.mouseDown(screen.getByRole('tab', { name: 'Invitations' }), {
+      button: 0,
+      ctrlKey: false,
+    });
+    await waitFor(() =>
+      expect(h.useChallenges).toHaveBeenLastCalledWith('invitations')
+    );
+    fireEvent.mouseDown(screen.getByRole('tab', { name: 'History' }), {
+      button: 0,
+      ctrlKey: false,
+    });
+    await waitFor(() =>
+      expect(h.useChallenges).toHaveBeenLastCalledWith('history')
+    );
+    expect(screen.getByText('Completed')).toBeInTheDocument();
+    expect(h.useChallengeResults).not.toHaveBeenCalled();
   });
-  it('renders an invitation without displaying scores', () => {
+  it('renders an invitation row without displaying scores', () => {
     h.useChallenges.mockReturnValue({
       ...query({
         pages: [{ challenges: [{ ...challenge, my_membership: 'pending' }] }],
       }),
     } as unknown as ReturnType<typeof hooks.useChallenges>);
-    show(<ChallengesPage />);
+    show(<ChallengesPage />, '/challenges?view=invitations');
     expect(screen.queryByText('54,280')).not.toBeInTheDocument();
-    expect(screen.getByText(/Review the rules/)).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: /A little further/ })
+    ).toBeInTheDocument();
+    expect(h.useChallengeResults).not.toHaveBeenCalled();
   });
   it('refreshes and loads older competitions', () => {
     const fetchNextPage = jest.fn();
@@ -180,24 +201,22 @@ describe('Challenge hub', () => {
       expect(screen.getByRole('alert')).toBeInTheDocument();
     else
       expect(
-        screen.getByText('Go a little further, together')
+        screen.getByText('Your Challenges will appear here.')
       ).toBeInTheDocument();
   });
 });
 describe('scores and daily history', () => {
-  it('shows server ranks, gap, today, zero and absent days', () => {
+  it('shows server ranks, today, zero and absent days', () => {
     show(
       <>
         <ChallengeScores result={results} actor={actor} />
         <ChallengeDailyHistory result={results} actor={actor} />
       </>
     );
-    expect(screen.getByText('Nico leads by 2,287 steps')).toBeInTheDocument();
-    expect(screen.getByText('Rank 2')).toBeInTheDocument();
-    expect(screen.getByText('Today: 0')).toBeInTheDocument();
-    expect(screen.getByText('Today: No step data')).toBeInTheDocument();
+    expect(screen.getByText('2')).toBeInTheDocument();
+    expect(screen.getByText('Today: 0 steps')).toBeInTheDocument();
     expect(screen.getByText('0 steps')).toBeInTheDocument();
-    expect(screen.getAllByText('No step data').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('No data recorded').length).toBeGreaterThan(0);
     expect(screen.getByText('Nico ahead this day')).toBeInTheDocument();
   });
   it('uses supplied tie ranks and shared leaders', () => {
@@ -213,10 +232,8 @@ describe('scores and daily history', () => {
       })),
     };
     show(<ChallengeScores result={tied} actor={actor} />);
-    expect(
-      screen.getByText('Nico and Marta share the lead')
-    ).toBeInTheDocument();
-    expect(screen.getAllByText('Rank 1 · Tied')).toHaveLength(2);
+    expect(screen.getAllByText('Tied')).toHaveLength(2);
+    expect(screen.getAllByText('1')).toHaveLength(2);
   });
   it('supports 100 people and selects whose daily history to show', () => {
     const group = {
@@ -238,7 +255,7 @@ describe('scores and daily history', () => {
       </>
     );
     expect(
-      within(screen.getByRole('list', { name: 'Leaderboard' })).getAllByRole(
+      within(screen.getByRole('list', { name: 'Standings' })).getAllByRole(
         'listitem'
       )
     ).toHaveLength(100);
@@ -276,8 +293,8 @@ describe('detail and membership actions', () => {
       }) as unknown as ReturnType<typeof hooks.useChallengeDetail>
     );
     show(<ChallengeDetailPage />, `/challenges/${challenge.id}`);
-    expect(screen.getByText('Current results')).toBeInTheDocument();
-    expect(screen.getByText(/Results can change/)).toBeInTheDocument();
+    expect(screen.getByText('Completed')).toBeInTheDocument();
+    expect(screen.getAllByText(/Results can change/).length).toBeGreaterThan(0);
     expect(
       screen.queryByRole('button', { name: 'Cancel Challenge' })
     ).not.toBeInTheDocument();
@@ -291,7 +308,7 @@ describe('detail and membership actions', () => {
     );
     show(<ChallengeDetailPage />, `/challenges/${challenge.id}`);
     expect(
-      screen.getByText('Cancelled. Step sharing has stopped.')
+      screen.getByText('Cancelled. Challenge data sharing has stopped.')
     ).toBeInTheDocument();
     expect(screen.queryByText('54,280')).not.toBeInTheDocument();
   });
@@ -341,6 +358,7 @@ describe('detail and membership actions', () => {
       if (label === 'Leave Challenge')
         h.useChallengeIdentity.mockReturnValue({ actor: peer, enabled: true });
       show(<ChallengeDetailPage />, `/challenges/${challenge.id}`);
+      openDetails();
       fireEvent.click(screen.getByRole('button', { name: label }));
       expect(mutateAsync).not.toHaveBeenCalled();
       fireEvent.click(
@@ -362,6 +380,7 @@ describe('detail and membership actions', () => {
       }) as unknown as ReturnType<typeof hooks.useChallengeDetail>
     );
     show(<ChallengeDetailPage />, `/challenges/${challenge.id}`);
+    openDetails();
     fireEvent.click(screen.getByRole('button', { name: 'Rename' }));
     fireEvent.change(screen.getByLabelText('Challenge name'), {
       target: { value: 'Tomorrow together' },
@@ -434,7 +453,7 @@ describe('creation', () => {
     expect(screen.queryByLabelText('Marta')).not.toBeInTheDocument();
   });
 });
-it('keeps your own position on a compact group card', () => {
+it('keeps your supplied position in the ranked list', () => {
   const group = {
     ...results,
     entries: Array.from({ length: 4 }, (_, i) => ({
@@ -444,24 +463,25 @@ it('keeps your own position on a compact group card', () => {
       rank: i + 1,
     })),
   };
-  show(<ChallengeScores result={group} actor={actor} compact />);
-  expect(screen.getByText('Friend 3')).toBeInTheDocument();
-  expect(screen.getByText('Rank 4')).toBeInTheDocument();
+  show(<ChallengeScores result={group} actor={actor} />);
+  expect(screen.getByText('Friend 3 (you)')).toBeInTheDocument();
+  expect(screen.getByText('4')).toBeInTheDocument();
 });
 it.each([false, true])(
-  'labels reconciled completed winners (tie=%s)',
+  'preserves completed server ranks and ties (tie=%s)',
   (tied) => {
     const result = {
       ...results,
       challenge: { ...challenge, lifecycle: 'completed' as const },
-      leader_user_ids: tied ? [actor, peer] : [actor],
+      entries: results.entries.map((entry, index) => ({
+        ...entry,
+        rank: tied ? 1 : index + 1,
+        is_tied: tied,
+      })),
     };
     show(<ChallengeScores result={result} actor={actor} />);
-    expect(
-      screen.getByText(
-        tied ? 'Current tied winners: Nico and Marta' : 'Current winner: Nico'
-      )
-    ).toBeInTheDocument();
+    expect(screen.getAllByText('1')).toHaveLength(tied ? 2 : 1);
+    expect(screen.queryAllByText('Tied')).toHaveLength(tied ? 2 : 0);
   }
 );
 it('uses singular steps without an unresolved interpolation', () => {
@@ -479,7 +499,6 @@ it('uses singular steps without an unresolved interpolation', () => {
       <ChallengeDailyHistory result={result} actor={actor} />
     </>
   );
-  expect(screen.getByText('Nico leads by 1 step')).toBeInTheDocument();
   expect(screen.getAllByText('1 step')).toHaveLength(2);
 });
 it('does not submit invalid calendar ranges', () => {
@@ -515,6 +534,7 @@ it('invites an eligible connection through the owner dialog', async () => {
     }) as unknown as ReturnType<typeof hooks.useChallengeDetail>
   );
   show(<ChallengeDetailPage />, `/challenges/${challenge.id}`);
+  openDetails();
   fireEvent.click(screen.getByRole('button', { name: 'Invite' }));
   fireEvent.click(screen.getByLabelText('Marta'));
   fireEvent.click(
@@ -555,11 +575,14 @@ describe('Workout time presentation', () => {
   it('creates a workout-time competition while keeping Steps the default', async () => {
     show(<CreateChallengePage />);
     expect(
-      screen.getByRole('combobox', { name: 'Challenge type' })
-    ).toHaveValue('step-race');
-    fireEvent.change(screen.getByRole('combobox', { name: 'Challenge type' }), {
-      target: { value: 'workout-minutes' },
-    });
+      screen.getByRole('combobox', { name: 'What will you track?' })
+    ).toHaveValue('steps');
+    fireEvent.change(
+      screen.getByRole('combobox', { name: 'What will you track?' }),
+      {
+        target: { value: 'workout_time' },
+      }
+    );
     fireEvent.change(screen.getByLabelText('Challenge name'), {
       target: { value: 'Time together' },
     });
@@ -578,17 +601,20 @@ describe('Workout time presentation', () => {
     'renders %s versus duration, margin and secondary counts',
     (lifecycle) => {
       show(
-        <ChallengeScores
-          actor={actor}
-          result={{
-            ...workoutResults,
-            challenge: { ...workoutResults.challenge, lifecycle },
-          }}
-        />
+        <>
+          <ChallengeScores
+            actor={actor}
+            result={{
+              ...workoutResults,
+              challenge: { ...workoutResults.challenge, lifecycle },
+            }}
+          />
+          <ChallengeResultFacts result={workoutResults} />
+        </>
       );
-      expect(screen.getAllByText('3h 42m').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('3.7').length).toBeGreaterThan(0);
       expect(screen.getAllByText(/4 workouts/).length).toBeGreaterThan(0);
-      expect(screen.getAllByText(/24m/).length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/h/).length).toBeGreaterThan(0);
       expect(screen.queryByText(/54,280/)).not.toBeInTheDocument();
     }
   );
@@ -605,18 +631,24 @@ describe('Workout time presentation', () => {
       },
     ];
     show(
-      <ChallengeScores actor={actor} result={{ ...workoutResults, entries }} />
+      <>
+        <ChallengeScores
+          actor={actor}
+          result={{ ...workoutResults, entries }}
+        />
+        <ChallengeResultFacts result={{ ...workoutResults, entries }} />
+      </>
     );
-    expect(screen.getByText('Luca')).toBeInTheDocument();
+    expect(screen.getAllByText('Luca').length).toBeGreaterThan(0);
     expect(screen.getByText('1 workout')).toBeInTheDocument();
   });
   it('distinguishes qualifying zero duration from no workout recorded in daily history', () => {
     show(<ChallengeDailyHistory actor={actor} result={workoutResults} />);
-    expect(screen.getAllByText('0m').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('0 min').length).toBeGreaterThan(0);
     expect(screen.getAllByText('No workout recorded').length).toBeGreaterThan(
       0
     );
-    expect(screen.queryByText('No step data')).not.toBeInTheDocument();
+    expect(screen.queryByText('No data recorded')).not.toBeInTheDocument();
   });
   it('shows a workout invitation without score disclosure', () => {
     h.useChallenges.mockReturnValue({
@@ -630,9 +662,9 @@ describe('Workout time presentation', () => {
         ],
       }),
     } as unknown as ReturnType<typeof hooks.useChallenges>);
-    show(<ChallengesPage />);
-    expect(screen.getAllByText(/Workout time/).length).toBeGreaterThan(0);
-    expect(screen.queryByText('3h 42m')).not.toBeInTheDocument();
+    show(<ChallengesPage />, '/challenges?view=invitations');
+    expect(screen.getAllByText(/Workout Minutes/).length).toBeGreaterThan(0);
+    expect(screen.queryByText('3.7')).not.toBeInTheDocument();
   });
 });
 
@@ -666,8 +698,8 @@ describe('Rematch', () => {
     );
     show(<CreateChallengePage />, `/challenges/new?rematch=${challenge.id}`);
     expect(
-      screen.getByRole('combobox', { name: 'Challenge type' })
-    ).toHaveValue('workout-minutes');
+      screen.getByRole('combobox', { name: 'What will you track?' })
+    ).toHaveValue('workout_time');
     expect(screen.getByRole('checkbox')).toBeChecked();
     fireEvent.change(screen.getByLabelText('Challenge name'), {
       target: { value: 'Another round' },
@@ -709,9 +741,7 @@ describe('Goal lobbies', () => {
   };
   it('creates a duration-based goal lobby with immediate start by default', async () => {
     show(<CreateChallengePage />);
-    fireEvent.change(screen.getByLabelText('Challenge type'), {
-      target: { value: 'step-goal' },
-    });
+    fireEvent.click(screen.getByRole('radio', { name: 'Goal points' }));
     fireEvent.change(screen.getByLabelText('Challenge name'), {
       target: { value: 'Our goal' },
     });
@@ -730,15 +760,15 @@ describe('Goal lobbies', () => {
     );
     expect(mutateAsync.mock.calls[0][0].body).not.toHaveProperty('start_date');
   });
-  it('suggests the personal goal and allows an explicit Challenge override', () => {
+  it('suggests the personal goal and autosaves an explicit override on blur', async () => {
     show(<ChallengeLobby detail={lobby} />);
     expect(screen.getByLabelText('Your daily target (steps)')).toHaveValue(
-      8000
+      '8000'
     );
     fireEvent.change(screen.getByLabelText('Your daily target (steps)'), {
       target: { value: '9000' },
     });
-    fireEvent.click(screen.getByText('Save target'));
+    fireEvent.blur(screen.getByLabelText('Your daily target (steps)'));
     expect(mutateAsync).toHaveBeenCalledWith({
       action: 'target',
       id: challenge.id,
@@ -763,10 +793,10 @@ describe('Goal lobbies', () => {
         }}
       />
     );
-    expect(screen.getByText('Locked daily targets')).toBeInTheDocument();
+    expect(screen.getAllByText('8,000 steps')).toHaveLength(2);
     expect(screen.queryByText('Save target')).not.toBeInTheDocument();
   });
-  it('allows creator to withdraw a pending invitation without removing accepted members', () => {
+  it('requires confirmation before creator withdraws a pending invitation', async () => {
     show(
       <ChallengeLobby
         detail={{
@@ -777,7 +807,17 @@ describe('Goal lobbies', () => {
         }}
       />
     );
-    fireEvent.click(screen.getByText('Withdraw invitation'));
+    fireEvent.keyDown(
+      screen.getByRole('button', { name: 'Actions for Marta' }),
+      { key: 'Enter' }
+    );
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Remove' }));
+    expect(mutateAsync).not.toHaveBeenCalled();
+    fireEvent.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', {
+        name: 'Remove',
+      })
+    );
     expect(mutateAsync).toHaveBeenCalledWith({
       action: 'withdraw',
       id: challenge.id,
@@ -788,16 +828,22 @@ describe('Goal lobbies', () => {
 
 describe('Goal result units', () => {
   it('shows uncapped points, distinct targets and a genuine tie', () => {
-    show(<ChallengeScores actor={actor} result={goalResults} />);
-    expect(screen.getAllByText('140 pts')).toHaveLength(2);
+    show(
+      <>
+        <ChallengeScores actor={actor} result={goalResults} />
+        <ChallengeResultFacts result={goalResults} />
+      </>
+    );
+    expect(screen.getAllByText('140').length).toBeGreaterThanOrEqual(2);
     expect(screen.getByText('Daily target: 8,000 steps')).toBeInTheDocument();
     expect(screen.getByText('Daily target: 16,000 steps')).toBeInTheDocument();
-    expect(screen.getAllByText(/Rank 1.*Tied/)).toHaveLength(2);
+    expect(screen.getAllByText('1')).toHaveLength(2);
+    expect(screen.getAllByText('Tied')).toHaveLength(2);
   });
   it('keeps canonical actuals and percentage in daily history', () => {
     show(<ChallengeDailyHistory actor={actor} result={goalResults} />);
     expect(
-      screen.getAllByText(/11,200 steps.*8,000 steps.*140%/).length
+      screen.getAllByText(/11,200.*8,000 steps.*140%/).length
     ).toBeGreaterThan(0);
     expect(screen.getAllByText('No data recorded').length).toBeGreaterThan(0);
   });

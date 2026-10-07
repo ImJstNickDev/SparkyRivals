@@ -25,19 +25,29 @@ const EN_LOCALE_PATH = path.join(
 );
 const SOURCE_INTL_LOCALE = REGISTRY_MANIFEST.locales[SOURCE_LOCALE].intlLocale;
 
-function localeHasKey(keySet, key) {
+function defaultSourceRoots(rootDir) {
+  const roots = [path.join(rootDir, 'src')];
+  if (path.resolve(rootDir) === MOBILE_ROOT)
+    roots.push(
+      path.resolve(MOBILE_ROOT, '../shared/src/challenges/presentation')
+    );
+  return roots;
+}
+
+function localeHasKey(keySet, key, ordinal = false) {
   if (keySet.has(key)) return true;
   // An exact key that is the base of a recognized plural group is also valid
   // (i18next resolves t('measurement', { count }) to measurement_one/other).
   for (const suffix of PLURAL_SUFFIXES) {
-    if (keySet.has(`${key}${suffix}`)) return true;
+    if (keySet.has(`${key}${ordinal ? '_ordinal' : ''}${suffix}`)) return true;
   }
   return false;
 }
 
-function expectedFallbackKey(key, fallbackName, hasCount) {
+function expectedFallbackKey(key, fallbackName, hasCount, ordinal = false) {
   if (!hasCount) return key;
-  if (fallbackName === 'defaultValue') return `${key}_other`;
+  if (fallbackName === 'defaultValue')
+    return `${key}${ordinal ? '_ordinal' : ''}_other`;
   return `${key}_${fallbackName.slice('defaultValue_'.length)}`;
 }
 
@@ -83,8 +93,8 @@ function runAudit(options = {}) {
     }
   }
   // Default source roots derive from the ACTUAL rootDir so a custom-root run
-  // scans its own source tree; the production default remains mobile/src.
-  const sourceRoots = options.sourceRoots || [path.join(rootDir, 'src')];
+  // scans its own source tree. Production also audits shared Challenge presentation.
+  const sourceRoots = options.sourceRoots || defaultSourceRoots(rootDir);
 
   const report = {
     localeStructuralErrors: [],
@@ -197,13 +207,20 @@ function runAudit(options = {}) {
   }
 
   const enKeySet = new Set(localeResult.enKeys || []);
-  const sourceRequiredForms = requiredPluralForms(SOURCE_INTL_LOCALE);
 
   const seenStaticKeys = new Set();
 
   for (const finding of scanResult.findings) {
     if (finding.kind === 'static-t-key') {
-      const { fallbacks = {}, hasCount = false } = finding.context;
+      const {
+        fallbacks = {},
+        hasCount = false,
+        ordinal = false,
+      } = finding.context;
+      const sourceRequiredForms = requiredPluralForms(
+        SOURCE_INTL_LOCALE,
+        ordinal
+      ).map((form) => `${ordinal ? '_ordinal' : ''}${form}`);
       if (hasCount) {
         if (
           !sourceRequiredForms.every((form) =>
@@ -223,7 +240,8 @@ function runAudit(options = {}) {
         const expectedKey = expectedFallbackKey(
           finding.value,
           fallbackName,
-          hasCount
+          hasCount,
+          ordinal
         );
         if (localeResult.enValues[expectedKey] !== fallbackValue) {
           report.missingFallbackFindings.push({
@@ -237,7 +255,7 @@ function runAudit(options = {}) {
       }
       if (!seenStaticKeys.has(finding.value)) {
         seenStaticKeys.add(finding.value);
-        if (!localeHasKey(enKeySet, finding.value)) {
+        if (!localeHasKey(enKeySet, finding.value, ordinal)) {
           report.missingStaticKeys.push({
             rule: 'missing-static-key',
             locale: SOURCE_LOCALE,
@@ -316,7 +334,7 @@ function runAudit(options = {}) {
 }
 
 function collectFindingsForSource(rootDir, sourceRoots) {
-  return scanFindings(rootDir, sourceRoots || [path.join(rootDir, 'src')]);
+  return scanFindings(rootDir, sourceRoots || defaultSourceRoots(rootDir));
 }
 
 function buildSummary(report) {

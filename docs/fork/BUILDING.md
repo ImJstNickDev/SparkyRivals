@@ -135,6 +135,13 @@ phone, widget, Live Activity, Watch and Watch-widget targets. Do not pre-create
 portal resources. Stop at interactive Apple login/2FA and have the maintainer
 complete the command locally; never collect passwords or codes in chat.
 
+Owned profiles pin the iOS worker to `medium`, the smallest supported iOS
+resource class. Keep Android/Wear builds local. Rebuild only the affected
+platform when a binary is needed for a validated runtime/native change; batch
+related fixes before submitting. Documentation-only changes do not require a
+new binary. Do not upgrade the worker class without a demonstrated need and
+maintainer approval.
+
 Build-only ownership/signing settings do not belong in Docker/Helm server runtime
 configuration. Never put signing secrets in `extra`, `EXPO_PUBLIC_*`, tracked env
 files or logs. There is still no store submission profile/destination.
@@ -432,3 +439,64 @@ paths, exact source revisions and physical checks are recorded in the release
 evidence. New distributed builds must advance those numbers. Phone/watch layout,
 accessibility and unavailable physical health-source checks remain explicit QA
 debt; the disposable acceptance server and tunnel are now stopped.
+
+## M8A.7 localization and visual validation
+
+Fork-owned translations are versioned under `localization/fork/`. From the root,
+run `pnpm i18n:fork:export` after owned English changes, edit the approved source
+translations, then run `pnpm i18n:fork:import`, `pnpm i18n:fork:check` and
+`pnpm i18n:fork:test`. Imports preserve unrelated upstream keys and feed existing
+catalogs; no new runtime overlay, external service or upstream workflow is needed.
+
+Mobile `native-locales:check` now also validates Watch/watch-widget string catalogs
+and Wear string/plural resources. These native resources use OS language, not the
+phone's in-app selection. Clean prebuild copies/includes sources through existing
+plugins and synchronized groups. A prebuild or source validator does not execute
+Swift, compile an IPA or show an extension on device.
+
+Use the capture manifest in [CHALLENGE_UX.md](CHALLENGE_UX.md). Debug emulator
+artifacts are not distributed releases. Before physical acceptance, allocate new
+production version codes, reuse permanent phone/Wear signing and build a full EAS
+iOS internal artifact from the recorded source commit. No re-sign-only shortcut
+can incorporate changed Swift/resources. Preserve synthetic test provenance and
+keep raw private diagnostics outside Git. Device installation, Apple interaction,
+new public tunnels and actual push sends remain explicit maintainer gates.
+
+Latest M8A.7 allocations are Android phone 1010, Wear 1000001010 and EAS iOS
+1014, from `d66d8fa8352470956915a7c9b099624977a034a8`. The Android release
+pair passed build/signature checks, and phone 1010 passed the Dashboard/hub/Back
+journey on the dedicated emulator. Samsung is updated with data preserved, and
+the maintainer confirmed the same navigation journey on the physical phone.
+EAS iOS 1014 and all-five-target IPA inspection passed; iPhone installation and
+navigation confirmation remain pending. The 1009/1013 Dashboard
+entry failed physical acceptance and is superseded by this correction. The
+physical Watch remains on 1000001009; its runtime source is unchanged.
+Future artifacts must advance these allocations. Do not reuse a number simply
+because its device acceptance has not finished. See the release validation ledger.
+
+### Retained laptop development workspace
+
+Store milestone helpers, logs, captures and private acceptance artifacts under
+repository-root `.local/<milestone>/` (M8A.7 uses `.local/m8a7/`). This directory is
+explicitly excluded from Git, EAS archives and Docker contexts. Do not retain
+these development files in `/tmp`. M8A.7 files previously under
+`/tmp/sparkyrivals-8a7/` and `~/.local/share/sparkyrivals/artifacts/milestone-8a7/`
+were moved to `.local/m8a7/` and `.local/m8a7/artifacts/` respectively on 7 October.
+Earlier evidence may retain its original capture path. Signing and service
+credentials retain their existing private locations outside the repository.
+The two dedicated M8A.7 AVDs are retained under `.local/m8a7/avd/`; use that
+directory as `ANDROID_AVD_HOME`. Their former location is a compatibility symlink
+so existing disk-image paths remain valid. No emulator data was cleared.
+
+EAS CLI 24.10.0 needs its disposable archive staging outside the source tree:
+setting `TMPDIR` to `.local/` makes its repository copy fail with “cannot copy to
+a subdirectory of self”. For that command, use a private transient cache such as
+`~/.cache/sparkyrivals/eas-staging` (directory mode 0700). Keep the command's logs,
+downloaded artifacts and source manifests in repository-root `.local/`.
+
+The 7 October session hit a kernel global out-of-memory event while several
+heavy jobs overlapped. Run native builds, the full mobile suite and Android
+emulators sequentially on this laptop. Use a bounded Gradle worker count/heap
+and a single Jest worker when running acceptance; interrupted logs are not passes.
+User systemd scopes with `MemoryMax` also contain a failing build so it cannot
+exhaust the desktop's memory. Do not run an emulator alongside native compilation.

@@ -61,9 +61,11 @@ object ChallengeProtocol {
                     }, row.optionalNumber("daysWithData") ?: row.number("daysWithSteps"), row.number("eligibleDays"), row.optionalNumber("workoutCount")
                 )
             }.also { require(it.map { row -> row.id }.distinct().size == it.size); require(it.count { row -> row.isSelf } <= 1) }
+            val allowedDisplayUnits = when(unit) { "meters" -> listOf("km", "mi"); "kcal" -> listOf("kcal", "kJ"); "milliliters" -> listOf("ml", "L", "fl_oz"); else -> emptyList() }
+            val displayUnit = item.optString("displayUnit").takeIf { it in allowedDisplayUnits }
             ChallengeItem(item.text("id", 100), item.text("name", 200), lifecycle, membership, start, end, zone,
                 totalDays, daysRemaining, currentDay,
-                participantCount, item.optionalScore("leadMargin", version), rows, metric, mode, unit)
+                participantCount, item.optionalScore("leadMargin", version), rows, metric, mode, unit, displayUnit)
         }.also { require(it.map { item -> item.id }.distinct().size == it.size) }
         return ChallengeSnapshot(account, state, time, items, json.bool("hasMore"))
     }
@@ -95,12 +97,13 @@ data class ChallengeRow(val id: String, val name: String, val isSelf: Boolean, v
         .put("tied", tied).put("leader", leader).put("gapToLeader", gapToLeader).put("today", today?.json())
         .put(if (workout) "daysWithData" else "daysWithSteps", daysWithData).put("eligibleDays", eligibleDays).put("workoutCount", workoutCount)
 }
-data class ChallengeItem(val id: String, val name: String, val lifecycle: String, val membership: String, val startDate: String, val endDate: String, val timezone: String, val totalDays: Long, val daysRemaining: Long, val currentDay: Long?, val participantCount: Long?, val leadMargin: Number?, val rows: List<ChallengeRow>, val metric: String = "steps", val scoringMode: String = "sum", val scoreUnit: String = if(metric=="workout_time") "seconds" else "steps") {
+data class ChallengeItem(val id: String, val name: String, val lifecycle: String, val membership: String, val startDate: String, val endDate: String, val timezone: String, val totalDays: Long, val daysRemaining: Long, val currentDay: Long?, val participantCount: Long?, val leadMargin: Number?, val rows: List<ChallengeRow>, val metric: String = "steps", val scoringMode: String = "sum", val scoreUnit: String = if(metric=="workout_time") "seconds" else "steps", val displayUnit: String? = null) {
     fun json() = JSONObject().put("id", id).put("name", name).put("lifecycle", lifecycle).put("membership", membership)
         .put("startDate", startDate).put("endDate", endDate).put("timezone", timezone).put("totalDays", totalDays)
         .put("daysRemaining", daysRemaining).put("currentDay", currentDay).put("participantCount", participantCount)
         .put("leadMargin", leadMargin).put("rows", JSONArray(rows.map { it.json(metric != "steps" || scoringMode != "sum") }))
         .also {
+            if(displayUnit != null) it.put("displayUnit", displayUnit)
             if(metric != "steps" || scoringMode != "sum") it.put("metric",metric).put("scoreUnit",scoreUnit)
             if(scoringMode != "sum" || metric !in listOf("steps","workout_time")) it.put("scoringMode",scoringMode)
             if(lifecycle == "lobby") { it.remove("startDate"); it.remove("endDate") }

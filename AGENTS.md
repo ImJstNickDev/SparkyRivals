@@ -193,6 +193,12 @@ Keep the upstream license, attribution, history, functionality, and package guid
   authoritative result.
 - Read `docs/fork/IDENTIFIERS.md` before changing native identity, signing, deep
   links, or health writeback markers. Do not submit builds to upstream accounts.
+- Keep retained local development helpers, logs, captures and acceptance artifacts
+  under repository-root `.local/<milestone>/`, excluded from Git, EAS archives and
+  Docker contexts. Do not use `/tmp` as the durable development workspace. Keep
+  signing/push/Apple credentials in their established private external locations.
+  Run memory-heavy native builds, full suites and emulators sequentially on the
+  development laptop; use bounded worker counts and heap limits.
 - Run the relevant tests and validation for every changed package; validate
   shared contracts through all affected consumers. Record baseline failures and
   platform limitations rather than claiming unrun checks passed.
@@ -223,3 +229,15 @@ senders. Device registry/outbox data is private infrastructure, not diary sharin
 ## M8A.6 Challenge domain source map
 
 M8A.6 Challenge types: `docs/fork/CHALLENGE_TYPES.md` maps canonical metrics, fixed-point goal scoring, self-only target snapshots and transactional Ready lobbies. Keep existing sum behavior and M8A.5 encrypted invitation push/RLS recovery intact. Mobile/web own target and Ready actions; watches stay read-only.
+
+## Fork translation sources (M8A.7)
+
+The maintainer approved repository-local ownership of fork-only translations.
+`localization/fork/ownership.json` (relative to the repository root) restricts
+imports to Challenge keys and explicitly listed activity-goal keys. Edit Italian
+source files under `localization/fork/`, then run root `pnpm i18n:fork:import`.
+Do not hand-edit other non-English catalog entries. English remains canonical;
+run `pnpm i18n:fork:export` after owned English changes and retain existing package
+plural/placeholder/registry checks. This narrow approved exception does not
+transfer ownership of upstream translations. Keep the upstream translation
+workflow guarded; do not create external translation resources without approval.

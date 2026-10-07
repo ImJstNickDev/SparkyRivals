@@ -9,6 +9,7 @@
 //      native method) so useWidgetSync can target a specific widget.
 import {
   ConfigPlugin,
+  AndroidConfig,
   withAndroidManifest,
   withDangerousMod,
   withMainApplication,
@@ -72,6 +73,94 @@ async function copyTree(
   }
 }
 
+export function configureWidgetManifest(
+  manifest: AndroidConfig.Manifest.AndroidManifest
+): void {
+  const app = manifest.manifest.application?.[0];
+  if (!app) return;
+
+  const configureActivity = `${WIDGET_PACKAGE}.ChallengeWidgetConfigureActivity`;
+  app.activity = app.activity ?? [];
+  if (
+    !app.activity.some(
+      (activity) => activity.$['android:name'] === configureActivity
+    )
+  ) {
+    app.activity.push({
+      $: {
+        'android:name': configureActivity,
+        'android:exported': 'true',
+        'android:excludeFromRecents': 'true',
+      },
+      'intent-filter': [
+        {
+          action: [
+            {
+              $: {
+                'android:name': 'android.appwidget.action.APPWIDGET_CONFIGURE',
+              },
+            },
+          ],
+        },
+      ],
+    });
+  }
+  app.receiver = app.receiver ?? [];
+  for (const receiver of WIDGET_RECEIVERS) {
+    const existing = app.receiver.find(
+      (r: { $?: Record<string, string> }) =>
+        r.$?.['android:name'] === receiver.name
+    ) as
+      | {
+          $?: Record<string, string>;
+          'intent-filter'?: unknown[];
+          'meta-data'?: unknown[];
+        }
+      | undefined;
+
+    const receiverConfig = existing ?? {};
+    receiverConfig.$ = {
+      ...(receiverConfig.$ ?? {}),
+      'android:name': receiver.name,
+      'android:exported': 'false',
+      'android:label': receiver.label,
+    };
+    receiverConfig['intent-filter'] = [
+      {
+        action: [
+          {
+            $: {
+              'android:name': 'android.appwidget.action.APPWIDGET_UPDATE',
+            },
+          },
+          {
+            $: {
+              // Manifest-declared receivers may still receive this implicit
+              // broadcast (explicit exemption in the Android O implicit
+              // broadcast limits). It covers both device-wide and per-app
+              // locale changes, so widgets re-render when the app language
+              // is changed outside the app (e.g. Android Settings).
+              'android:name': 'android.intent.action.LOCALE_CHANGED',
+            },
+          },
+        ],
+      },
+    ];
+    receiverConfig['meta-data'] = [
+      {
+        $: {
+          'android:name': 'android.appwidget.provider',
+          'android:resource': receiver.provider,
+        },
+      },
+    ];
+
+    if (!existing) {
+      app.receiver.push(receiverConfig as unknown as never);
+    }
+  }
+}
+
 const withCalorieWidget: ConfigPlugin = (config) => {
   config = withDangerousMod(config, [
     'android',
@@ -120,64 +209,7 @@ const withCalorieWidget: ConfigPlugin = (config) => {
   ]);
 
   config = withAndroidManifest(config, (config) => {
-    const app = config.modResults.manifest.application?.[0];
-    if (!app) return config;
-
-    app.receiver = app.receiver ?? [];
-    for (const receiver of WIDGET_RECEIVERS) {
-      const existing = app.receiver.find(
-        (r: { $?: Record<string, string> }) =>
-          r.$?.['android:name'] === receiver.name
-      ) as
-        | {
-            $?: Record<string, string>;
-            'intent-filter'?: unknown[];
-            'meta-data'?: unknown[];
-          }
-        | undefined;
-
-      const receiverConfig = existing ?? {};
-      receiverConfig.$ = {
-        ...(receiverConfig.$ ?? {}),
-        'android:name': receiver.name,
-        'android:exported': 'false',
-        'android:label': receiver.label,
-      };
-      receiverConfig['intent-filter'] = [
-        {
-          action: [
-            {
-              $: {
-                'android:name': 'android.appwidget.action.APPWIDGET_UPDATE',
-              },
-            },
-            {
-              $: {
-                // Manifest-declared receivers may still receive this implicit
-                // broadcast (explicit exemption in the Android O implicit
-                // broadcast limits). It covers both device-wide and per-app
-                // locale changes, so widgets re-render when the app language
-                // is changed outside the app (e.g. Android Settings).
-                'android:name': 'android.intent.action.LOCALE_CHANGED',
-              },
-            },
-          ],
-        },
-      ];
-      receiverConfig['meta-data'] = [
-        {
-          $: {
-            'android:name': 'android.appwidget.provider',
-            'android:resource': receiver.provider,
-          },
-        },
-      ];
-
-      if (!existing) {
-        app.receiver.push(receiverConfig as unknown as never);
-      }
-    }
-
+    configureWidgetManifest(config.modResults);
     return config;
   });
 

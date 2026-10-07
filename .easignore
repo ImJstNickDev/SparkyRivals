@@ -126,3 +126,6 @@ dossier sans titre
 
 # From helm/.gitignore
 /helm/chart/charts
+
+# Retained private development tools, logs and native acceptance artifacts.
+/.local

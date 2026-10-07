@@ -82,6 +82,7 @@ const EditGoalsForm = ({
     nutrientDisplayPreferences,
   } = usePreferences();
   const { t } = useTranslation();
+  const [activityValid, setActivityValid] = useState(true);
   const isMobile = useIsMobile();
   const platform = isMobile ? 'mobile' : 'desktop';
 
@@ -404,7 +405,11 @@ const EditGoalsForm = ({
       </div>
 
       <Separator />
-      <WaterAndExerciseFields state={goals} setState={(val) => setGoals(val)} />
+      <WaterAndExerciseFields
+        onValidityChange={setActivityValid}
+        state={goals}
+        setState={(val) => setGoals(val)}
+      />
       <Separator />
 
       <div className="space-y-4">
@@ -426,6 +431,7 @@ const EditGoalsForm = ({
       <DialogFooter>
         <Button
           onClick={() => {
+            if (!activityValid) return;
             const finalGoals = { ...goals };
             if (macroInputType === 'grams') {
               finalGoals.protein_percentage = null;
@@ -434,7 +440,12 @@ const EditGoalsForm = ({
             }
             onSave(finalGoals);
           }}
-          disabled={isSaving || !isMacroValid || !isTotalPercentageValid}
+          disabled={
+            !activityValid ||
+            isSaving ||
+            !isMacroValid ||
+            !isTotalPercentageValid
+          }
           className="w-full"
         >
           {isSaving

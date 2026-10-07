@@ -281,6 +281,30 @@ async function withdraw(
     return rethrowChallengeWriteError(error);
   }
 }
+async function removeParticipant(
+  actor: string,
+  id: string,
+  userId: string
+): Promise<ChallengeDetailResponse> {
+  const { challenge } = await detail(actor, id);
+  if (challenge.creator_user_id !== actor || userId === actor)
+    throw new ChallengeError(
+      403,
+      'Only the creator can remove another participant'
+    );
+  if (challenge.lifecycle !== 'lobby')
+    throw new ChallengeError(409, 'Participants are locked');
+  try {
+    if (!(await repository.removeParticipant(actor, id, userId)))
+      throw new ChallengeError(
+        409,
+        'Only accepted lobby participants can be removed'
+      );
+    return detail(actor, id);
+  } catch (error) {
+    return rethrowChallengeWriteError(error);
+  }
+}
 export default {
   create,
   detail,
@@ -290,4 +314,5 @@ export default {
   update,
   configure,
   withdraw,
+  removeParticipant,
 };

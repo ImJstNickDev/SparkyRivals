@@ -56,6 +56,9 @@ enum ChallengePayloadMapper {
                 guard let row = participant(from: raw, version: version), seen.insert(row.id).inserted else { return nil }
                 return row
             } : []
+        let allowedDisplayUnits: [String: [String]] = ["meters": ["km", "mi"], "kcal": ["kcal", "kJ"], "milliliters": ["ml", "L", "fl_oz"]]
+        let suppliedDisplayUnit = item["displayUnit"] as? String
+        let displayUnit = suppliedDisplayUnit.flatMap { (allowedDisplayUnits[unit] ?? []).contains($0) ? $0 : nil }
         return WatchChallenge(
             id: id, name: name, lifecycle: lifecycle, isInvitation: membership == "pending",
             startDate: startDate, endDate: endDate, timezone: timezone,
@@ -63,7 +66,7 @@ enum ChallengePayloadMapper {
             participantCount: membership == "accepted" ? integer(item["participantCount"]) : nil,
             calculatedAt: ContextPayloadMapper.isoDate(from: item["calculatedAt"]),
             leadMargin: membership == "accepted" ? number(item["leadMargin"], fractional: version == 3) : nil,
-            rows: rows, metric: metric, scoringMode: mode, scoreUnit: unit
+            rows: rows, metric: metric, scoringMode: mode, scoreUnit: unit, displayUnit: displayUnit
         )
     }
 

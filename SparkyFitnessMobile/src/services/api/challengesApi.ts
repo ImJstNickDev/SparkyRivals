@@ -4,6 +4,7 @@ import {
   challengeLeaderboardResponseSchema,
   challengeListResponseSchema,
   type CreateChallengeRequest,
+  type ChallengeListQuery,
 } from '@workspace/shared';
 import { apiFetch } from './apiClient';
 
@@ -11,26 +12,39 @@ const path = (id: string) => `/api/v2/challenges/${encodeURIComponent(id)}`;
 const request = (
   endpoint: string,
   method: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE' = 'GET',
-  body?: unknown
+  body?: unknown,
+  signal?: AbortSignal
 ) =>
   apiFetch<unknown>({
     endpoint,
     method,
     body,
+    signal,
     headers: { 'X-Challenge-Contract-Version': '3' },
     serviceName: 'Challenges API',
     operation: 'update or read Challenge',
   });
 export const challengesApi = {
-  list: async (offset = 0) =>
+  list: async (
+    offset = 0,
+    view?: ChallengeListQuery['view'],
+    signal?: AbortSignal
+  ) =>
     challengeListResponseSchema.parse(
-      await request(`/api/v2/challenges?limit=20&offset=${offset}`)
+      await request(
+        `/api/v2/challenges?limit=${view === 'summary' || view === 'active' ? 1 : 20}&offset=${offset}${view ? `&view=${view}` : ''}`,
+        'GET',
+        undefined,
+        signal
+      )
     ),
-  detail: async (id: string) =>
-    challengeDetailResponseSchema.parse(await request(path(id))),
-  results: async (id: string) =>
+  detail: async (id: string, signal?: AbortSignal) =>
+    challengeDetailResponseSchema.parse(
+      await request(path(id), 'GET', undefined, signal)
+    ),
+  results: async (id: string, signal?: AbortSignal) =>
     challengeLeaderboardResponseSchema.parse(
-      await request(`${path(id)}/leaderboard`)
+      await request(`${path(id)}/leaderboard`, 'GET', undefined, signal)
     ),
   connections: async () =>
     challengeConnectionsSchema.parse(
@@ -63,6 +77,13 @@ export const challengesApi = {
     challengeDetailResponseSchema.parse(
       await request(
         `${path(id)}/invitations/${encodeURIComponent(userId)}`,
+        'DELETE'
+      )
+    ),
+  removeParticipant: async (id: string, userId: string) =>
+    challengeDetailResponseSchema.parse(
+      await request(
+        `${path(id)}/participants/${encodeURIComponent(userId)}`,
         'DELETE'
       )
     ),

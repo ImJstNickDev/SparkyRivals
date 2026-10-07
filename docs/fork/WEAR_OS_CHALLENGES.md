@@ -414,3 +414,33 @@ Docker state or deployment change.
 ## Companion snapshot v3
 
 The outer Data Layer envelope/path remains v1. Its nested snapshot now also accepts v3 metrics, scoring modes and lobby state. App, Tile and complication share unit formatting. Lobby scores are stripped and configuration/Ready remains phone-only. See [CHALLENGE_TYPES.md](CHALLENGE_TYPES.md).
+
+## M8A.7 presentation
+
+`protocol/ChallengeDisplay.kt` performs display conversion only; app, Tile and
+complication share it through `ChallengePresentation`. Points use at most one
+decimal, tiny positive values show an explicit less-than threshold, goal days use numeric plural
+resources, and optional display units never change scores/ranks. The complication
+title describes the score unit, so goal points are not labelled steps or seconds.
+Round-screen scaffolds, transforming list, rotary scroll and swipe-back remain.
+
+English/Italian resources live under `res/values` and `res/values-it`; the existing
+plugin copies them with the module. Language follows native system/per-app OS
+configuration independently of the phone's in-app language. Italian is a draft.
+`native-locales:check` validates this set separately from phone widgets, including
+placeholders and numeric plurals.
+
+Actual debug compilation/JVM checks and small-round emulator renders are recorded
+in [CHALLENGE_UX.md](CHALLENGE_UX.md). Emulator snapshots use persisted synthetic
+projections with original timestamps; they do not prove paired Data Layer delivery.
+Release 1000001008 also launched in the emulator; its Tile was rendered in the
+CLI host for empty and sum/stale fixtures. Complication rendering and physical
+Tile acceptance remain separate. Physical Galaxy Watch release **1000001009**
+(SM-R930, 432×432, Italian, font scale 1.0) has inspected list, long-title detail,
+points/rank and lobby captures in the
+[physical manifest](assets/challenge-ux/physical/wear-1000001009/manifest.json).
+The centered long row and full detail title fit at that size; missing data remains
+explicit. Lobby text directs the user to the phone without claiming individual
+readiness or offering edits. Larger physical text, rotary/swipe gestures,
+TalkBack, Tile and complication still need separate acceptance.
+No speculative transport change or simulated freshness was introduced.

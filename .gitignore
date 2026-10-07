@@ -90,3 +90,6 @@ fcm-v1-service-account.json
 expo-access-token
 expo_access_token
 *.p8
+
+# Retained private development tools, logs and native acceptance artifacts.
+/.local/

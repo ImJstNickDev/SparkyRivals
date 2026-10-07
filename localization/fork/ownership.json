@@ -1,0 +1,85 @@
+{
+  "version": 1,
+  "components": [
+    {
+      "name": "mobile",
+      "source": "localization/fork/mobile",
+      "destination": "SparkyFitnessMobile/src/localization/locales",
+      "locales": ["it"],
+      "paths": [
+        "challenges",
+        "goals.personal",
+        "goals.moveExplanation",
+        "goals.readMove",
+        "goals.useMove",
+        "goals.moveUnavailable",
+        "goals.activityExplanation",
+        "goals.invalid",
+        "goals.saveError",
+        "goals.saved",
+        "goals.steps_goal",
+        "goals.distance_goal_meters",
+        "goals.active_calories_goal",
+        "goals.target_exercise_duration_minutes",
+        "goals.target_exercise_calories_burned",
+        "goals.water_goal_ml",
+        "goals.waitForSave",
+        "goals.discardTitle",
+        "goals.minutesUnit",
+        "goals.fieldWithUnit"
+      ]
+    },
+    {
+      "name": "web",
+      "source": "localization/fork/web",
+      "destination": "SparkyFitnessFrontend/public/locales",
+      "locales": ["it"],
+      "paths": [
+        "challenges",
+        "goals.steps_goal",
+        "goals.distance_goal_meters",
+        "goals.active_calories_goal"
+      ]
+    }
+  ],
+  "nativeComponents": [
+    {
+      "name": "ios-phone-widget",
+      "format": "ios",
+      "source": "localization/fork/ios-phone-widget",
+      "english": "SparkyFitnessMobile/targets/widget/en.lproj/Localizable.strings",
+      "destinations": {
+        "it": "SparkyFitnessMobile/targets/widget/it.lproj/Localizable.strings"
+      },
+      "keys": [
+        "widget.challenge.name",
+        "widget.challenge.description",
+        "widget.challenge.not_synced",
+        "widget.challenge.choose",
+        "widget.challenge.automatic",
+        "widget.challenge.unavailable",
+        "widget.challenge.synced_choices",
+        "widget.challenge.automatic_name"
+      ]
+    },
+    {
+      "name": "android-phone-widget",
+      "format": "android",
+      "source": "localization/fork/android-phone-widget",
+      "english": "SparkyFitnessMobile/targets/android-widget/res/values/widget_strings.xml",
+      "destinations": {
+        "it": "SparkyFitnessMobile/targets/android-widget/res/values-it/widget_strings.xml"
+      },
+      "keys": [
+        "sparky_challenge_widget_name",
+        "challenge_widget_not_synced",
+        "challenge_widget_description",
+        "challenge_widget_choose",
+        "challenge_widget_automatic",
+        "challenge_widget_unavailable",
+        "challenge_widget_synced_choices",
+        "challenge_widget_save_failed"
+      ]
+    }
+  ]
+}

@@ -24,7 +24,11 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCSSVariable } from 'uniwind';
-import { useActiveWorkoutBarPadding } from '../components/ActiveWorkoutBar';
+import {
+  useActiveWorkoutBarPadding,
+  navigationRef as rootNavigationRef,
+} from '../components/ActiveWorkoutBar';
+import { openChallengeEntry } from '../navigation/challengeEntry';
 import CalendarSheet, {
   type CalendarSheetRef,
 } from '../components/CalendarSheet';
@@ -331,6 +335,9 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) => {
   const hydrationCardVisible = useAppPreferencesStore(
     (s) => s.hydrationCardVisible
   );
+  const challengesCardVisible = useAppPreferencesStore(
+    (s) => s.challengesCardVisible
+  );
   const caffeineCardVisible = useAppPreferencesStore(
     (s) => s.caffeineCardVisible
   );
@@ -508,11 +515,15 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) => {
             to `selectedDate`. Visibility is a local app setting toggled from
             Dashboard Settings. */}
         <FastingGoalReconciler />
-        <ChallengeDashboardEntry
-          onPress={() => navigation.navigate('Challenges')}
-        />
         {orderedDashboardCards.map((cardKey) => {
           switch (cardKey) {
+            case 'challenges':
+              return challengesCardVisible ? (
+                <ChallengeDashboardEntry
+                  key="challenges"
+                  onPress={(id) => openChallengeEntry(rootNavigationRef, id)}
+                />
+              ) : null;
             case 'calorieRing':
               return calorieRingCardVisible &&
                 (summary.foodEntries.length > 0 ||
