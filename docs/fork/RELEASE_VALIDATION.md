@@ -1408,8 +1408,29 @@ EAS allocated **1020**, uploaded the archive, then rejected build creation becau
 the account's monthly free iOS build allowance was exhausted (reported reset:
 **1 November 2026**). There is **no 1020 IPA and no successful native compile**.
 No billing change, credential rotation or store submission was made. The fix's
-physical upgrade, gallery name, selection and rendering checks remain blocked
+physical upgrade, gallery name, selection and rendering checks were blocked
 on an available iOS build route; Android's accepted **1015** remains unchanged.
+
+After the maintainer enabled additional build capacity, one full internal iOS
+[**1021**](https://expo.dev/accounts/imjstnickdev/projects/sparkyrivals/builds/e2316137-4896-4561-b120-d61dffd64c5b)
+completed from **`3c086d0c05ecbe0f7e339d248b6978c3e5350f0f`**. Owned profiles now
+explicitly inherit the **Medium** worker; the resolved EAS build log confirms
+that class. Existing credentials were reused without interactive authentication.
+The additional profile suite passes **16 tests**; formatting and the docs build
+pass. This focused group overlaps the previously reported full mobile suite and
+is not an additional milestone-wide test total.
+
+The exported IPA passes five-target identity/version, team, App Group,
+ad-hoc-profile, callback and phone-only APNs entitlement inspection on Linux.
+It contains both static `challengeWidget` and configurable
+`challengeSelectionWidget`, the selection AppIntent/entity/query metadata and
+all eight owned Italian widget strings. Artifact and private inspection evidence:
+`.local/m8a7/artifacts/ios-1021/`. These checks do not execute WidgetKit or replace
+Apple code-signature/device verification. Physical upgrade, gallery labels,
+Edit Widget, independent selection and populated rendering remain pending.
+Android/Wear were not rebuilt for this iOS-only fix. The authorized disposable
+test API/tunnel was resumed for this pending check; credentials remain in the
+ignored local workspace, with public admin/diagnostic/health-data routes blocked.
 
 After the desktop session crash, retained helpers, diagnostics and artifacts
 were moved to repository-root **`.local/m8a7/`**, excluded from Git, Docker and
