@@ -1432,6 +1432,14 @@ Android/Wear were not rebuilt for this iOS-only fix. The authorized disposable
 test API/tunnel was resumed for this pending check; credentials remain in the
 ignored local workspace, with public admin/diagnostic/health-data routes blocked.
 
+The maintainer subsequently confirmed that the widget flow now works, in response
+to the iOS **1021** installation and gallery/selection/rendering check. Together
+with the earlier Android **1015** confirmation, this closes the reported physical
+widget defects. Evidence is the maintainer's device confirmation; no new capture
+or independent installed-version lookup was supplied in this step. It does not
+establish every widget family/state, account-transition scenario or screen-reader
+behavior, nor does it validate watch Tiles/complications.
+
 After the desktop session crash, retained helpers, diagnostics and artifacts
 were moved to repository-root **`.local/m8a7/`**, excluded from Git, Docker and
 EAS. Earlier paths in this document are historical; the corresponding artifact
@@ -1444,6 +1452,6 @@ observed global out-of-memory event. Interrupted runs are not counted as passes.
 The authorized disposable test backend/tunnel was restarted for widget checks,
 with remote push disabled and public admin, diagnostic and health-data routes
 blocked. No production, NPM, DNS, upstream or credential changes occurred.
-Physical phone configuration checks, additional widget families/states,
+Additional widget families/states,
 screen readers, Tiles/complications and inherited health-source/writeback
 boundaries remain open; M8A.7 is not declared complete.

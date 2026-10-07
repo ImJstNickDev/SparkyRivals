@@ -689,7 +689,7 @@ the Close scores, points/activity and daily-history journey on physical Samsung 
 Required outstanding acceptance: remaining physical phone and Apple Watch flows;
 Galaxy Watch larger text, rotary/swipe gestures and accessibility; iOS native
 headers with glass on/off, swipe/keyboard/accessibility; Apple Watch sizes/text
-scales beyond the captured viewport; representative phone widgets, Tile and
+scales beyond the captured viewport; additional phone-widget states, Tile and
 complication renders; VoiceOver/TalkBack, reduced motion and broader offline/error/long-value visual
 cases. The release Wear Tile was separately rendered in its CLI host for empty and
 sum/stale synthetic states; see the manifest. This does not establish physical
@@ -768,8 +768,12 @@ without an intent. Even newly added instances used that cached descriptor and
 failed with CHSErrorDomain 1103. A distinct kind avoids depending on that
 unsupported conversion while retaining the original static provider. See
 [Apple's explanation of static widget configuration migration](https://developer.apple.com/forums/thread/661247).
-The new kind still requires physical upgrade/configuration acceptance; native
-metadata compilation alone did not detect the defect.
+The maintainer confirmed the widget flow works after full iOS **1021**, following
+the request to check gallery naming, Edit Widget, selection and populated data.
+Android **1015** widget operation was already confirmed. This closes the reported
+widget defects; the confirmation is user-reported physical evidence, not a new
+screenshot set or proof of every family, stale state and accessibility behavior.
+Native metadata compilation alone had not detected the original defect.
 
 Implementation references: [Apple configurable widgets](https://developer.apple.com/documentation/widgetkit/making-a-configurable-widget)
 uses AppEntity queries and AppIntentConfiguration; [Android widget configuration](https://developer.android.com/develop/ui/compose/glance/configuration)
