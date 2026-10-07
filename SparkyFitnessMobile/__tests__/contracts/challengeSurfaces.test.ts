@@ -141,6 +141,10 @@ it('configures each native widget independently and keeps invalid selections clo
     'state[ChallengeWidget.SELECTION_STATE_KEY] = ids[position]'
   );
   expect(config).toContain('current?.optString("accountKey") != account');
+  expect(config).toContain('ViewCompat.setOnApplyWindowInsetsListener(layout)');
+  expect(config).toContain('WindowInsetsCompat.Type.displayCutout()');
+  expect(config).toContain('isAppearanceLightStatusBars = !dark');
+  expect(config).not.toContain('fitsSystemWindows = true');
   expect(read(base + 'ChallengeWidget.kt.tmpl')).toContain(
     'listOf("above", "self", "below")'
   );

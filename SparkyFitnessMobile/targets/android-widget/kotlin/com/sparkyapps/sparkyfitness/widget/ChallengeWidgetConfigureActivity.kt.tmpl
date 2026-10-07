@@ -12,6 +12,9 @@ import android.widget.ArrayAdapter
 import android.widget.LinearLayout
 import android.widget.ListView
 import android.widget.TextView
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.state.getAppWidgetState
 import androidx.glance.appwidget.state.updateAppWidgetState
@@ -34,6 +37,11 @@ class ChallengeWidgetConfigureActivity : Activity(), SharedPreferences.OnSharedP
         val dark = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
         setTheme(if (dark) android.R.style.Theme_Material_NoActionBar else android.R.style.Theme_Material_Light_NoActionBar)
         super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        WindowCompat.getInsetsController(window, window.decorView).apply {
+            isAppearanceLightStatusBars = !dark
+            isAppearanceLightNavigationBars = !dark
+        }
         widgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
         setResult(RESULT_CANCELED, Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId))
         val info = AppWidgetManager.getInstance(this).getAppWidgetInfo(widgetId)
@@ -57,13 +65,20 @@ class ChallengeWidgetConfigureActivity : Activity(), SharedPreferences.OnSharedP
         val layout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(padding, padding, padding, padding)
-            fitsSystemWindows = true
+        }
+        // fitsSystemWindows replaces View padding. Keep the form gutters and
+        // add current system/cutout insets explicitly on edge-to-edge Android.
+        ViewCompat.setOnApplyWindowInsetsListener(layout) { view, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+            view.setPadding(padding + bars.left, bars.top, padding + bars.right, padding + bars.bottom)
+            WindowInsetsCompat.CONSUMED
         }
         layout.addView(TextView(this).apply {
+            setTextAppearance(android.R.style.TextAppearance_Material_Headline)
             text = localized.getString(R.string.challenge_widget_choose)
             textSize = 22f
             setPadding(0, padding, 0, padding / 2)
-            androidx.core.view.ViewCompat.setAccessibilityHeading(this, true)
+            ViewCompat.setAccessibilityHeading(this, true)
         })
         layout.addView(TextView(this).apply {
             text = localized.getString(R.string.challenge_widget_synced_choices)
@@ -76,6 +91,7 @@ class ChallengeWidgetConfigureActivity : Activity(), SharedPreferences.OnSharedP
         }
         layout.addView(list, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f))
         setContentView(layout)
+        ViewCompat.requestApplyInsets(layout)
         scope.launch {
             val glanceId = GlanceAppWidgetManager(this@ChallengeWidgetConfigureActivity).getGlanceIdBy(widgetId)
             val state = getAppWidgetState(this@ChallengeWidgetConfigureActivity, PreferencesGlanceStateDefinition, glanceId)
