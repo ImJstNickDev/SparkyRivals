@@ -662,8 +662,10 @@ nothing because its reset targeted the focused child navigator. A real-container
 test reproduced the failure. The root-state fix passed those tests and the
 production Android **1010** emulator Dashboard → hub → detail → hub → Dashboard
 journey. The maintainer also confirmed that journey on physical Samsung **1010**.
-EAS iOS **1014** compilation and exported-IPA inspection passed; iPhone update
-and navigation confirmation remain pending. See the source-specific release ledger.
+EAS iOS **1014** compilation and exported-IPA inspection passed. Read-only USB
+Lookup confirmed the installed iPhone version **1014**, and the maintainer
+confirmed the same navigation journey on iPhone. This does not establish the
+installed Apple Watch build. See the source-specific release ledger.
 
 Required outstanding acceptance: remaining physical phone and Apple Watch flows;
 Galaxy Watch larger text, rotary/swipe gestures and accessibility; iOS native

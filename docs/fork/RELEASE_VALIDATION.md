@@ -1094,7 +1094,11 @@ remote version counter. Downloaded IPA inspection on Linux verified all five
 build numbers and production bundle IDs, team, signed/profile App Groups,
 internal provisioning, the phone callback scheme and production APNs on the
 phone only. This is not local Xcode execution or full Apple `codesign`
-verification. iPhone installation/navigation acceptance remains pending.
+verification. The maintainer subsequently confirmed Dashboard → hub → detail →
+Back → hub → Back → Dashboard on iPhone. Read-only USB `installation_proxy`
+Lookup independently returned phone bundle version **1014**. This closes the
+iPhone navigation regression, not all remaining phone acceptance. The phone
+version is not evidence of the installed Watch version.
 IPA and verification evidence are under
 `~/.local/share/sparkyrivals/artifacts/milestone-8a7/ios-1014/`.
 
@@ -1137,6 +1141,8 @@ reported overflow. Captures and limitations are in the
 confirmation was requested; the exact installed build and text-scale setting
 remain unconfirmed. Native Watch sources are unchanged between the 1012 and 1014
 source commits, but this is not used to infer the installed build number.
+The iPhone was independently verified at **1014** through USB; its available
+application-filtered log did not expose a Watch bundle version.
 
 Public copies omit text/EXIF metadata; image/color chunks and decompressed image
 data match the private originals.
