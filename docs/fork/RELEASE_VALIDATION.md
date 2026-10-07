@@ -1498,3 +1498,62 @@ three disposable stack services were stopped after testing; data was preserved.
 Remote push stayed disabled. No physical devices, production, NPM, DNS, upstream
 or credentials were changed. Broader visual/accessibility and Apple auxiliary
 surface acceptance remain open; this pass does not mark M8A.7 complete.
+
+### Review handoff and accepted Italian wording (2026-10-08)
+
+The maintainer accepted the current Italian coverage after five mobile wording
+corrections and requested the fork PR without waiting for deeper linguistic QA.
+Commit `c7a7dfe655615d348d6dea583839167fb1ac710c` imports those corrections into
+the normal mobile catalog. No runtime logic, native resources or scoring changed.
+At the maintainer's explicit request, no new release build is produced for these
+five strings. Installed phone builds retain the previous wording until the next
+necessary build; existing captures do not validate the final copy.
+
+An additional autonomous Wear check reused **1000001015**, source
+`fd7dde6c91599d39476db2a3a9e63e00c60804e9`. The official deployer broadcast
+attached the real provider to Utility/Numerique slot 0 as SHORT_TEXT. The
+[capture manifest](assets/challenge-ux/emulator-acceptance-1015/manifest.json)
+now includes fresh rank, unavailable-receipt and TalkBack-focus screenshots.
+
+- Fresh points rendered `PUNTI #2`; tap opened the matching detail with 140 pt
+  and the supplied rank 2.
+- After injecting an unavailable synthetic receipt and explicitly rebinding the
+  provider, the complication showed a dash, with the host abbreviating its status
+  title. Tap opened `Telefono non disponibile`, without the old title or score.
+  This tests rendering/guarded navigation, not live account-clear transport.
+- TalkBack **14.1.0.622776723 wear** was bound with touch exploration enabled;
+  the actual focus outline appeared on the long title without a crash. Complete
+  swipe traversal, action activation and speech were not verified.
+- Runtime: API 35-ext15, 384×384 round, 320 dpi, Italian, actual font scale **1.24**.
+  Original receipt/accessibility settings were restored, the temporary provider
+  association removed and the emulator stopped. The test server/tunnel remained
+  stopped; retained data was not deleted.
+
+Final copy validation: **196 mobile tests / 12 suites** and **7 fork importer
+tests** passed. These overlap prior full-suite coverage and are not added to it.
+Fresh mobile, server and web `validate`, fork import consistency, native locale
+checks, changed-file formatting and the documentation build passed. The docs
+build retains its existing bundle-size warning.
+The latest full mobile run remains **8,065 tests / 523 suites**. The recorded
+web **1,805 tests / 188 suites**, server **5,649 passed / 514 skipped**, and
+disposable DB/RLS **376 tests / 4 files** are earlier milestone runs, not fresh
+full-suite executions for this wording-only change.
+
+#### Explicit residual acceptance
+
+- iOS glass on/off, larger accessibility text, full keyboard/header/swipe dirty
+  form behavior and VoiceOver have not all been exercised physically.
+- Physical Apple/Wear complications, Wear launcher Tile interaction, additional
+  widget families/states and complete screen-reader operation remain unverified.
+  Native short-text Wear host evidence does not cover LONG_TEXT or Apple hosts.
+- The broader error/offline/very-large-score visual matrix is incomplete; the
+  tested Android cached-detail offline case is narrower. Large-text daily history
+  is dense and deserves further visual review.
+- Deeper Italian linguistic review is deferred; other new fork languages use
+  documented English fallback. M8A.6 health-source/writeback gaps remain unchanged.
+- Remote push was disabled in the synthetic UI stack. M8A.5 automated regressions
+  remain covered; this milestone does not claim a fresh APNs/FCM delivery pass.
+
+The PR is an implementation/evidence review handoff. Full visual acceptance is
+not declared and M8B remains deferred. No production, NPM, DNS, credential,
+upstream or store changes occurred.

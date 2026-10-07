@@ -111,12 +111,61 @@
       "state": "native Tile host, fresh goal points and rank",
       "provenance": "Synthetic receipt injected into dedicated emulator storage; production native renderer, no Data Layer pairing or health ingestion",
       "capturedAt": "2026-10-07T22:12:18.936213+00:00"
+    },
+    {
+      "file": "wear-complication-short.png",
+      "sourceCommit": "fd7dde6c91599d39476db2a3a9e63e00c60804e9",
+      "build": 1000001015,
+      "platform": "Wear OS API 35-ext15 x86_64 emulator",
+      "device": "dedicated round Wear AVD",
+      "viewport": [384, 384],
+      "densityDpi": 320,
+      "fontScale": 1.24,
+      "appLocale": "it-IT",
+      "systemLocale": "en-US",
+      "theme": "dark",
+      "state": "Utility/Numerique slot 0 SHORT_TEXT; fresh goal-points rank",
+      "provenance": "Synthetic receipt injected into isolated emulator; production provider/native watch-face host; no paired delivery or health ingestion",
+      "capturedAt": "2026-10-07T23:08:35.219598+00:00"
+    },
+    {
+      "file": "wear-complication-cleared.png",
+      "sourceCommit": "fd7dde6c91599d39476db2a3a9e63e00c60804e9",
+      "build": 1000001015,
+      "platform": "Wear OS API 35-ext15 x86_64 emulator",
+      "device": "dedicated round Wear AVD",
+      "viewport": [384, 384],
+      "densityDpi": 320,
+      "fontScale": 1.24,
+      "appLocale": "it-IT",
+      "systemLocale": "en-US",
+      "theme": "dark",
+      "state": "Utility/Numerique slot 0 SHORT_TEXT; explicitly rebound unavailable synthetic receipt",
+      "provenance": "Synthetic receipt injected into isolated emulator; production provider/native watch-face host; no paired delivery or health ingestion",
+      "capturedAt": "2026-10-07T23:10:36.360514+00:00"
+    },
+    {
+      "file": "wear-talkback-title.png",
+      "sourceCommit": "fd7dde6c91599d39476db2a3a9e63e00c60804e9",
+      "build": 1000001015,
+      "platform": "Wear OS API 35-ext15 x86_64 emulator",
+      "device": "dedicated round Wear AVD",
+      "viewport": [384, 384],
+      "densityDpi": 320,
+      "fontScale": 1.24,
+      "appLocale": "it-IT",
+      "systemLocale": "en-US",
+      "theme": "dark",
+      "state": "TalkBack service bound; long title accessibility focus, speech not verified",
+      "provenance": "Synthetic receipt injected into isolated emulator; production provider/native watch-face host; no paired delivery or health ingestion",
+      "capturedAt": "2026-10-07T23:09:45.158550+00:00"
     }
   ],
   "notes": [
     "Original unedited screenshots. Capture timestamps come from retained file creation, not an app data freshness claim.",
     "Tile captures use the native CLI Tile host. They do not validate a physical watch launcher or complication.",
     "Phone daily-history layout is dense at 1.3 font scale; this sample does not establish exhaustive large-text accessibility.",
-    "No new builds, private device identifiers, tokens or real health records."
+    "No new builds, private device identifiers, tokens or real health records.",
+    "Follow-up short-text complication captures validate one native host/slot. Empty-state rendering used explicit rebind; live account-clear transport and long-text/physical/Apple complications were not tested."
   ]
 }

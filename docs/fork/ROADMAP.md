@@ -172,7 +172,7 @@ PR #14 merged normally at `0e185e879042a6fec0613e57ebe534c00fd552ab`,
 preserving reviewed head `a6f87cd34c78629f398016a18b60ffbdab264118`.
 The documented physical health-source gaps remain; automated coverage is not physical evidence. M8A.5 credential, privacy and push boundaries remain intact.
 
-## 8A.7. Challenge UX, localization and companion polish — in progress
+## 8A.7. Challenge UX, localization and companion polish — review handoff
 
 The maintainer approved Phase A revision 3 and repository-local fork translation
 ownership on 2026-10-06. Phase B implements the three-view hub, ordered Dashboard
@@ -200,11 +200,14 @@ blank-widget, gallery-name and missing-configuration defects.
 An autonomous Android/Wear emulator pass subsequently verified core phone flows,
 all seven Wear metric labels, state clearing, rotary/swipe navigation and native
 Tile-host rendering/tap behavior on the existing 1015 pair. Paired transport was
-not simulated as hardware evidence. Complication rendering, physical Tile checks,
+not simulated as hardware evidence. A subsequent native watch-face host check
+verified the Wear short-text complication and guarded tap for fresh/empty
+synthetic receipts. Physical Tile/complication checks, Apple complications,
 remaining accessibility/gesture checks and the broader visual matrix remain
-outstanding. English fallback in other languages
-is documented; Italian is an authored draft awaiting linguistic review.
-M8A.7 is not complete or ready for final visual acceptance.
+outstanding. English fallback in other languages is documented. The maintainer
+accepted current Italian coverage on 8 October after five wording corrections;
+deeper linguistic review is deferred. The fork PR is prepared for review with
+these limits explicit. M8A.7 is not declared fully visually accepted.
 
 ## 8B. Real production deployment — deferred
 

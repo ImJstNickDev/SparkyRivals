@@ -32,7 +32,7 @@ must not be counted as translated merely because a React key exists.
 
 Phone widget gallery metadata uses the same export/import commands through
 `ownership.json`'s `nativeComponents`. The flat JSON catalogs in
-`ios-phone-widget/` and `android-phone-widget/` own only the three Challenge keys
+`ios-phone-widget/` and `android-phone-widget/` own only the eight Challenge keys
 listed there. Imports update those declarations in the existing `.strings`/XML
 resources and preserve unrelated upstream translations. English remains the
 native source and fallback. iOS gallery metadata resolves through the existing
@@ -44,7 +44,8 @@ Fork-owned Watch and watch-widget strings live in each target’s
 `Localizable.xcstrings`; Wear uses `res/values/strings.xml` and
 `res/values-it/strings.xml`. These versioned native sources are included by the
 existing target/prebuild pipeline. They use system language, separately from the
-phone’s in-app language. The Italian text is an authored draft awaiting linguistic
-review. Other languages use English fallback. Native plural/placeholder checks
+phone’s in-app language. The maintainer accepted current Italian coverage on
+2026-10-08; deeper linguistic review is deferred. Other languages use English
+fallback. Native plural/placeholder checks
 run with `native-locales:check`; native compilation and rendered acceptance remain
 separate requirements. The same files can later become Weblate components.

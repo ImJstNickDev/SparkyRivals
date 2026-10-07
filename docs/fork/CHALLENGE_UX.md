@@ -565,7 +565,8 @@ Watch/Wear strings have separate maintained resources and checks. See the
 At this source: mobile English 391 / Italian 407 leaf entries; web English 368 /
 Italian 379. Different plural categories mean these totals are not comparable
 coverage percentages. Native resources contain 56 Watch, 5 watch-widget and 92
-Wear entries. Italian is an authored draft awaiting linguistic review. German,
+Wear entries. Italian was initially an authored draft; the maintainer accepted
+the current coverage on 8 October, with deeper review deferred. German,
 Polish and other registered locales retain existing translations and English
 fallback for missing fork keys. Rendered German/Polish cases verify formatting
 and fallback, not complete translation. Native companions follow system language,
@@ -821,8 +822,42 @@ records actual native runtime captures with synthetic data:
   and [goal-points Tile](assets/challenge-ux/emulator-acceptance-1015/wear-tile-points-large-it.png)
   rendered in the native Tile host; tap navigation passed. Wear fixtures bypass
   transport, so these captures do not prove paired Data Layer or physical Tile
-  delivery. The complication host/editor could not be opened and remains untested.
+  delivery. The initial complication host/editor attempt failed; the follow-up
+  below records the successful direct host launch.
 
 Full scope and limitations are in [release validation](RELEASE_VALIDATION.md#autonomous-androidwear-emulator-acceptance-2026-10-08).
 Owned emulators, tunnel and disposable stack were stopped; retained evidence and
 test data were preserved under the ignored local workspace.
+
+### Wear complication and translation review closeout (2026-10-08)
+
+The existing Wear **1000001015** provider was attached to slot 0 of the native
+Utility/Numerique watch face using the same `DEBUG_SURFACE` broadcast as
+[Android Studio's deployer](https://android.googlesource.com/platform/tools/base/+/mirror-goog-studio-main/deploy/deployer/src/main/java/com/android/tools/deployer/model/component/Complication.java).
+The watch-face service dump supplied the supported slot/type, avoiding the CLI
+wrapper's missing launch parameters. No product code or new build was needed.
+
+- [Short-text complication](assets/challenge-ux/emulator-acceptance-1015/wear-complication-short.png):
+  `PUNTI #2`, with tap opening the matching goal-points detail.
+- [Unavailable receipt](assets/challenge-ux/emulator-acceptance-1015/wear-complication-cleared.png):
+  a dash rather than zero or the old score; tap opens the neutral phone-unavailable
+  state. The host abbreviates the status title. This fixture explicitly rebinds
+  the provider; it does not test live account-clearing propagation.
+- [TalkBack focus](assets/challenge-ux/emulator-acceptance-1015/wear-talkback-title.png):
+  the actual bound TalkBack service highlights the long Challenge title.
+  Speech, complete gesture traversal and activation remain unverified.
+
+These are synthetic emulator renders at 384×384, font scale **1.24**, Italian,
+with the original fixture/accessibility settings restored afterward. Long-text
+complications, physical complication hosts and Apple complications remain outside
+this evidence. The emulator was stopped; test server/tunnel stayed stopped.
+
+The maintainer accepted the current Italian coverage on 8 October after editing
+five mobile strings. The approved fork importer applied those exact changes;
+deeper linguistic review is deferred. Other languages retain documented English
+fallback. Installed release binaries precede these five copy changes: screenshots
+must not be presented as verification of the final wording. No additional native
+build was commissioned solely for these text edits.
+
+The PR is a review handoff with the residual acceptance limits in the release
+ledger, not a declaration that the entire visual/accessibility matrix passed.
