@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { mergeNativeTranslation } from "../fork-native-locales.mjs";
 import {
   flatten,
   mergeTranslation,
@@ -77,3 +78,75 @@ test("rejects unsafe catalog paths and scalar/object collisions", () => {
     ),
   );
 });
+
+for (const format of ["ios", "android"]) {
+  test(`${format}: native fork import preserves upstream bytes and is idempotent`, () => {
+    const before =
+      format === "ios"
+        ? '/* upstream */\n"widget.calorie.name" = "Calorie";\n'
+        : '<?xml version="1.0"?>\n<resources>\n    <string name="widget_calorie_name">Calorie</string>\n</resources>\n';
+    const key =
+      format === "ios"
+        ? "widget.challenge.name"
+        : "sparky_challenge_widget_name";
+    const source = { [key]: "Sfide" };
+    const english = { [key]: "Challenges" };
+    const after = mergeNativeTranslation(
+      before,
+      source,
+      english,
+      [key],
+      format,
+    );
+    assert.ok(after.includes("Calorie"));
+    assert.ok(after.includes("Sfide"));
+    assert.equal(after.split("Sfide").length, 2);
+    assert.equal(
+      mergeNativeTranslation(after, source, english, [key], format),
+      after,
+    );
+    assert.equal(
+      mergeNativeTranslation(before, {}, english, [key], format),
+      before,
+    );
+    assert.throws(() =>
+      mergeNativeTranslation(
+        before,
+        { unrelated: "Oops" },
+        english,
+        [key],
+        format,
+      ),
+    );
+    assert.throws(() =>
+      mergeNativeTranslation(before, { [key]: "" }, english, [key], format),
+    );
+    assert.throws(() =>
+      mergeNativeTranslation(
+        before,
+        { [key]: "%d Sfide" },
+        english,
+        [key],
+        format,
+      ),
+    );
+    const changed = mergeNativeTranslation(
+      after,
+      { [key]: "Nuove sfide" },
+      english,
+      [key],
+      format,
+    );
+    assert.equal(changed.split("Nuove sfide").length, 2);
+    // Only the owned declaration is replaced; comments, spacing, other keys stay intact.
+    assert.equal(
+      after.replace(
+        format === "ios"
+          ? `"${key}" = "Sfide";\n`
+          : `    <string name="${key}">Sfide</string>\n`,
+        "",
+      ),
+      before,
+    );
+  });
+}

@@ -698,3 +698,36 @@ Tile behavior or complication/widget acceptance. Carry forward
 M8A.6 health-source/writeback gaps. The maintainer authorized the temporary
 M8A.7 test tunnel on 7 October; remote push remains disabled. Live remote push
 still requires separate consent. M8A.7 remains incomplete; M8B stays deferred.
+
+
+### Phone widget correction after physical feedback
+
+The maintainer's Italian iPhone capture showed six stacked result lines with a
+large score. Gallery metadata displayed untranslated keys on both supported
+families. Samsung captures showed a tall initial footprint and unused lower
+space. The API 36 emulator reproduced the old **2×3** placement, title/score
+truncation at font scale 1.3, and the excessive vertical space.
+
+The revised small/medium WidgetKit and compact/wide Glance layouts retain only
+the Challenge title, own result, server rank and status. Medium/wide puts score
+and rank side by side; compact puts them in two rows. Typography follows the
+existing calorie/macro widgets, with a 20-point result instead of the previous
+larger result and six competing lines. The trophy denotes a competition, not a
+step metric. No synthetic progress ring is inferred from rank or leader totals.
+A stale warning replaces the ordinary status footer without advancing source
+freshness. Guarded links, missing values and account clearing remain intact.
+
+Android now requests **4×2** initially, supports compact resizing and has its
+own localized preview instead of borrowing the calorie preview. Existing placed
+widgets retain their launcher allocation until resized/re-added. This follows
+[Android's widget sizing guidance](https://developer.android.com/develop/ui/views/appwidgets/layouts).
+WidgetKit gallery metadata uses the supported
+[Text overload](https://developer.apple.com/documentation/swiftui/widgetconfiguration/configurationdisplayname%28_%3A%29-3sbn4)
+with the existing native/English fallback resolver. Three Italian native keys on
+each phone platform now come from the approved fork translation import, which
+preserves unrelated upstream resources. Native gallery language follows the
+platform's existing policy; published result text follows the phone app locale.
+
+These source changes require native rebuilds. Android emulator evidence and
+subsequent device acceptance are recorded in the release ledger; Linux source
+checks alone do not establish iOS rendering or gallery acceptance.

@@ -17,7 +17,15 @@ it('keeps both existing phone widgets and registers the third in existing target
   expect(widget).toContain('[.systemSmall, .systemMedium]');
   expect(widget).toContain('generatedAt / 1000');
   expect(widget).toContain('value.state == "ready"');
-  expect(widget).toContain('if value.score.isEmpty { Text(value.metric)');
+  expect(widget).toMatch(/if value.score.isEmpty\s*\{\s*Text\(value.metric\)/);
+  expect(widget).toContain('family == .systemMedium');
+  expect(widget).not.toMatch(/Text\(value\.(peer|gap)\)/);
+  expect(widget).toContain(
+    'Text(verbatim: localizedWidgetString("widget.challenge.name"))'
+  );
+  expect(widget).toContain(
+    'Text(verbatim: localizedWidgetString("widget.challenge.description"))'
+  );
 });
 it('Android third widget has its own snapshot and variant-aware destination', () => {
   const base =
@@ -29,6 +37,19 @@ it('Android third widget has its own snapshot and variant-aware destination', ()
   expect(widget).toContain('{{APP_URL_SCHEME}}://challenges');
   expect(widget).toContain('SizeMode.Responsive');
   expect(widget).toContain('900000');
+  expect(widget).toContain('optString("accountKey").isNotEmpty()');
+  expect(widget).toContain('WidgetLocale.LOCALE_RENDER_REVISION_STATE_KEY');
+  const provider = read(
+    'targets/android-widget/res/xml/sparky_challenge_widget_info.xml'
+  );
+  expect(provider).toContain('android:targetCellWidth="4"');
+  expect(provider).toContain('android:targetCellHeight="2"');
+  expect(provider).toContain('@layout/sparky_challenge_widget_initial_layout');
+  const preview = read(
+    'targets/android-widget/res/layout/sparky_challenge_widget_initial_layout.xml'
+  );
+  expect(preview).toContain('@string/sparky_challenge_widget_name');
+  expect(preview).not.toMatch(/calorie|kcal|macro/);
   expect(read(base + 'CalorieWidgetModule.kt.tmpl')).toContain(
     'fun setChallengeSnapshot'
   );

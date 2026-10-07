@@ -30,6 +30,14 @@ languages retain upstream translations plus English fallback for missing fork
 keys. Native Apple/Wear/widget resources have separate platform validation and
 must not be counted as translated merely because a React key exists.
 
+Phone widget gallery metadata uses the same export/import commands through
+`ownership.json`'s `nativeComponents`. The flat JSON catalogs in
+`ios-phone-widget/` and `android-phone-widget/` own only the three Challenge keys
+listed there. Imports update those declarations in the existing `.strings`/XML
+resources and preserve unrelated upstream translations. English remains the
+native source and fallback. iOS gallery metadata resolves through the existing
+native/English bundle helper, so a missing translation never exposes a key.
+
 ## Companion resources
 
 Fork-owned Watch and watch-widget strings live in each target’s

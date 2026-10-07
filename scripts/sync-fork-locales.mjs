@@ -1,6 +1,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { syncNativeTranslations } from "./fork-native-locales.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const forbidden = new Set(["__proto__", "constructor", "prototype"]);
@@ -107,6 +108,8 @@ function main(mode) {
       );
     }
   }
+  if (syncNativeTranslations(root, manifest.nativeComponents ?? [], mode))
+    stale = true;
   if (stale) process.exitCode = 1;
 }
 

@@ -41,5 +41,35 @@
         "goals.active_calories_goal"
       ]
     }
+  ],
+  "nativeComponents": [
+    {
+      "name": "ios-phone-widget",
+      "format": "ios",
+      "source": "localization/fork/ios-phone-widget",
+      "english": "SparkyFitnessMobile/targets/widget/en.lproj/Localizable.strings",
+      "destinations": {
+        "it": "SparkyFitnessMobile/targets/widget/it.lproj/Localizable.strings"
+      },
+      "keys": [
+        "widget.challenge.name",
+        "widget.challenge.description",
+        "widget.challenge.not_synced"
+      ]
+    },
+    {
+      "name": "android-phone-widget",
+      "format": "android",
+      "source": "localization/fork/android-phone-widget",
+      "english": "SparkyFitnessMobile/targets/android-widget/res/values/widget_strings.xml",
+      "destinations": {
+        "it": "SparkyFitnessMobile/targets/android-widget/res/values-it/widget_strings.xml"
+      },
+      "keys": [
+        "sparky_challenge_widget_name",
+        "challenge_widget_not_synced",
+        "challenge_widget_description"
+      ]
+    }
   ]
 }

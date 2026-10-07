@@ -52,34 +52,54 @@ private struct ChallengeWidgetView: View {
     let entry: ChallengeWidgetEntry
     @Environment(\.widgetFamily) private var family
     var body: some View {
-        VStack(alignment: .leading, spacing: 5) {
-            Label(entry.snapshot?.title ?? localizedWidgetString("widget.challenge.name"), systemImage: "trophy")
-                .font(.caption.bold()).lineLimit(1)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .top, spacing: 6) {
+                Image(systemName: "trophy").foregroundStyle(.secondary).accessibilityHidden(true)
+                Text(entry.snapshot?.title ?? localizedWidgetString("widget.challenge.name"))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .font(.system(.caption, design: .rounded).weight(.semibold)).lineLimit(2)
+            Spacer(minLength: 0)
             if let value = entry.snapshot {
-                if value.score.isEmpty { Text(value.metric).font(.caption2).foregroundStyle(.secondary) }
-                Text(value.status).font(.caption2).foregroundStyle(.secondary).lineLimit(2)
-                Text(value.score).font(.system(.title2, design: .rounded).bold()).minimumScaleFactor(0.6).lineLimit(1)
-                Text(value.rank).font(.caption)
-                Text(value.gap).font(.caption.bold()).lineLimit(1)
-                if family == .systemMedium { Text(value.peer).font(.caption).lineLimit(1) }
+                if value.score.isEmpty {
+                    Text(value.metric).font(.subheadline).lineLimit(2)
+                } else if family == .systemMedium {
+                    HStack(alignment: .firstTextBaseline, spacing: 16) {
+                        score(value.score).frame(maxWidth: .infinity, alignment: .leading)
+                        Text(value.rank).font(.subheadline).foregroundStyle(.secondary).lineLimit(2)
+                    }
+                } else {
+                    score(value.score)
+                    Text(value.rank).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                }
+                Spacer(minLength: 0)
                 let age = entry.date.timeIntervalSince1970 - value.generatedAt / 1000
-                if age > 900 || age < -300 { Text(value.staleLabel).font(.caption2).foregroundStyle(.secondary) }
+                // Keep the source timestamp. Old results replace the ordinary footer
+                // with the stale warning rather than adding another line of copy.
+                Text(age > 900 || age < -300 ? value.staleLabel : value.status)
+                    .font(.caption2).foregroundStyle(.secondary).lineLimit(2)
             } else {
                 Text(localizedWidgetString("widget.challenge.not_synced")).font(.caption).foregroundStyle(.secondary)
+                Spacer(minLength: 0)
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
         .privacySensitive()
         .widgetURL(entry.snapshot?.link ?? hostAppURL("challenges"))
         .containerBackground(.fill.tertiary, for: .widget)
         .accessibilityElement(children: .combine)
     }
+
+    private func score(_ text: String) -> some View {
+        Text(text).font(.system(.title3, design: .rounded).weight(.semibold))
+            .lineLimit(2).fixedSize(horizontal: false, vertical: true)
+    }
 }
 struct ChallengeWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "challengeWidget", provider: ChallengeWidgetProvider()) { ChallengeWidgetView(entry: $0) }
-            .configurationDisplayName("widget.challenge.name")
-            .description("widget.challenge.description")
+            .configurationDisplayName(Text(verbatim: localizedWidgetString("widget.challenge.name")))
+            .description(Text(verbatim: localizedWidgetString("widget.challenge.description")))
             .supportedFamilies([.systemSmall, .systemMedium])
     }
 }

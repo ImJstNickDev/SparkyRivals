@@ -504,6 +504,9 @@ The maintainer approved repository-local ownership of fork-only translations.
 `localization/fork/ownership.json` (relative to the repository root) restricts
 imports to Challenge keys and explicitly listed activity-goal keys. Edit Italian
 source files under `localization/fork/`, then run root `pnpm i18n:fork:import`.
+The manifest's `nativeComponents` also owns the three Challenge phone-widget
+metadata/empty-state keys on each platform. The same commands merge those keys
+into native resources without changing unrelated upstream translations.
 Do not hand-edit other non-English catalog entries. English remains canonical;
 run `pnpm i18n:fork:export` after owned English changes and retain existing package
 plural/placeholder/registry checks. This narrow approved exception does not

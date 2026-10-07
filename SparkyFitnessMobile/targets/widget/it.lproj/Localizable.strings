@@ -15,3 +15,6 @@
 "widget.a11y.kcal" = "%@ kcal";
 "widget.search_food" = "Cerca cibo";
 "widget.scan_barcode" = "Scansiona codice";
+"widget.challenge.name" = "Sfide";
+"widget.challenge.description" = "Il risultato della tua sfida a colpo d’occhio.";
+"widget.challenge.not_synced" = "Apri l’app per sincronizzare le sfide.";

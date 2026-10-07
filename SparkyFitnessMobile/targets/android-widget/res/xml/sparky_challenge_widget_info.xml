@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
-    android:minWidth="160dp" android:minHeight="180dp"
+    android:minWidth="250dp" android:minHeight="160dp"
+    android:targetCellWidth="4" android:targetCellHeight="2"
+    android:minResizeWidth="130dp" android:minResizeHeight="160dp"
     android:resizeMode="horizontal|vertical" android:widgetCategory="home_screen"
-    android:initialLayout="@layout/sparky_widget_initial_layout"
+    android:initialLayout="@layout/sparky_challenge_widget_initial_layout"
+    android:previewLayout="@layout/sparky_challenge_widget_initial_layout"
+    android:description="@string/challenge_widget_description"
     android:updatePeriodMillis="1800000" />

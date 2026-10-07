@@ -19,4 +19,5 @@
     <string name="widget_preview_grams_fat">32 g</string>
     <string name="sparky_challenge_widget_name">Challenges</string>
     <string name="challenge_widget_not_synced">Open the app to sync Challenges.</string>
+    <string name="challenge_widget_description">Your latest Challenge result at a glance.</string>
 </resources>
