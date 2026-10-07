@@ -673,8 +673,10 @@ used Hermes' Android-only `NumberFormat.formatToParts`. Its replacement uses
 localized `format()` output, retaining exact truncation and server ranks. Tests
 exercise missing/throwing `formatToParts`, large values and the real detail
 component. The new full iPhone artifact **1015** compiled and passed exported-IPA
-inspection; physical retry is pending. The previously
-confirmed hub/Back navigation is a separate result. The corrected formatter passed
+inspection. The maintainer confirmed Close scores opens, points/activity toggles
+and daily history opens/closes on physical iPhone 1015; USB lookup independently
+confirmed that installed version. The previously confirmed hub/Back navigation
+is a separate result. The corrected formatter passed
 full mobile CI (**523 suites / 8,031 tests**), mobile/server validation, web
 validation/production build and the **17-test** web Challenge UX group.
 Android **1011** / Wear **1000001011** compiled with the permanent signer and

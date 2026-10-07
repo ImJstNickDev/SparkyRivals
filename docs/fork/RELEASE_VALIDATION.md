@@ -1175,10 +1175,9 @@ detail rendering, points/activity toggling, daily-history open/close, Italian
 decimals and large English/Italian/Indian/Arabic integers without `formatToParts`.
 Web Challenge UX tests passed **17 tests / 1 suite**; mobile/server validation and
 web validation/production build passed. Full mobile CI passed **523 suites /
-8,031 tests**; focused groups overlap this total. New native artifacts are
-recorded below. Updated iPhone physical acceptance is
-required; the matched crash location and local regression tests do not establish
-physical acceptance of the correction.
+8,031 tests**; focused groups overlap this total. New native artifacts and their
+separate physical acceptance are recorded below; local regression tests alone
+do not establish physical acceptance of the correction.
 
 Corrected source **`4fd8a974fbda3f1387eb19e281cce887c15d3406`** produced Android
 phone **1011** and Wear **1000001011**. Clean production prebuild/native validation,
@@ -1214,7 +1213,11 @@ full Apple codesign verification or a physical acceptance pass. IPA, build
 metadata, source and verification are retained privately under
 `~/.local/share/sparkyrivals/artifacts/milestone-8a7/ios-1015/`.
 
-The maintainer has been asked to install 1015 and retry Close scores, row
-points/activity toggling and daily-history open/close. That physical result is
-still pending. Watch native source is unchanged by this formatter fix; the earlier
-Watch capture/version limitations remain. M8A.7 is not complete.
+The maintainer confirmed the same journey on physical iPhone **1015**: Close
+scores opens without the reported error, points → steps → points works, and
+daily history opens/closes correctly. Read-only USB application lookup separately
+confirmed installed version **1015**. Private confirmation is retained alongside
+the IPA as `physical-close-scores.json`. This closes the reported fractional-score
+crash regression on both phones; it does not establish widget, screen-reader or
+additional companion acceptance. Watch native source is unchanged by this fix;
+the earlier Watch capture/version limitations remain. M8A.7 is not complete.

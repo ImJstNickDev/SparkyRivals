@@ -187,11 +187,16 @@ conditional on all-ready. The authorized creator removal is limited to unlocked
 goal lobbies and cannot set another participant's target.
 
 Both watches have compact metric-aware presentation and separate native catalogs.
-Android/Wear emulator renders and actual Android debug compilation are available.
-Apple runtime/screenshots, physical acceptance on both phones/watches and
-representative widgets/Tiles/complications remain required. English fallback in
-other languages is documented; Italian is an authored draft awaiting linguistic
-review. M8A.7 is not complete or ready for final visual acceptance.
+Production Android/Wear and full internal EAS iOS builds are recorded in
+[RELEASE_VALIDATION.md](RELEASE_VALIDATION.md). Core phone navigation passed on
+both platforms; the fractional-score fix passed physical Close scores,
+points/activity and daily-history checks on Samsung **1011** and iPhone **1015**.
+Physical Watch captures show the revised presentation and corrected Apple Watch
+row overflow, with exact capture/version limits documented. Representative
+widgets/Tiles/complications, remaining accessibility/gesture checks and the
+broader visual matrix remain outstanding. English fallback in other languages
+is documented; Italian is an authored draft awaiting linguistic review.
+M8A.7 is not complete or ready for final visual acceptance.
 
 ## 8B. Real production deployment — deferred
 
