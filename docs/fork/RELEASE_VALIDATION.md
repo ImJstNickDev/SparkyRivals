@@ -1082,9 +1082,18 @@ artifact directory's `navigation-emulator/`. The emulator was stopped afterward,
 retaining its data. This is emulator evidence, not an iPhone or hardware pass.
 
 Samsung was updated to **1010** using `adb install -r`; package readback matched,
-data was retained and the app launched. Maintainer navigation confirmation is
-pending. The physical Watch remains on **1000001009**, with unchanged source.
+data was retained and the app launched. The maintainer then confirmed the full
+Dashboard → hub → detail → Back → hub → Back → Dashboard journey works on the
+physical Samsung. This closes that Android navigation regression, not all
+remaining visual/companion acceptance. The physical Watch remains on
+**1000001009**, with unchanged source.
 Full EAS production-internal
 [iOS 1014](https://expo.dev/accounts/imjstnickdev/projects/sparkyrivals/builds/300dc12f-c31f-484e-8646-33d31807949e)
-is in progress from the same source, using existing credentials and the remote
-version counter. No iOS build/installation success is claimed yet.
+finished successfully from the same source, using existing credentials and the
+remote version counter. Downloaded IPA inspection on Linux verified all five
+build numbers and production bundle IDs, team, signed/profile App Groups,
+internal provisioning, the phone callback scheme and production APNs on the
+phone only. This is not local Xcode execution or full Apple `codesign`
+verification. iPhone installation/navigation acceptance remains pending.
+IPA and verification evidence are under
+`~/.local/share/sparkyrivals/artifacts/milestone-8a7/ios-1014/`.

@@ -632,8 +632,9 @@ verification. Physical testing then found the 1009/1013 Dashboard entry did
 nothing because its reset targeted the focused child navigator. A real-container
 test reproduced the failure. The root-state fix passed those tests and the
 production Android **1010** emulator Dashboard → hub → detail → hub → Dashboard
-journey. Samsung 1010 is installed; physical confirmation and EAS iOS **1014**
-completion remain pending. See the source-specific release ledger.
+journey. The maintainer also confirmed that journey on physical Samsung **1010**.
+EAS iOS **1014** compilation and exported-IPA inspection passed; iPhone update
+and navigation confirmation remain pending. See the source-specific release ledger.
 
 Required outstanding acceptance: both physical phones and watches; iOS native
 headers with glass on/off, swipe/keyboard/accessibility; small/large Apple Watch

@@ -458,8 +458,10 @@ new public tunnels and actual push sends remain explicit maintainer gates.
 Latest M8A.7 allocations are Android phone 1010, Wear 1000001010 and EAS iOS
 1014, from `d66d8fa8352470956915a7c9b099624977a034a8`. The Android release
 pair passed build/signature checks, and phone 1010 passed the Dashboard/hub/Back
-journey on the dedicated emulator. Samsung is updated with data preserved;
-physical confirmation is pending. iOS 1014 is building. The 1009/1013 Dashboard
+journey on the dedicated emulator. Samsung is updated with data preserved, and
+the maintainer confirmed the same navigation journey on the physical phone.
+EAS iOS 1014 and all-five-target IPA inspection passed; iPhone installation and
+navigation confirmation remain pending. The 1009/1013 Dashboard
 entry failed physical acceptance and is superseded by this correction. The
 physical Watch remains on 1000001009; its runtime source is unchanged.
 Future artifacts must advance these allocations. Do not reuse a number simply
