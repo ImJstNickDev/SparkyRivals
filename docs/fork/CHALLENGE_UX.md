@@ -797,3 +797,32 @@ languages, regional tags, deterministic English fallback, mounted language
 changes, reload ordering/retries and the iOS no-op have behavioral coverage.
 This preserves Android's existing locale authority and avoids a picker-specific
 language override.
+
+### Autonomous emulator follow-up (2026-10-08)
+
+The maintainer requested Android/Wear checks without physical-device assistance.
+Existing release **1015 / 1000001015** artifacts were reused; no build credits
+were consumed. The [manifest](assets/challenge-ux/emulator-acceptance-1015/manifest.json)
+records actual native runtime captures with synthetic data:
+
+- [Phone hub](assets/challenge-ux/emulator-acceptance-1015/phone-hub-it-large.png),
+  [close scores](assets/challenge-ux/emulator-acceptance-1015/phone-points-it-large.png)
+  and [daily history](assets/challenge-ux/emulator-acceptance-1015/phone-history-it-large.png)
+  at font scale 1.3. Navigation, hidden-card access, points/activity switching,
+  loaded content without network and personal-goal decimal input/Save/Back passed.
+  Daily-history rows remain dense in this large-text sample; exhaustive
+  accessibility and longer-name combinations are not established by it.
+- [Wear long title](assets/challenge-ux/emulator-acceptance-1015/wear-long-title-large-it.png)
+  and [goal day](assets/challenge-ux/emulator-acceptance-1015/wear-goal-day-large-it.png)
+  use a 384×384 round viewport at font scale 1.3. Content scrolls; the capture
+  is not an assertion that the entire detail fits on one screen. All seven
+  metrics, zero/missing, lobby/invitation/clear states, rotary and swipe-back passed.
+- [Stale Tile](assets/challenge-ux/emulator-acceptance-1015/wear-tile-stale-it.png)
+  and [goal-points Tile](assets/challenge-ux/emulator-acceptance-1015/wear-tile-points-large-it.png)
+  rendered in the native Tile host; tap navigation passed. Wear fixtures bypass
+  transport, so these captures do not prove paired Data Layer or physical Tile
+  delivery. The complication host/editor could not be opened and remains untested.
+
+Full scope and limitations are in [release validation](RELEASE_VALIDATION.md#autonomous-androidwear-emulator-acceptance-2026-10-08).
+Owned emulators, tunnel and disposable stack were stopped; retained evidence and
+test data were preserved under the ignored local workspace.

@@ -1455,3 +1455,46 @@ blocked. No production, NPM, DNS, upstream or credential changes occurred.
 Additional widget families/states,
 screen readers, Tiles/complications and inherited health-source/writeback
 boundaries remain open; M8A.7 is not declared complete.
+
+### Autonomous Android/Wear emulator acceptance (2026-10-08)
+
+At the maintainer's request, the next Android acceptance pass used dedicated
+emulators without physical-device interaction. It reused production phone
+**1015** and Wear **1000001015**, source
+`fd7dde6c91599d39476db2a3a9e63e00c60804e9`; no new build was needed.
+The [capture manifest](assets/challenge-ux/emulator-acceptance-1015/manifest.json)
+records seven unedited captures, sizes, language, font scale and fixture provenance.
+
+- **Phone:** API 36 Pixel 6, 1080×2400, 420 dpi, Italian/light, font scale 1.3.
+  Dashboard → hub → detail → hub → Dashboard passed. Hiding the Dashboard card
+  retained the independent Library entry; visibility was restored. Invitations
+  and History showed their empty states for this authorized test account.
+  Close scores retained ranks 1/2 for 140.05/140 points; points → steps → points
+  and daily-history open/close passed. Missing days remained explicitly missing.
+  Previously loaded detail remained visible with emulator Wi-Fi/data disabled;
+  both were restored. This does not establish offline mutation or restart behavior.
+- **Personal goals:** entering `5,75` in the Italian distance field persisted and
+  reopened correctly. Both header Back and Android Back prompted for a dirty form;
+  cancelling retained input. Explicit Save returned after acknowledgment. The
+  original synthetic goal `5,5` was restored through the normal form. No health
+  samples were written or provider synchronization enabled.
+- **Wear:** API 35-ext15, 384×384 round, 320 dpi, Italian, font scales 1.0/1.3.
+  Seven metric layout cases and five state cases passed: explicit zero, missing,
+  lobby, invitation and cleared snapshot. Long title/emoji, uncapped points,
+  singular goal day, rotary scrolling and edge-swipe return were inspected.
+  Synthetic receipts were injected only into this emulator; this is not paired
+  Data Layer delivery evidence.
+- **Tile:** the native CLI Tile host rendered a stale sum snapshot and fresh goal
+  points with rank; tapping opened the corresponding detail. This closes a
+  representative emulator rendering gap, not physical launcher acceptance.
+- **Complication remains unverified:** the CLI required launch flags its wrapper
+  did not expose; the stock watch-face editor returned Home without opening.
+  No complication render or app regression is inferred from that tooling limit.
+  Accessibility nodes were inspected, but TalkBack speech was not exercised.
+
+Retained journey notes, assertions and diagnostics are in ignored
+`.local/m8a7/emulator-final/`. Both emulators, the owned temporary tunnel and all
+three disposable stack services were stopped after testing; data was preserved.
+Remote push stayed disabled. No physical devices, production, NPM, DNS, upstream
+or credentials were changed. Broader visual/accessibility and Apple auxiliary
+surface acceptance remain open; this pass does not mark M8A.7 complete.

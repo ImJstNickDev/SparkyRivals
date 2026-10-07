@@ -197,8 +197,12 @@ phone widgets have Android emulator 4×2/2×2 captures, per-instance selection a
 nearby standings. The maintainer confirmed Android **1015** widget operation and
 the corrected iOS widget flow after full build **1021**, closing the reported
 blank-widget, gallery-name and missing-configuration defects.
-Tiles/complications, remaining accessibility/gesture checks and the
-broader visual matrix remain outstanding. English fallback in other languages
+An autonomous Android/Wear emulator pass subsequently verified core phone flows,
+all seven Wear metric labels, state clearing, rotary/swipe navigation and native
+Tile-host rendering/tap behavior on the existing 1015 pair. Paired transport was
+not simulated as hardware evidence. Complication rendering, physical Tile checks,
+remaining accessibility/gesture checks and the broader visual matrix remain
+outstanding. English fallback in other languages
 is documented; Italian is an authored draft awaiting linguistic review.
 M8A.7 is not complete or ready for final visual acceptance.
 
