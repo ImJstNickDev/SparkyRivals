@@ -1,7 +1,8 @@
 # SparkyRivals production deployment preparation
 
-Milestone 8A prepares and tests this stack **locally**. Real server deployment,
-NPM/TLS configuration and production data remain Milestone 8B. Production uses a
+The pre-production upstream integration tests this stack **locally**. Real server
+deployment and NPM changes require approval of its open synchronization PR first.
+Production uses a
 **separate server checkout**; the laptop path is never embedded in configuration.
 
 ## Final root Compose
@@ -43,11 +44,11 @@ existing `prod-frontend`, a separate fork checkout and an operator-confirmed HTT
 origin. The script starts no container and contacts no remote server.
 
 ```sh
-python3 scripts/bootstrap-production.py --url https://YOUR-CONFIRMED-HOST
+python3 scripts/bootstrap-production.py --url https://sparkyrivals.imjstnick.com
 # Review dockerdata/config/runtime.env, set the initial admin email and optional integrations.
 # Then, in the separately authorized deployment:
 docker compose config --quiet
-docker compose up -d
+docker compose up -d --build
 ```
 
 Bootstrap creates private directories, four random runtime secret files and a
@@ -57,6 +58,40 @@ root `.env` symlink points to that runtime file for Compose interpolation. Exist
 secrets beside an existing database cause an error: restore them, do not rotate
 implicitly. Repeated bootstrap with the same configuration preserves all secrets.
 No permanent mobile signing material belongs on the server.
+
+Both `BETTER_AUTH_URL` and `SPARKY_FITNESS_FRONTEND_URL` must equal the confirmed
+HTTPS origin. Bootstrap refuses a mismatch without overwriting the configuration.
+Before using it on a server, inspect existing checkout, `.env`, `dockerdata`,
+container mounts and databases. An existing instance requires backup/reconciliation,
+not a second empty database. Pin the reviewed, merged fork `main` SHA explicitly.
+
+### First administrator with signup closed
+
+New runtime files default to `SPARKY_FITNESS_DISABLE_SIGNUP=true` and demo mode off.
+Existing files retain their operator settings; inspect those before exposing NPM.
+Set `SPARKY_FITNESS_ADMIN_EMAIL` to the operator's real email in the private runtime
+file, start the healthy stack, then on the **production checkout after approval**:
+
+```sh
+python3 scripts/initialize-production-admin.py
+```
+
+The command prompts for name/password locally (password entry is hidden), sends
+them only through stdin to an operator-only backend process and uses normal Better
+Auth account creation, password hashing and profile initialization. It opens no
+listener and keeps the running HTTP server's signup closed. An advisory lock
+serializes concurrent invocations. Any existing user makes it refuse; it never
+resets a password, promotes an arbitrary existing account or deletes existing data.
+If initialization was incomplete, inspect/recover that account instead of deleting
+it to retry. No bootstrap login session is retained. Sign in normally afterward.
+
+Only expose the approved NPM host after admin initialization and the signup policy
+have been checked. Closed signup is an initial safety default, not an implicit
+permanent membership decision. For additional participants, the operator must
+choose a controlled registration window (optionally restricting NPM access during
+it) or deliberately permit public registration. The existing master switch blocks
+all new-account creation, including administrator/SSO creation; do not promise an
+invite-only registration mechanism that the product does not provide.
 
 The backend alone reads the runtime env file, so existing optional upstream
 SMTP/OIDC/provider/admin/rate-limit settings remain available without being sent
@@ -101,6 +136,15 @@ created it and it is empty. Existing networks/containers/data remain intact.
 Private logs, evidence and test data are retained in the printed directory for
 inspection; they are ignored by git and Docker build context.
 
+The harness also creates a synthetic first admin without opening signup, checks
+an authenticated Challenge request and places an extra disposable nginx proxy in
+front of frontend nginx. It verifies Secure/HttpOnly/SameSite cookies, the client IP
+stored by Better Auth and rate limits despite changing forged forwarding headers.
+This is a local two-hop test, not production NPM/TLS acceptance. Enabled push is
+checked inside the backend with a dummy secret and scheduled jobs disabled; no
+notification is sent. TLS egress to Expo, writable upload/backup mounts and
+fork/upstream RLS are checked too.
+
 ## Milestone 8B NPM handoff
 
 After explicit production authorization and bootstrap, create an NPM Proxy Host
@@ -111,6 +155,11 @@ host mapping is needed. Verify auth cookies/callbacks, uploads, `/api/health`,
 Challenge privacy, provider egress and client IP/rate limiting end-to-end. Do not
 add a CDN/tunnel without recalculating proxy trust. None of these real NPM actions
 are performed during 8A.
+
+For the approved first deployment, use `sparkyrivals.imjstnick.com`, the existing
+`*.imjstnick.com` certificate and **Force SSL**. Keep normal upgrade/WebSocket
+forwarding where required. No extra TLS termination, public tunnel, DNS mutation
+or published 3010/5432 port is needed.
 
 ## Required layout
 
@@ -248,7 +297,8 @@ provider credentials and actual off-host retention still require operator accept
 
 ## M8A.5 remote push handoff for M8B
 
-Remote push stays disabled by default. Supply the external Expo access token as a
+Remote push stays optional by default for upstream compatibility, but **must be
+enabled for the first SparkyRivals production deployment**. Supply the external Expo access token as a
 private `dockerdata/secrets/expo_access_token` file, optionally through bootstrap's
 `--expo-access-token-file` import. Bootstrap never generates/overwrites that token.
 Set `SPARKY_FITNESS_REMOTE_PUSH_ENABLED=true` and
@@ -257,3 +307,14 @@ bootstrap before startup. No APNs/FCM/signing credential belongs on the server.
 Outbound HTTPS to Expo is required. Topology, bind mounts and zero published ports
 are unchanged. See [REMOTE_PUSH.md](REMOTE_PUSH.md) for token rotation, backups,
 disabling delivery and the non-production acceptance boundary. No M8B action has run.
+
+After the synchronization PR is approved and merged, transfer a protected copy
+from the maintainer's private token file through the approved SSH connection to
+`dockerdata/secrets/expo_access_token` (0600). Never put its value in argv, build
+arguments, an image, a public URL or Git. Re-run bootstrap and inspect Compose's
+effective non-secret push flag/path, then the running container values. `.env`
+must still reference `dockerdata/config/runtime.env` for interpolation. Validate
+the sender's Bearer-auth path and Expo egress. After consenting production users
+register devices, test one invitation, background arrival, guarded tap,
+deduplication and revocation. If devices are unavailable, keep server push enabled
+and report live delivery as pending. APNs/FCM/signing custody is unchanged.

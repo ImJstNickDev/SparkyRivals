@@ -107,7 +107,10 @@ def prepare(root, data, url, local_test=False, expo_token_source=None):
         if runtime.is_symlink():
             raise ValueError('Refusing symlink runtime file')
         if runtime.exists():
-            if f'SPARKY_FITNESS_FRONTEND_URL={url}\n' not in runtime.read_text():
+            settings = dict(line.split('=', 1) for line in runtime.read_text().splitlines()
+                            if '=' in line and not line.lstrip().startswith('#'))
+            if any(settings.get(key) != url for key in
+                   ('SPARKY_FITNESS_FRONTEND_URL', 'BETTER_AUTH_URL')):
                 raise ValueError('Existing origin differs; runtime configuration preserved')
             if runtime.stat().st_mode & 0o077:
                 raise ValueError('runtime.env must have mode 0600')

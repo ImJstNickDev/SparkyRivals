@@ -60,6 +60,7 @@ pnpm exec eslint routes/v2/foodRoutes.ts services/foodCoreService.ts
 - `SparkyFitnessServer.ts` - Express app shell, route mounting, Swagger/ReDoc, startup, graceful shutdown
 - `services/backgroundJobScheduler.ts` - starts every scheduled background job at startup, including the demo reset; provider syncs are listed in `services/providerSyncScheduler.ts`; `SPARKY_FITNESS_DISABLE_SCHEDULED_JOBS=true` skips them all
 - `auth.ts` - Better Auth configuration, plugins, session behavior, SSO provider syncing
+- `scripts/initializeFirstAdmin.script.ts` - operator-only first-admin stdin tool for an empty database with public signup closed; invoked by root `scripts/initialize-production-admin.py`, never an HTTP endpoint or a recovery/reset tool
 - `utils/mobileAuthCallbacks.ts` - validates `SPARKY_FITNESS_MOBILE_AUTH_SCHEMES` and constructs allowlisted native auth returns; never accept an arbitrary client callback URL
 - `routes/` - primary HTTP route surface
 - `routes/v2/` - newer typed route surface; pair these changes with `schemas/`

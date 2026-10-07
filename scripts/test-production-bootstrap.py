@@ -56,6 +56,20 @@ class BootstrapTests(unittest.TestCase):
             bootstrap.prepare(self.root, self.data, 'https://another.example.test')
         self.assertEqual(runtime.read_bytes(), original)
 
+    def test_auth_origin_mismatch_is_rejected_without_repair(self):
+        runtime = self.run_bootstrap()
+        runtime.write_text(runtime.read_text().replace(
+            'BETTER_AUTH_URL=https://fitness.example.test',
+            'BETTER_AUTH_URL=http://sparkyrivals-server:3010'))
+        original = runtime.read_bytes()
+        with self.assertRaisesRegex(ValueError, 'origin differs'):
+            self.run_bootstrap()
+        self.assertEqual(runtime.read_bytes(), original)
+
+    def test_signup_is_closed_on_first_start(self):
+        runtime = self.run_bootstrap()
+        self.assertIn('SPARKY_FITNESS_DISABLE_SIGNUP=true\n', runtime.read_text())
+
     def test_local_test_does_not_change_root_env(self):
         (self.root / '.env').write_text('user state')
         bootstrap.prepare(self.root, self.data / 'acceptance-test', 'http://local.test', True)

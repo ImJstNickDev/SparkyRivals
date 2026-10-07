@@ -12,14 +12,17 @@ ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location('bootstrap', ROOT / 'scripts/bootstrap-production.py')
 bootstrap = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(bootstrap)
+auth_spec = importlib.util.spec_from_file_location('auth_acceptance', ROOT / 'scripts/production-auth-acceptance.py')
+auth_acceptance = importlib.util.module_from_spec(auth_spec)
+auth_spec.loader.exec_module(auth_acceptance)
 
 
 def run(args, **kwargs):
     return subprocess.run(args, check=True, text=True, **kwargs)
 
 
-def capture(args):
-    return run(args, stdout=subprocess.PIPE).stdout
+def capture(args, **kwargs):
+    return run(args, stdout=subprocess.PIPE, **kwargs).stdout
 
 
 def assert_topology(config, data):
@@ -47,6 +50,8 @@ def assert_topology(config, data):
 
 def main():
     os.umask(0o077)
+    os.environ['COMPOSE_PARALLEL_LIMIT'] = '1'
+    os.environ['COMPOSE_BAKE'] = 'false'
     # Refuse remote Docker contexts/overrides: this command is laptop acceptance.
     endpoint = os.environ.get('DOCKER_HOST') or json.loads(capture(
         ['docker', 'context', 'inspect']))[0]['Endpoints']['docker']['Host']
@@ -56,6 +61,14 @@ def main():
     project = 'sparkyrivals-acceptance-' + token
     data = ROOT / 'dockerdata' / project
     runtime = bootstrap.prepare(ROOT, data, 'https://sparkyrivals.test', True)
+    # Exercise enabled configuration with a synthetic secret. Never load the
+    # maintainer's Expo token or send a push during local Docker acceptance.
+    runtime.write_text(runtime.read_text().replace(
+        'SPARKY_FITNESS_REMOTE_PUSH_ENABLED=false', 'SPARKY_FITNESS_REMOTE_PUSH_ENABLED=true'
+    ).replace('SPARKY_FITNESS_ADMIN_EMAIL=\n', 'SPARKY_FITNESS_ADMIN_EMAIL=admin@example.test\n') +
+        '\nEXPO_ACCESS_TOKEN_FILE=/run/secrets/expo_access_token\nSPARKY_FITNESS_DISABLE_SCHEDULED_JOBS=true\n')
+    bootstrap.exclusive_write(data / 'secrets/expo_access_token', 'local-acceptance-not-a-real-expo-token\n')
+    bootstrap.validate_push_secret(data, runtime)
     config = json.loads(capture(['docker', 'compose', '--env-file', str(runtime),
                                 '-f', str(ROOT / 'compose.yaml'), 'config',
                                 '--no-env-resolution', '--format', 'json']))
@@ -91,8 +104,13 @@ def main():
         print(f'Local acceptance project: {project}\nPrivate evidence/data: {data}', flush=True)
         started = True
         with (data / 'build-startup.log').open('w') as log:
-            run(compose + ['up', '-d', '--wait', '--wait-timeout', '240'], stdout=log, stderr=log)
+            # Compose's build graph can schedule both images concurrently even
+            # with a one-command limit. Build one service at a time on laptops.
+            for service in ('sparkyrivals-server', 'sparkyrivals-frontend'):
+                run(compose + ['build', service], stdout=log, stderr=log)
+            run(compose + ['up', '-d', '--no-build', '--wait', '--wait-timeout', '240'], stdout=log, stderr=log)
         evidence = {'project': project, 'containers': {}, 'routes': {}}
+        images = {}
         for service in config['services']:
             container = capture(compose + ['ps', '-q', service]).strip()
             info = json.loads(capture(['docker', 'inspect', container]))[0]
@@ -103,6 +121,15 @@ def main():
                 expected_networks.add('prod-frontend')
             assert set(info['NetworkSettings']['Networks']) == expected_networks
             assert info['State']['Health']['Status'] == 'healthy'
+            assert info['HostConfig']['RestartPolicy']['Name'] == 'unless-stopped'
+            images[service] = info['Image']
+            if service == 'sparkyrivals-server':
+                env = dict(item.split('=', 1) for item in info['Config']['Env'])
+                assert env['SPARKY_FITNESS_REMOTE_PUSH_ENABLED'] == 'true'
+                assert env['EXPO_ACCESS_TOKEN_FILE'] == '/run/secrets/expo_access_token'
+                assert env['SPARKY_FITNESS_FRONTEND_URL'] == env['BETTER_AUTH_URL'] == 'https://sparkyrivals.test'
+                assert env['SPARKY_FITNESS_TRUSTED_PROXY_HOPS'] == '2'
+                assert not env.get('SPARKY_FITNESS_REAL_IP_HEADER')
             for mount in info['Mounts']:
                 assert mount['Type'] == 'bind'
                 if mount['RW'] or mount['Destination'].startswith('/run/secrets'):
@@ -125,6 +152,17 @@ def main():
             result = subprocess.run(curl + ['http://' + host + ':3010'],
                                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             assert result.returncode == 6, 'Backend/database must not resolve on external network'
+        evidence['authProxy'] = auth_acceptance.check_auth(compose, project, data, images)
+        evidence['remotePushEnabledWithSyntheticSecret'] = True
+        # Check writeability and TLS egress without contacting Expo's send API.
+        run(compose + ['exec', '-T', 'sparkyrivals-server', 'node', '--input-type=module', '-e',
+            "import fs from 'node:fs'; for (const path of ['uploads','backup']) { const file=path+'/acceptance-write-probe'; fs.writeFileSync(file,'synthetic'); } const response=await fetch('https://exp.host',{method:'HEAD',signal:AbortSignal.timeout(20000)}); if(response.status>=500) throw new Error('Expo egress unavailable');"])
+        evidence['writableUploadsBackupsAndExpoTlsEgress'] = True
+        restored_rls = capture(compose + ['exec', '-T', 'sparkyrivals-db', 'sh', '-c',
+            'psql -At -U "$POSTGRES_USER" -d "$POSTGRES_DB"'], input=
+            "SELECT count(*)=8 AND bool_and(relrowsecurity) FROM pg_class WHERE relnamespace='public'::regnamespace AND relname IN ('challenges','challenge_participants','push_installations','push_events','push_deliveries','user_goals','user_fasting_preferences','mindfulness_sessions');")
+        assert restored_rls.strip() == 't'
+        evidence['forkAndUpstreamRls'] = True
         # Logical backup/restore into another disposable DB in this test cluster.
         # No production DB or user fixture is ever used.
         db_exec = compose + ['exec', '-T', 'sparkyrivals-db', 'sh', '-c']
