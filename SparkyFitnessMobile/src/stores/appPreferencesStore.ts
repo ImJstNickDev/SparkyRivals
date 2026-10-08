@@ -80,7 +80,9 @@ export const PREFERENCE_DEFAULTS = {
   medicationsCardVisible: true,
   symptomsCardVisible: true,
   progressPhotosCardVisible: true,
+  onDeviceLabelScanEnabled: true,
   healthTrendsCardVisible: true,
+  mindfulnessCardVisible: true,
   dashboardCardOrder: [...DASHBOARD_CARD_KEYS] as DashboardCardKey[],
   medicationRemindersEnabled: true,
   medicationReminderRepeats: true,
@@ -108,6 +110,7 @@ export const PREFERENCE_DEFAULTS = {
   hiddenHealthTrends: [] as HealthTrendKey[],
   watchPageOrder: [...WATCH_PAGE_KEYS] as WatchPageKey[],
   hiddenWatchPages: [] as WatchPageKey[],
+  watchDoubleTapEnabled: true,
   watchNutrientOrder: [] as string[],
   shownWatchNutrients: [...DEFAULT_WATCH_NUTRIENTS] as string[],
   watchSetInputStyle: 'keypad' as WatchSetInputStyle,
@@ -139,7 +142,9 @@ export type AppPreferencesData = {
   medicationsCardVisible: boolean;
   symptomsCardVisible: boolean;
   progressPhotosCardVisible: boolean;
+  onDeviceLabelScanEnabled: boolean;
   healthTrendsCardVisible: boolean;
+  mindfulnessCardVisible: boolean;
   dashboardCardOrder: DashboardCardKey[];
   medicationRemindersEnabled: boolean;
   medicationReminderRepeats: boolean;
@@ -180,6 +185,8 @@ export type AppPreferencesData = {
   watchPageOrder: WatchPageKey[];
   /** Watch pages turned off in Settings → Apple Watch. */
   hiddenWatchPages: WatchPageKey[];
+  /** Whether the watch's double-tap gesture logs the current set. */
+  watchDoubleTapEnabled: boolean;
   /**
    * Order of the nutrients the watch's Goals page can list (standard keys and
    * custom nutrient names). Empty until the wearer drags one.
@@ -217,7 +224,9 @@ export interface AppPreferencesState extends AppPreferencesData {
   setMedicationsCardVisible: (value: boolean) => void;
   setSymptomsCardVisible: (value: boolean) => void;
   setProgressPhotosCardVisible: (value: boolean) => void;
+  setOnDeviceLabelScanEnabled: (value: boolean) => void;
   setHealthTrendsCardVisible: (value: boolean) => void;
+  setMindfulnessCardVisible: (value: boolean) => void;
   setDashboardCardOrder: (order: DashboardCardKey[]) => void;
   setMedicationRemindersEnabled: (value: boolean) => void;
   setMedicationReminderRepeats: (value: boolean) => void;
@@ -244,6 +253,7 @@ export interface AppPreferencesState extends AppPreferencesData {
   setHealthTrendHidden: (key: HealthTrendKey, isHidden: boolean) => void;
   setWatchPageOrder: (order: WatchPageKey[]) => void;
   setWatchPageHidden: (key: WatchPageKey, isHidden: boolean) => void;
+  setWatchDoubleTapEnabled: (value: boolean) => void;
   setWatchNutrientOrder: (order: string[]) => void;
   setWatchNutrientShown: (key: string, isShown: boolean) => void;
   setWatchSetInputStyle: (value: WatchSetInputStyle) => void;
@@ -335,8 +345,12 @@ export const useAppPreferencesStore = create<AppPreferencesState>()(
       setSymptomsCardVisible: (value) => set({ symptomsCardVisible: value }),
       setProgressPhotosCardVisible: (value) =>
         set({ progressPhotosCardVisible: value }),
+      setOnDeviceLabelScanEnabled: (value) =>
+        set({ onDeviceLabelScanEnabled: value }),
       setHealthTrendsCardVisible: (value) =>
         set({ healthTrendsCardVisible: value }),
+      setMindfulnessCardVisible: (value) =>
+        set({ mindfulnessCardVisible: value }),
       setDashboardCardOrder: (order) => set({ dashboardCardOrder: order }),
       setMedicationRemindersEnabled: (value) =>
         set({ medicationRemindersEnabled: value }),
@@ -392,6 +406,8 @@ export const useAppPreferencesStore = create<AppPreferencesState>()(
             isShown
           ),
         })),
+      setWatchDoubleTapEnabled: (value) =>
+        set({ watchDoubleTapEnabled: value }),
       setWatchPageHidden: (key, isHidden) =>
         set((state) => ({
           hiddenWatchPages: withMembership(
@@ -438,7 +454,9 @@ export const useAppPreferencesStore = create<AppPreferencesState>()(
         medicationsCardVisible: state.medicationsCardVisible,
         symptomsCardVisible: state.symptomsCardVisible,
         progressPhotosCardVisible: state.progressPhotosCardVisible,
+        onDeviceLabelScanEnabled: state.onDeviceLabelScanEnabled,
         healthTrendsCardVisible: state.healthTrendsCardVisible,
+        mindfulnessCardVisible: state.mindfulnessCardVisible,
         dashboardCardOrder: state.dashboardCardOrder,
         medicationRemindersEnabled: state.medicationRemindersEnabled,
         medicationReminderRepeats: state.medicationReminderRepeats,
@@ -468,6 +486,7 @@ export const useAppPreferencesStore = create<AppPreferencesState>()(
         hiddenHealthTrends: state.hiddenHealthTrends,
         watchPageOrder: state.watchPageOrder,
         hiddenWatchPages: state.hiddenWatchPages,
+        watchDoubleTapEnabled: state.watchDoubleTapEnabled,
         watchNutrientOrder: state.watchNutrientOrder,
         shownWatchNutrients: state.shownWatchNutrients,
         watchSetInputStyle: state.watchSetInputStyle,

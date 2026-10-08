@@ -172,7 +172,7 @@ PR #14 merged normally at `0e185e879042a6fec0613e57ebe534c00fd552ab`,
 preserving reviewed head `a6f87cd34c78629f398016a18b60ffbdab264118`.
 The documented physical health-source gaps remain; automated coverage is not physical evidence. M8A.5 credential, privacy and push boundaries remain intact.
 
-## 8A.7. Challenge UX, localization and companion polish — review handoff
+## 8A.7. Challenge UX, localization and companion polish — PR #15 merged
 
 The maintainer approved Phase A revision 3 and repository-local fork translation
 ownership on 2026-10-06. Phase B implements the three-view hub, ordered Dashboard
@@ -206,12 +206,19 @@ synthetic receipts. Physical Tile/complication checks, Apple complications,
 remaining accessibility/gesture checks and the broader visual matrix remain
 outstanding. English fallback in other languages is documented. The maintainer
 accepted current Italian coverage on 8 October after five wording corrections;
-deeper linguistic review is deferred. The fork PR is prepared for review with
-these limits explicit. M8A.7 is not declared fully visually accepted.
+deeper linguistic review is deferred. PR #15 merged normally at
+`6e7e02f8d0ce90118a01b4011b4e39b77ccd579a`, preserving all 33 commits and reviewed
+head `0a05c421a31a817aaa43be280bd80c3dee314900`. These acceptance limits remain
+explicit; the merge does not declare full visual acceptance or require new builds
+for the accepted five Italian wording edits.
 
-## 8B. Real production deployment — deferred
+## 8B. Real production deployment — preparation; synchronization review gate
 
-Requires separate authorization for the server checkout, actual hostname/runtime
-secrets, existing `prod-frontend`, NPM/TLS, migrations/startup, backups/restores and
-production E2E. No production server or NPM changes occur in 8A. Persistent state
-remains repository-root `dockerdata/` with bind mounts only.
+The requested first deployment targets `https://sparkyrivals.imjstnick.com`, with
+remote invitation push enabled. The upstream integration PR must be reviewed and
+approved before it is merged or any production/NPM action occurs. See
+[UPSTREAM_PRE_PRODUCTION.md](UPSTREAM_PRE_PRODUCTION.md) and
+[DEPLOYMENT.md](DEPLOYMENT.md). Production still requires a separate pinned checkout,
+private runtime secrets, the existing `prod-frontend`, safe initial admin/signup
+onboarding, backups/restores and real end-to-end verification. Persistent state
+remains repository-root `dockerdata/` with bind mounts only. No deployment has run.

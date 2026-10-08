@@ -83,6 +83,8 @@ const options = {
                 'weight_reps',
                 'reps_only',
                 'bodyweight_reps',
+                'weight_duration',
+                'weight_distance',
                 'duration',
                 'duration_distance',
               ],

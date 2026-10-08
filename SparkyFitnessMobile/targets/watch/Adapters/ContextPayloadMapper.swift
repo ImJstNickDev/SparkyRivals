@@ -71,9 +71,12 @@ enum ContextPayloadMapper {
                 : previous.hiddenPages,
             setInputStyle: payload["setInputStyle"] as? String ?? previous.setInputStyle,
             startableWorkouts: startableWorkouts(from: payload) ?? previous.startableWorkouts,
+            scheduledWorkouts: scheduledWorkouts(from: payload) ?? previous.scheduledWorkouts,
             workoutServerId: payload.keys.contains("workoutServerId")
                 ? payload["workoutServerId"] as? String
                 : previous.workoutServerId,
+            distanceUnit: payload["distanceUnit"] as? String ?? previous.distanceUnit,
+            doubleTapEnabled: payload["doubleTapEnabled"] as? Bool ?? previous.doubleTapEnabled,
             // Unlike preferences, private Challenge state is never carried
             // forward across an absent/invalid/explicitly cleared field.
             challengeSnapshot: ChallengePayloadMapper.snapshot(from: payload["challengeSnapshot"])
@@ -91,6 +94,25 @@ enum ContextPayloadMapper {
                 let name = row["name"] as? String, !name.isEmpty
             else { return nil }
             return StartableWorkout(presetId: presetId, name: name)
+        }
+    }
+
+    /// Same rule as `startableWorkouts`: nil when the key is absent, so an
+    /// older push keeps the list the watch has; empty is a real answer.
+    static func scheduledWorkouts(from payload: [String: Any]) -> [ScheduledWorkout]? {
+        guard let raw = payload["scheduledWorkouts"] else { return nil }
+        let rows = dictionaryArray(raw) ?? []
+        return rows.compactMap { row in
+            guard
+                let presetId = row["presetId"] as? String, !presetId.isEmpty,
+                let name = row["name"] as? String, !name.isEmpty
+            else { return nil }
+            return ScheduledWorkout(
+                presetId: presetId,
+                name: name,
+                planName: row["planName"] as? String ?? "",
+                caption: row["caption"] as? String ?? ""
+            )
         }
     }
 
@@ -310,7 +332,10 @@ enum ContextPayloadMapper {
                     setType: rawSet["setType"] as? String,
                     targetDurationSec: intValue(rawSet["targetDurationSec"]),
                     previousDurationSec: intValue(rawSet["previousDurationSec"]),
-                    timed: rawSet["timed"] as? Bool
+                    timed: rawSet["timed"] as? Bool,
+                    carry: rawSet["carry"] as? Bool,
+                    targetDistanceKm: doubleValue(rawSet["targetDistanceKm"]),
+                    weighted: rawSet["weighted"] as? Bool
                 )
             }
             return PlannedExercise(
@@ -397,7 +422,8 @@ enum ContextPayloadMapper {
                 weightKg: doubleValue(raw["targetWeightKg"]),
                 reps: doubleValue(raw["targetReps"]),
                 durationSec: intValue(raw["targetDurationSec"]),
-                previousDurationSec: intValue(raw["previousDurationSec"])
+                previousDurationSec: intValue(raw["previousDurationSec"]),
+                distanceKm: doubleValue(raw["targetDistanceKm"])
             )
         }
         // Sets already logged on the phone. Absent from an older phone build.

@@ -145,6 +145,7 @@ struct ContentView: View {
             TrendView()
         case .workout:
             WorkoutView()
+                .environment(\.workoutPageActive, selectedPage == .workout)
         case .challenge:
             ChallengeView()
         case .nowPlaying:

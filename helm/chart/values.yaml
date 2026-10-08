@@ -58,6 +58,8 @@ config:
   extraTrustedOrigins: ""
   # -- Additional owned native mobile auth schemes, comma-separated; upstream remains supported
   mobileAuthSchemes: ""
+  # -- Optional trusted proxy IPs/CIDRs; use only the actual proxy chain.
+  trustedProxies: ""
 
   # -- Force email/password login to be enabled (fail-safe against OIDC lockout)
   forceEmailLogin: true
